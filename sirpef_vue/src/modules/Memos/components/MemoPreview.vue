@@ -7,7 +7,7 @@
 
     <!-- Metadata -->
     <div class="flex justify-between mb-6">
-      <div class="font-bold uppercase">{{ data.codigo }}</div>
+      <div class="font-bold uppercase">OAC-M N° {{ data.tabla?.pto_cta }}</div>
       <div class="text-right">Caracas, {{ formatDisplayDate(data.tabla?.fecha) }}</div>
     </div>
 
