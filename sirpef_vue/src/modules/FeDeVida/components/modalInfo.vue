@@ -75,7 +75,19 @@ const viewMemo = () => {
 const createMemoFromPDC = async () => {
     const memo = caseData.value?.punto_cuenta?.memorandum;
     if (memo?.id) {
-        localStorage.setItem('editing_memo', JSON.stringify(memo));
+        const memoToEdit = {
+            ...memo,
+            tabla: {
+                pto_cta: caseData.value.punto_cuenta.numero_punto,
+                fecha: memo.fecha,
+                solicitante: caseData.value.persona.nombre_completo,
+                cedula: caseData.value.persona.cedula,
+                monto: memo.monto,
+                total: memo.monto,
+                proveedor: memo.proveedor
+            }
+        };
+        localStorage.setItem('editing_memo', JSON.stringify(memoToEdit));
         router.push({
             path: '/oac/memos/form',
             query: { id: memo.id }
