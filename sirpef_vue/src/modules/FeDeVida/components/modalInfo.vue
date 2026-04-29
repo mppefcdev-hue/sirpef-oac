@@ -6,6 +6,8 @@ import CardHistory from './cardHistory.vue';
 import { useRoute, useRouter } from 'vue-router';
 import { nextTick, ref } from 'vue';
 import MemoPreview from '../../Memos/components/MemoPreview.vue';
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 
 const {
     caseData,
@@ -75,7 +77,7 @@ const viewMemo = () => {
 const createMemoFromPDC = async () => {
     const memo = caseData.value?.punto_cuenta?.memorandum;
     if (memo?.id) {
-        const memoToEdit = {
+        memoToPrint.value = {
             ...memo,
             tabla: {
                 pto_cta: caseData.value.punto_cuenta.numero_punto,
@@ -87,11 +89,27 @@ const createMemoFromPDC = async () => {
                 proveedor: memo.proveedor
             }
         };
-        localStorage.setItem('editing_memo', JSON.stringify(memoToEdit));
-        router.push({
-            path: '/oac/memos/form',
-            query: { id: memo.id }
-        });
+        
+        await nextTick();
+        const element = document.getElementById('memo-printable-hidden');
+        if (element) {
+            element.classList.remove('hidden');
+            const canvas = await html2canvas(element.querySelector('.memo-paper'), {
+                scale: 2,
+                useCORS: true,
+                logging: false
+            });
+            element.classList.add('hidden');
+            
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'letter');
+            const imgProps = pdf.getImageProperties(imgData);
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+            
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            window.open(pdf.output('bloburl'), '_blank');
+        }
     } else if (caseData.value?.punto_cuenta?.numero_punto) {
         router.push({
             path: '/oac/memos/form',
