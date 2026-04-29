@@ -38,7 +38,12 @@ class PuntoCuenta extends Model
 
 
     public function registros()
-{
-    return $this->hasMany(Registro::class, 'punto_cuenta_id');
-}
+    {
+        return $this->hasMany(Registro::class, 'punto_cuenta_id');
+    }
+
+    public function memorandum()
+    {
+        return $this->hasOne(Memorandum::class, 'punto_cuenta_id');
+    }
 }

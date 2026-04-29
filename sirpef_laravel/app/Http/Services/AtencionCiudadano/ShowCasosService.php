@@ -29,7 +29,7 @@ class ShowCasosService {
             $registro = Registro::with([
                 'eventoPersona.persona.parroquia.municipio.estado',
                 'tipoCaso',
-                'puntoCuenta',
+                'puntoCuenta.memorandum',
                 'proveedores',
                 'recaudos',
             ])->findOrFail($id);
@@ -88,7 +88,11 @@ class ShowCasosService {
                     'numero_punto' => $registro->puntoCuenta->numero_punto,
                     'asunto' => $registro->puntoCuenta->asunto,
                     'decision' => $registro->puntoCuenta->decision,
-                    'estatus' => $registro->puntoCuenta->estatus_pc, // Aquí está 'estatus_pc'
+                    'estatus' => $registro->puntoCuenta->estatus_pc,
+                    'memorandum' => $registro->puntoCuenta->memorandum ? [
+                        'id' => $registro->puntoCuenta->memorandum->id,
+                        'codigo' => $registro->puntoCuenta->memorandum->codigo,
+                    ] : null,
                 ] : null,
 
                 // Lista de proveedores (usando la relación definida)
