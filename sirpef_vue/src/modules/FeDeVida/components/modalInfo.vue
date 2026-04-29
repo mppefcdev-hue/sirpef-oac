@@ -421,7 +421,7 @@ const createMemoFromPDC = async () => {
 
 
 
-                    <div @click="createMemoFromPDC"
+                    <div v-if="caseData?.punto_cuenta" @click="createMemoFromPDC"
                         class="border cursor-pointer w-[200px] h-[300px] border-gray-200 rounded-lg overflow-hidden flex flex-col justify-between shadow-md hover:shadow-2xl transition-shadow duration-300 bg-white">
                         <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
                             <h3 class="font-medium text-gray-700 capitalize truncate">Memorándum</h3>

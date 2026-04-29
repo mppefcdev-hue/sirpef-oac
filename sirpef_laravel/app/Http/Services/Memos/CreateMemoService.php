@@ -21,7 +21,7 @@ class CreateMemoService
     public static function buscarPuntoCuenta(string $numero): JsonResponse
     {
         $puntoCuenta = PuntoCuenta::where('numero_punto', 'LIKE', trim($numero))
-            ->with(['registros.eventoPersona.persona', 'registros.proveedores'])
+            ->with(['registros.eventoPersona.persona', 'registros.proveedores', 'memorandum'])
             ->first();
 
         if (!$puntoCuenta) {
