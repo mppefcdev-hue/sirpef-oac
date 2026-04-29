@@ -74,13 +74,13 @@ const viewMemo = () => {
 
 const createMemoFromPDC = async () => {
     const memo = caseData.value?.punto_cuenta?.memorandum;
-    if (memo) {
+    if (memo?.id) {
         localStorage.setItem('editing_memo', JSON.stringify(memo));
         router.push({
             path: '/oac/memos/form',
             query: { id: memo.id }
         });
-    } else {
+    } else if (caseData.value?.punto_cuenta?.numero_punto) {
         router.push({
             path: '/oac/memos/form',
             query: { numero: caseData.value.punto_cuenta.numero_punto }

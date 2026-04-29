@@ -92,6 +92,16 @@ class ShowCasosService {
                     'memorandum' => $registro->puntoCuenta->memorandum ? [
                         'id' => $registro->puntoCuenta->memorandum->id,
                         'codigo' => $registro->puntoCuenta->memorandum->codigo,
+                        'de' => $registro->puntoCuenta->memorandum->de,
+                        'para' => $registro->puntoCuenta->memorandum->para,
+                        'asunto' => $registro->puntoCuenta->memorandum->asunto,
+                        'fecha' => $registro->puntoCuenta->memorandum->fecha->format('Y-m-d'),
+                        'cuerpo' => $registro->puntoCuenta->memorandum->cuerpo,
+                        'monto' => $registro->puntoCuenta->memorandum->monto,
+                        'proveedor' => $registro->puntoCuenta->memorandum->proveedor,
+                        'header_img' => $registro->puntoCuenta->memorandum->header_img,
+                        'footer_img' => $registro->puntoCuenta->memorandum->footer_img,
+                        'firma_img' => $registro->puntoCuenta->memorandum->firma_img,
                     ] : null,
                 ] : null,
 
