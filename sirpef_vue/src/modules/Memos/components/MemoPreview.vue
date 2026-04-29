@@ -45,30 +45,30 @@
     <!-- Table -->
     <table class="w-full border-collapse border border-black mb-6 text-[11px] table-fixed">
       <thead>
-        <tr class="bg-[#e60000] text-white font-bold">
-          <th class="border border-black p-1 text-center w-[15%]" style="background-color: #e60000 !important; -webkit-print-color-adjust: exact;">Pto/Cta</th>
-          <th class="border border-black p-1 text-center w-[15%]" style="background-color: #e60000 !important; -webkit-print-color-adjust: exact;">Fecha</th>
-          <th class="border border-black p-1 text-center w-[18%]" style="background-color: #e60000 !important; -webkit-print-color-adjust: exact;">Solicitante</th>
-          <th class="border border-black p-1 text-center w-[12%]" style="background-color: #e60000 !important; -webkit-print-color-adjust: exact;">C.I.</th>
-          <th class="border border-black p-1 text-center w-[15%]" style="background-color: #e60000 !important; -webkit-print-color-adjust: exact;">Monto (Bs.)</th>
-          <th class="border border-black p-1 text-center w-[25%]" style="background-color: #e60000 !important; -webkit-print-color-adjust: exact;">Proveedor</th>
+        <tr class="bg-[#e60000] text-white font-bold h-10">
+          <th class="border border-black p-2 text-center align-middle w-[15%]" style="background-color: #e60000 !important; -webkit-print-color-adjust: exact;">Pto/Cta</th>
+          <th class="border border-black p-2 text-center align-middle w-[15%]" style="background-color: #e60000 !important; -webkit-print-color-adjust: exact;">Fecha</th>
+          <th class="border border-black p-2 text-center align-middle w-[18%]" style="background-color: #e60000 !important; -webkit-print-color-adjust: exact;">Solicitante</th>
+          <th class="border border-black p-2 text-center align-middle w-[12%]" style="background-color: #e60000 !important; -webkit-print-color-adjust: exact;">C.I.</th>
+          <th class="border border-black p-2 text-center align-middle w-[15%]" style="background-color: #e60000 !important; -webkit-print-color-adjust: exact;">Monto (Bs.)</th>
+          <th class="border border-black p-2 text-center align-middle w-[25%]" style="background-color: #e60000 !important; -webkit-print-color-adjust: exact;">Proveedor</th>
         </tr>
       </thead>
       <tbody>
         <tr class="h-16 text-center align-middle">
-          <td class="border border-black p-1">{{ data.tabla?.pto_cta }}</td>
-          <td class="border border-black p-1">{{ formatDisplayDate(data.tabla?.fecha) }}</td>
-          <td class="border border-black p-1">{{ data.tabla?.solicitante }}</td>
-          <td class="border border-black p-1">{{ data.tabla?.cedula }}</td>
-          <td class="border border-black p-1">{{ data.tabla?.monto }}</td>
-          <td class="border border-black p-1">{{ data.tabla?.proveedor }}</td>
+          <td class="border border-black p-2">{{ data.tabla?.pto_cta }}</td>
+          <td class="border border-black p-2">{{ formatDisplayDate(data.tabla?.fecha) }}</td>
+          <td class="border border-black p-2">{{ data.tabla?.solicitante }}</td>
+          <td class="border border-black p-2">{{ data.tabla?.cedula }}</td>
+          <td class="border border-black p-2">{{ data.tabla?.monto }}</td>
+          <td class="border border-black p-2">{{ data.tabla?.proveedor }}</td>
         </tr>
-        <tr class="h-8 text-center">
+        <tr class="h-10 text-center align-middle">
           <td class="border-x border-black"></td>
           <td class="border-x border-black"></td>
           <td class="border-x border-black"></td>
-          <td class="border border-black p-1 font-bold text-center bg-gray-50" style="-webkit-print-color-adjust: exact;">TOTAL</td>
-          <td class="border border-black p-1 font-bold">{{ data.tabla?.total }}</td>
+          <td class="border border-black p-2 font-bold text-center bg-gray-50" style="-webkit-print-color-adjust: exact;">TOTAL</td>
+          <td class="border border-black p-2 font-bold">{{ data.tabla?.total }}</td>
           <td class="border border-black"></td>
         </tr>
       </tbody>
