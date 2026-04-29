@@ -436,7 +436,7 @@ const createMemoFromPDC = async () => {
                             <button
                                 class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition-colors duration-200">
                                 <font-awesome-icon :icon="caseData?.punto_cuenta?.memorandum ? 'pen-to-square' : 'eye'" />
-                                {{ caseData?.punto_cuenta?.memorandum ? 'Ver Memorándum' : 'Crear Memorándum' }}
+                                {{ (caseData?.punto_cuenta?.memorandum || caseData?.punto_cuenta?.existing_memo) ? 'Ver Memorándum' : 'Crear Memorándum' }}
                             </button>
                         </div>
                     </div>

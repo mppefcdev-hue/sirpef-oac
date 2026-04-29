@@ -42,6 +42,11 @@ class CreateMemoService
         // Buscamos si ya existe un memorándum para este punto de cuenta
         $memorandum = $puntoCuenta->memorandum;
 
+        Log::info('Checking memorandum existence for PC:', [
+            'pc_id' => $puntoCuenta->id,
+            'memo_exists' => !is_null($memorandum)
+        ]);
+
         return response()->json([
             'success' => true,
             'data' => [
