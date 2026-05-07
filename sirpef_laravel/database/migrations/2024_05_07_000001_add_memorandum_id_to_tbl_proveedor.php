@@ -11,9 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('tbl_proveedor', function (Blueprint $blueprint) {
+        Schema::table('tbl_proveedor', function (Blueprint $table) {
             if (!Schema::hasColumn('tbl_proveedor', 'memorandum_id')) {
-                $blueprint->foreignId('memorandum_id')->nullable()->constrained('tbl_memorandums')->onDelete('cascade');
+                $table->foreignId('memorandum_id')
+                      ->nullable()
+                      ->constrained('tbl_memorandums')
+                      ->onDelete('cascade');
+            }
+            
+            if (!Schema::hasColumn('tbl_proveedor', 'monto')) {
+                $table->decimal('monto', 15, 2)->default(0);
             }
         });
     }
@@ -23,9 +30,15 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('tbl_proveedor', function (Blueprint $blueprint) {
-            $blueprint->dropForeign(['memorandum_id']);
-            $blueprint->dropColumn('memorandum_id');
+        Schema::table('tbl_proveedor', function (Blueprint $table) {
+            if (Schema::hasColumn('tbl_proveedor', 'memorandum_id')) {
+                $table->dropForeign(['memorandum_id']);
+                $table->dropColumn('memorandum_id');
+            }
+            
+            if (Schema::hasColumn('tbl_proveedor', 'monto')) {
+                $table->dropColumn('monto');
+            }
         });
     }
 };
