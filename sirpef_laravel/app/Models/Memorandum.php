@@ -20,7 +20,6 @@ class Memorandum extends Model
         'asunto',
         'fecha',
         'cuerpo',
-        'monto',
         'proveedor',
         'header_img',
         'footer_img',
