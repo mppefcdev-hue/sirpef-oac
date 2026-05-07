@@ -38,4 +38,9 @@ class Memorandum extends Model
     {
         return $this->belongsTo(PuntoCuenta::class, 'punto_cuenta_id');
     }
+
+    public function proveedores()
+    {
+        return $this->hasMany(Proveedor::class, 'memorandum_id');
+    }
 }

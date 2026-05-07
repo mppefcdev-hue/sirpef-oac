@@ -14,11 +14,17 @@ class Proveedor extends Model
     protected $fillable = [
         'nombre',
         'monto',
-        'registro_id'
+        'registro_id',
+        'memorandum_id'
     ];
 
     public function registro()
     {
         return $this->belongsTo(Registro::class, 'registro_id');
+    }
+
+    public function memorandum()
+    {
+        return $this->belongsTo(Memorandum::class, 'memorandum_id');
     }
 }
