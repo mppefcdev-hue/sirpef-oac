@@ -18,7 +18,7 @@ return new class extends Migration
                       ->constrained('tbl_memorandums')
                       ->onDelete('cascade');
             }
-            
+
             if (!Schema::hasColumn('tbl_proveedor', 'monto')) {
                 $table->decimal('monto', 15, 2)->default(0);
             }
