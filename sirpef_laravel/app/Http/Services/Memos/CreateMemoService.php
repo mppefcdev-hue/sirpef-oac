@@ -122,6 +122,8 @@ class CreateMemoService
                     ], 422);
                 }
 
+                $monto = $request->input('tabla.total') ?? ($request->input('monto') ?? 0);
+
                 $memorandum = Memorandum::create([
                     'punto_cuenta_id' => $validated['punto_cuenta_id'],
                     'codigo' => $validated['codigo'],
@@ -130,7 +132,7 @@ class CreateMemoService
                     'asunto' => $validated['asunto'],
                     'fecha' => $validated['fecha'],
                     'cuerpo' => $validated['cuerpo'],
-                    'monto' => $request->input('tabla.total') ?? ($request->monto ?? 0),
+                    'monto' => $monto,
                     'header_img' => $validated['header_img'] ?? null,
                     'footer_img' => $validated['footer_img'] ?? null,
                     'firma_img' => $validated['firma_img'] ?? null,
@@ -246,6 +248,8 @@ class CreateMemoService
                     'firma_img' => 'nullable|string',
                 ]);
 
+                $monto = $request->input('tabla.total') ?? ($request->input('monto') ?? $memorandum->monto);
+
                 $memorandum->update([
                     'codigo' => $validated['codigo'],
                     'de' => $validated['de'],
@@ -253,7 +257,7 @@ class CreateMemoService
                     'asunto' => $validated['asunto'],
                     'fecha' => $validated['fecha'],
                     'cuerpo' => $validated['cuerpo'],
-                    'monto' => $request->input('tabla.total') ?? ($request->monto ?? $memorandum->monto),
+                    'monto' => $monto,
                     'header_img' => $validated['header_img'] ?? $memorandum->header_img,
                     'footer_img' => $validated['footer_img'] ?? $memorandum->footer_img,
                     'firma_img' => $validated['firma_img'] ?? $memorandum->firma_img,

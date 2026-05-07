@@ -164,7 +164,9 @@ const addProveedor = () => {
 };
 
 const removeProveedor = (index) => {
-  props.form.tabla.proveedores.splice(index, 1);
+  if (props.form.tabla.proveedores && props.form.tabla.proveedores.length > 1) {
+    props.form.tabla.proveedores.splice(index, 1);
+  }
 };
 
 const calcularTotal = computed(() => {
