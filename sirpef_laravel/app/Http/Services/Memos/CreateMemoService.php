@@ -138,9 +138,10 @@ class CreateMemoService
 
                 if ($request->has('tabla.proveedores') && is_array($request->input('tabla.proveedores'))) {
                     foreach ($request->input('tabla.proveedores') as $prov) {
-                        if (!empty($prov['nombre'])) {
+                        $nombreProv = $prov['nombre'] ?? null;
+                        if (!empty($nombreProv)) {
                             $memorandum->proveedores()->create([
-                                'nombre' => $prov['nombre'],
+                                'nombre' => $nombreProv,
                                 'monto' => (float) ($prov['monto'] ?? 0),
                                 'registro_id' => $puntoCuenta->registros()->first()?->id,
                                 'memorandum_id' => $memorandum->id
@@ -261,9 +262,10 @@ class CreateMemoService
                 if ($request->has('tabla.proveedores') && is_array($request->input('tabla.proveedores'))) {
                     $memorandum->proveedores()->delete();
                     foreach ($request->input('tabla.proveedores') as $prov) {
-                        if (!empty($prov['nombre'])) {
+                        $nombreProv = $prov['nombre'] ?? null;
+                        if (!empty($nombreProv)) {
                             $memorandum->proveedores()->create([
-                                'nombre' => $prov['nombre'],
+                                'nombre' => $nombreProv,
                                 'monto' => (float) ($prov['monto'] ?? 0),
                                 'registro_id' => $memorandum->puntoCuenta->registros()->first()?->id,
                                 'memorandum_id' => $memorandum->id
