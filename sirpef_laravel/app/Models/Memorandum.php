@@ -41,6 +41,13 @@ class Memorandum extends Model
 
     public function proveedores()
     {
-        return $this->hasMany(Proveedor::class, 'memorandum_id');
+        return $this->hasManyThrough(
+            Proveedor::class,
+            Registro::class,
+            'punto_cuenta_id', // Foreign key on tbl_registros
+            'registro_id',     // Foreign key on tbl_proveedor
+            'punto_cuenta_id', // Local key on tbl_memorandums
+            'id'               // Local key on tbl_registros
+        );
     }
 }

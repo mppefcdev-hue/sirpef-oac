@@ -136,11 +136,15 @@ class CreateMemoService
                 ]);
 
                 if ($request->has('tabla.proveedores')) {
-                    foreach ($request->input('tabla.proveedores') as $prov) {
-                        $memorandum->proveedores()->create([
-                            'nombre' => $prov['nombre'],
-                            'monto' => $prov['monto']
-                        ]);
+                    $registro = $puntoCuenta->registros()->first();
+                    if ($registro) {
+                        $registro->proveedores()->delete();
+                        foreach ($request->input('tabla.proveedores') as $prov) {
+                            $registro->proveedores()->create([
+                                'nombre' => $prov['nombre'],
+                                'monto' => $prov['monto']
+                            ]);
+                        }
                     }
                 }
 
@@ -254,12 +258,15 @@ class CreateMemoService
                 ]);
 
                 if ($request->has('tabla.proveedores')) {
-                    $memorandum->proveedores()->delete();
-                    foreach ($request->input('tabla.proveedores') as $prov) {
-                        $memorandum->proveedores()->create([
-                            'nombre' => $prov['nombre'],
-                            'monto' => $prov['monto']
-                        ]);
+                    $registro = $memorandum->puntoCuenta->registros()->first();
+                    if ($registro) {
+                        $registro->proveedores()->delete();
+                        foreach ($request->input('tabla.proveedores') as $prov) {
+                            $registro->proveedores()->create([
+                                'nombre' => $prov['nombre'],
+                                'monto' => $prov['monto']
+                            ]);
+                        }
                     }
                 }
 
