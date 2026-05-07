@@ -135,14 +135,16 @@ class CreateMemoService
                     'firma_img' => $validated['firma_img'] ?? null,
                 ]);
 
-                if ($request->has('tabla.proveedores')) {
+                if ($request->has('tabla.proveedores') && is_array($request->input('tabla.proveedores'))) {
                     foreach ($request->input('tabla.proveedores') as $prov) {
-                        $memorandum->proveedores()->create([
-                            'nombre' => $prov['nombre'],
-                            'monto' => (float) ($prov['monto'] ?? 0),
-                            'registro_id' => $puntoCuenta->registros()->first()?->id,
-                            'memorandum_id' => $memorandum->id
-                        ]);
+                        if (!empty($prov['nombre'])) {
+                            $memorandum->proveedores()->create([
+                                'nombre' => $prov['nombre'],
+                                'monto' => (float) ($prov['monto'] ?? 0),
+                                'registro_id' => $puntoCuenta->registros()->first()?->id,
+                                'memorandum_id' => $memorandum->id
+                            ]);
+                        }
                     }
                 }
 
@@ -255,15 +257,17 @@ class CreateMemoService
                     'firma_img' => $validated['firma_img'] ?? $memorandum->firma_img,
                 ]);
 
-                if ($request->has('tabla.proveedores')) {
+                if ($request->has('tabla.proveedores') && is_array($request->input('tabla.proveedores'))) {
                     $memorandum->proveedores()->delete();
                     foreach ($request->input('tabla.proveedores') as $prov) {
-                        $memorandum->proveedores()->create([
-                            'nombre' => $prov['nombre'],
-                            'monto' => (float) ($prov['monto'] ?? 0),
-                            'registro_id' => $memorandum->puntoCuenta->registros()->first()?->id,
-                            'memorandum_id' => $memorandum->id
-                        ]);
+                        if (!empty($prov['nombre'])) {
+                            $memorandum->proveedores()->create([
+                                'nombre' => $prov['nombre'],
+                                'monto' => (float) ($prov['monto'] ?? 0),
+                                'registro_id' => $memorandum->puntoCuenta->registros()->first()?->id,
+                                'memorandum_id' => $memorandum->id
+                            ]);
+                        }
                     }
                 }
 
