@@ -136,15 +136,12 @@ class CreateMemoService
                 ]);
 
                 if ($request->has('tabla.proveedores')) {
-                    $registro = $puntoCuenta->registros()->first();
-                    if ($registro) {
-                        $registro->proveedores()->delete();
-                        foreach ($request->input('tabla.proveedores') as $prov) {
-                            $registro->proveedores()->create([
-                                'nombre' => $prov['nombre'],
-                                'monto' => $prov['monto']
-                            ]);
-                        }
+                    foreach ($request->input('tabla.proveedores') as $prov) {
+                        $memorandum->proveedores()->create([
+                            'nombre' => $prov['nombre'],
+                            'monto' => $prov['monto'],
+                            'registro_id' => $puntoCuenta->registros()->first()?->id
+                        ]);
                     }
                 }
 
@@ -258,15 +255,13 @@ class CreateMemoService
                 ]);
 
                 if ($request->has('tabla.proveedores')) {
-                    $registro = $memorandum->puntoCuenta->registros()->first();
-                    if ($registro) {
-                        $registro->proveedores()->delete();
-                        foreach ($request->input('tabla.proveedores') as $prov) {
-                            $registro->proveedores()->create([
-                                'nombre' => $prov['nombre'],
-                                'monto' => $prov['monto']
-                            ]);
-                        }
+                    $memorandum->proveedores()->delete();
+                    foreach ($request->input('tabla.proveedores') as $prov) {
+                        $memorandum->proveedores()->create([
+                            'nombre' => $prov['nombre'],
+                            'monto' => $prov['monto'],
+                            'registro_id' => $memorandum->puntoCuenta->registros()->first()?->id
+                        ]);
                     }
                 }
 
