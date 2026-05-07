@@ -74,18 +74,18 @@
         <div class="col-span-2 space-y-2">
           <div class="flex justify-between items-center">
             <label class="text-[10px] font-bold text-gray-500 uppercase">Proveedores y Montos</label>
-            <button @click="addProveedor" class="text-[10px] bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700">+ Agregar</button>
+            <button @click="addProveedor" type="button" class="text-[10px] bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700">+ Agregar</button>
           </div>
-          <div v-for="(item, index) in form.tabla.proveedores" :key="index" class="flex gap-2 items-end">
+          <div v-for="(item, index) in props.form.tabla.proveedores" :key="index" class="flex gap-2 items-end">
             <div class="flex-1">
               <label class="text-[9px] font-bold text-gray-400 uppercase">Proveedor</label>
-              <input v-model="item.nombre" placeholder="Nombre del proveedor" class="w-full border p-2 rounded text-xs focus:ring-1 focus:ring-blue-400 outline-none" />
+              <input v-model="props.form.tabla.proveedores[index].nombre" placeholder="Nombre del proveedor" class="w-full border p-2 rounded text-xs focus:ring-1 focus:ring-blue-400 outline-none" />
             </div>
             <div class="w-32">
               <label class="text-[9px] font-bold text-gray-400 uppercase">Monto (Bs.)</label>
-              <input v-model="item.monto" type="number" step="0.01" placeholder="0.00" class="w-full border p-2 rounded text-xs focus:ring-1 focus:ring-blue-400 outline-none" />
+              <input v-model.number="props.form.tabla.proveedores[index].monto" type="number" step="0.01" placeholder="0.00" class="w-full border p-2 rounded text-xs focus:ring-1 focus:ring-blue-400 outline-none" />
             </div>
-            <button @click="removeProveedor(index)" v-if="form.tabla.proveedores?.length > 1" class="text-red-500 p-2 mb-0.5">✕</button>
+            <button @click="removeProveedor(index)" type="button" v-if="props.form.tabla.proveedores?.length > 1" class="text-red-500 p-2 mb-0.5">✕</button>
           </div>
         </div>
       </div>
