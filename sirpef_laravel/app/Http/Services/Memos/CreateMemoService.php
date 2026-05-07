@@ -139,7 +139,7 @@ class CreateMemoService
                     foreach ($request->input('tabla.proveedores') as $prov) {
                         $memorandum->proveedores()->create([
                             'nombre' => $prov['nombre'],
-                            'monto' => $prov['monto'],
+                            'monto' => (float) $prov['monto'],
                             'registro_id' => $puntoCuenta->registros()->first()?->id
                         ]);
                     }
@@ -259,7 +259,7 @@ class CreateMemoService
                     foreach ($request->input('tabla.proveedores') as $prov) {
                         $memorandum->proveedores()->create([
                             'nombre' => $prov['nombre'],
-                            'monto' => $prov['monto'],
+                            'monto' => (float) $prov['monto'],
                             'registro_id' => $memorandum->puntoCuenta->registros()->first()?->id
                         ]);
                     }
