@@ -43,6 +43,9 @@ class UpdatePuntoCuentaService {
                     'cargo_por' => 'nullable|string|max:255',
                     'resolucion_1' => 'nullable|string',
                     'resolucion_2' => 'nullable|string',
+                    'proveedores' => 'nullable|array',
+                    'proveedores.*.nombre' => 'required_with:proveedores|string|max:255',
+                    'proveedores.*.monto' => 'required_with:proveedores|numeric',
                 ]);
 
                 $validatedData['estatus_pc'] = true;
@@ -50,6 +53,20 @@ class UpdatePuntoCuentaService {
 
                 $puntoCuenta->fill($validatedData);
                 $puntoCuenta->save();
+
+                if ($request->has('proveedores')) {
+                    // Assuming a relationship exists or syncing via the Registro associated
+                    $registro = $puntoCuenta->registro; 
+                    if ($registro) {
+                        $registro->proveedores()->delete();
+                        foreach ($request->proveedores as $prov) {
+                            $registro->proveedores()->create([
+                                'nombre' => $prov['nombre'],
+                                'monto' => $prov['monto']
+                            ]);
+                        }
+                    }
+                }
 
                 return response()->json([
                     'success' => true,
