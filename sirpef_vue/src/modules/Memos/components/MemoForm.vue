@@ -157,7 +157,9 @@ const http = new Http(init);
 const loadingSearch = ref(false);
 
 const addProveedor = () => {
-  if (!props.form.tabla.proveedores) props.form.tabla.proveedores = [];
+  if (!props.form.tabla.proveedores) {
+    props.form.tabla.proveedores = [];
+  }
   props.form.tabla.proveedores.push({ nombre: '', monto: 0 });
 };
 
@@ -188,8 +190,10 @@ const buscarPuntoCuenta = async (numero) => {
       
       if (pc.proveedores && pc.proveedores.length > 0) {
         props.form.tabla.proveedores = pc.proveedores.map(p => ({ nombre: p.nombre, monto: p.monto }));
-      } else {
+      } else if (pc.monto || pc.proveedor) {
         props.form.tabla.proveedores = [{ nombre: pc.proveedor || '', monto: pc.monto || 0 }];
+      } else {
+        props.form.tabla.proveedores = [{ nombre: '', monto: 0 }];
       }
       
       if (pc.asunto) {
@@ -248,6 +252,10 @@ watch(() => props.form.tabla.monto, (newVal) => {
 });
 
 onMounted(() => {
+  if (!props.form.tabla.proveedores || props.form.tabla.proveedores.length === 0) {
+    props.form.tabla.proveedores = [{ nombre: '', monto: 0 }];
+  }
+
   if (route.query.numero) {
     props.form.tabla.pto_cta = route.query.numero;
     buscarPuntoCuenta(route.query.numero);
