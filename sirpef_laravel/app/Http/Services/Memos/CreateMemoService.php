@@ -21,7 +21,7 @@ class CreateMemoService
     public static function buscarPuntoCuenta(string $numero): JsonResponse
     {
         $puntoCuenta = PuntoCuenta::where('numero_punto', 'LIKE', trim($numero))
-            ->with(['registros.eventoPersona.persona', 'registros.proveedores', 'memorandum'])
+            ->with(['registros.eventoPersona.persona', 'registros.proveedores', 'memorandum.proveedores'])
             ->first();
 
         if (!$puntoCuenta) {
@@ -173,7 +173,7 @@ class CreateMemoService
      */
     public static function index(): JsonResponse
     {
-        $memos = Memorandum::with(['puntoCuenta.registros.eventoPersona.persona'])
+        $memos = Memorandum::with(['puntoCuenta.registros.eventoPersona.persona', 'proveedores'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -198,9 +198,9 @@ class CreateMemoService
                     'solicitante' => $persona ? $persona->nombre_completo : 'N/A',
                     'cedula' => $persona ? $persona->cedula : 'N/A',
                     'monto' => $memo->monto, 
-                    'proveedores' => $memo->proveedores->map(function($p) {
+                    'proveedores' => optional($memo->proveedores)->map(function($p) {
                         return ['nombre' => $p->nombre, 'monto' => $p->monto];
-                    }),
+                    }) ?? [],
                     'total' => $memo->monto
                 ],
                 'headerImg' => $memo->header_img,

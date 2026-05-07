@@ -98,7 +98,9 @@ class ShowCasosService {
                         'fecha' => $registro->puntoCuenta->memorandum->fecha->format('Y-m-d'),
                         'cuerpo' => $registro->puntoCuenta->memorandum->cuerpo,
                         'monto' => $registro->puntoCuenta->memorandum->monto,
-                        'proveedor' => $registro->puntoCuenta->memorandum->proveedor,
+                        'proveedores' => optional($registro->puntoCuenta->memorandum->proveedores)->map(function($p) {
+                            return ['nombre' => $p->nombre, 'monto' => $p->monto];
+                        }) ?? [],
                         'header_img' => $registro->puntoCuenta->memorandum->header_img,
                         'footer_img' => $registro->puntoCuenta->memorandum->footer_img,
                         'firma_img' => $registro->puntoCuenta->memorandum->firma_img,
