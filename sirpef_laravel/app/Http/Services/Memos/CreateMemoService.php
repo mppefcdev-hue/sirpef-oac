@@ -59,7 +59,7 @@ class CreateMemoService
                 'asunto' => $puntoCuenta->asunto,
                 'monto' => $montoTotal,
                 'proveedores' => $proveedores->map(function($p) {
-                    return ['nombre' => $p->nombre, 'monto' => $p->monto];
+                    return ['nombre' => $p->nombre, 'monto' => (float)$p->monto];
                 }),
                 'existing_memo' => $memorandum ? [
                     'id' => $memorandum->id,
@@ -71,8 +71,8 @@ class CreateMemoService
                     'motivo' => $memorandum->cuerpo,
                     'monto' => $memorandum->monto,
                     'proveedores' => $memorandum->proveedores->map(function($p) {
-                        return ['nombre' => $p->nombre, 'monto' => $p->monto];
-                    }),
+                        return ['nombre' => $p->nombre, 'monto' => (float)$p->monto];
+                    })->toArray(),
                     'header_img' => $memorandum->header_img,
                     'footer_img' => $memorandum->footer_img,
                     'firma_img' => $memorandum->firma_img,
@@ -202,10 +202,10 @@ class CreateMemoService
                     'fecha' => $memo->fecha ? $memo->fecha->format('Y-m-d') : 'N/A',
                     'solicitante' => $persona ? $persona->nombre_completo : 'N/A',
                     'cedula' => $persona ? $persona->cedula : 'N/A',
-                    'proveedores' => optional($memo->proveedores)->map(function($p) {
-                        return ['nombre' => $p->nombre, 'monto' => $p->monto];
-                    }) ?? [],
-                    'total' => optional($memo->proveedores)->sum('monto') ?? 0
+                    'proveedores' => $memo->proveedores->map(function($p) {
+                        return ['nombre' => $p->nombre, 'monto' => (float)$p->monto];
+                    })->toArray(),
+                    'total' => (float)$memo->proveedores->sum('monto')
                 ],
                 'headerImg' => $memo->header_img,
                 'footerImg' => $memo->footer_img,
