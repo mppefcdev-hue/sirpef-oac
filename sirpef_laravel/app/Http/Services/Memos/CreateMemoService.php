@@ -35,8 +35,8 @@ class CreateMemoService
         $registro = $puntoCuenta->registros->first();
         $persona = ($registro && $registro->eventoPersona) ? $registro->eventoPersona->persona : null;
         
-        // Obtenemos el primer proveedor y el monto total si existen
-        $proveedor = ($registro && $registro->proveedores->count() > 0) ? $registro->proveedores->first() : null;
+        // Obtenemos todos los proveedores y el monto total
+        $proveedores = ($registro) ? $registro->proveedores : collect();
         $montoTotal = ($registro) ? $registro->proveedores->sum('monto') : 0;
 
         // Buscamos si ya existe un memorándum para este punto de cuenta
@@ -58,7 +58,9 @@ class CreateMemoService
                 'cedula' => $persona ? $persona->cedula : 'N/A',
                 'asunto' => $puntoCuenta->asunto,
                 'monto' => $montoTotal,
-                'proveedor' => $proveedor ? $proveedor->nombre : 'N/A',
+                'proveedores' => $proveedores->map(function($p) {
+                    return ['nombre' => $p->nombre, 'monto' => $p->monto];
+                }),
                 'existing_memo' => $memorandum ? [
                     'id' => $memorandum->id,
                     'codigo' => $memorandum->codigo,
@@ -68,7 +70,9 @@ class CreateMemoService
                     'fecha' => $memorandum->fecha->format('Y-m-d'),
                     'motivo' => $memorandum->cuerpo,
                     'monto' => $memorandum->monto,
-                    'proveedor' => $memorandum->proveedor,
+                    'proveedores' => $memorandum->proveedores->map(function($p) {
+                        return ['nombre' => $p->nombre, 'monto' => $p->monto];
+                    }),
                     'header_img' => $memorandum->header_img,
                     'footer_img' => $memorandum->footer_img,
                     'firma_img' => $memorandum->firma_img,
@@ -125,12 +129,20 @@ class CreateMemoService
                     'asunto' => $validated['asunto'],
                     'fecha' => $validated['fecha'],
                     'cuerpo' => $validated['cuerpo'],
-                    'monto' => $request->input('tabla.monto') ?? $request->monto,
-                    'proveedor' => $request->input('tabla.proveedor') ?? $request->proveedor,
+                    'monto' => $request->input('tabla.total') ?? $request->monto,
                     'header_img' => $validated['header_img'] ?? null,
                     'footer_img' => $validated['footer_img'] ?? null,
                     'firma_img' => $validated['firma_img'] ?? null,
                 ]);
+
+                if ($request->has('tabla.proveedores')) {
+                    foreach ($request->input('tabla.proveedores') as $prov) {
+                        $memorandum->proveedores()->create([
+                            'nombre' => $prov['nombre'],
+                            'monto' => $prov['monto']
+                        ]);
+                    }
+                }
 
                 // Auditoría
                 $auditoria = new Auditoria();
@@ -186,7 +198,9 @@ class CreateMemoService
                     'solicitante' => $persona ? $persona->nombre_completo : 'N/A',
                     'cedula' => $persona ? $persona->cedula : 'N/A',
                     'monto' => $memo->monto, 
-                    'proveedor' => $memo->proveedor,
+                    'proveedores' => $memo->proveedores->map(function($p) {
+                        return ['nombre' => $p->nombre, 'monto' => $p->monto];
+                    }),
                     'total' => $memo->monto
                 ],
                 'headerImg' => $memo->header_img,
@@ -233,12 +247,21 @@ class CreateMemoService
                     'asunto' => $validated['asunto'],
                     'fecha' => $validated['fecha'],
                     'cuerpo' => $validated['cuerpo'],
-                    'monto' => $request->input('tabla.monto') ?? ($request->monto ?? $memorandum->monto),
-                    'proveedor' => $request->input('tabla.proveedor') ?? ($request->proveedor ?? $memorandum->proveedor),
+                    'monto' => $request->input('tabla.total') ?? ($request->monto ?? $memorandum->monto),
                     'header_img' => $validated['header_img'] ?? $memorandum->header_img,
                     'footer_img' => $validated['footer_img'] ?? $memorandum->footer_img,
                     'firma_img' => $validated['firma_img'] ?? $memorandum->firma_img,
                 ]);
+
+                if ($request->has('tabla.proveedores')) {
+                    $memorandum->proveedores()->delete();
+                    foreach ($request->input('tabla.proveedores') as $prov) {
+                        $memorandum->proveedores()->create([
+                            'nombre' => $prov['nombre'],
+                            'monto' => $prov['monto']
+                        ]);
+                    }
+                }
 
                 // Auditoría
                 $auditoria = new Auditoria();
