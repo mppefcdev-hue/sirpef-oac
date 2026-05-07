@@ -105,6 +105,7 @@ class CreateMemoService
                     'asunto' => 'required|string',
                     'fecha' => 'required|date',
                     'cuerpo' => 'required|string',
+                    'monto' => 'nullable|numeric',
                     'header_img' => 'nullable|string',
                     'footer_img' => 'nullable|string',
                     'firma_img' => 'nullable|string',

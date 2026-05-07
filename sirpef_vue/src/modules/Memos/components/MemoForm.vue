@@ -169,8 +169,10 @@ const removeProveedor = (index) => {
 
 const calcularTotal = computed(() => {
   const total = (props.form.tabla.proveedores || []).reduce((acc, curr) => acc + (parseFloat(curr.monto) || 0), 0);
-  props.form.tabla.total = total.toFixed(2);
-  return props.form.tabla.total;
+  const fixedTotal = total.toFixed(2);
+  props.form.tabla.total = fixedTotal;
+  props.form.monto = fixedTotal;
+  return fixedTotal;
 });
 
 const buscarPuntoCuenta = async (numero) => {
@@ -189,9 +191,9 @@ const buscarPuntoCuenta = async (numero) => {
       props.form.tabla.monto = pc.monto;
       
       if (pc.proveedores && pc.proveedores.length > 0) {
-        props.form.tabla.proveedores = pc.proveedores.map(p => ({ nombre: p.nombre, monto: p.monto }));
+        props.form.tabla.proveedores = pc.proveedores.map(p => ({ nombre: p.nombre, monto: parseFloat(p.monto) || 0 }));
       } else if (pc.monto || pc.proveedor) {
-        props.form.tabla.proveedores = [{ nombre: pc.proveedor || '', monto: pc.monto || 0 }];
+        props.form.tabla.proveedores = [{ nombre: pc.proveedor || '', monto: parseFloat(pc.monto) || 0 }];
       } else {
         props.form.tabla.proveedores = [{ nombre: '', monto: 0 }];
       }
