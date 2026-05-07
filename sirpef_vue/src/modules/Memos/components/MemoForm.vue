@@ -71,26 +71,27 @@
           <label class="text-[10px] font-bold text-gray-500">CÉDULA</label>
           <input v-model="form.tabla.cedula" class="border p-2 rounded text-xs focus:ring-1 focus:ring-blue-400 outline-none" />
         </div>
-        <div class="flex flex-col">
-          <label class="text-[10px] font-bold text-gray-500">MONTO (BS.)</label>
-          <input 
-            v-model="form.tabla.monto" 
-            class="border p-2 rounded text-xs focus:ring-1 focus:ring-blue-400 outline-none" 
-            :class="{'border-red-500 ring-1 ring-red-500': form.tabla.monto && String(form.tabla.monto).includes(',')}"
-            placeholder="Ej: 1250.50"
-          />
-          <p v-if="form.tabla.monto && String(form.tabla.monto).includes(',')" class="text-[9px] text-red-600 font-bold mt-1">
-            Use punto (.) para decimales, no comas (,)
-          </p>
-        </div>
-        <div class="flex flex-col">
-          <label class="text-[10px] font-bold text-gray-500">PROVEEDOR</label>
-          <input v-model="form.tabla.proveedor" class="border p-2 rounded text-xs focus:ring-1 focus:ring-blue-400 outline-none" />
+        <div class="col-span-2 space-y-2">
+          <div class="flex justify-between items-center">
+            <label class="text-[10px] font-bold text-gray-500 uppercase">Proveedores y Montos</label>
+            <button @click="addProveedor" class="text-[10px] bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700">+ Agregar</button>
+          </div>
+          <div v-for="(item, index) in form.tabla.proveedores" :key="index" class="flex gap-2 items-start">
+            <div class="flex-1">
+              <input v-model="item.nombre" placeholder="Proveedor" class="w-full border p-2 rounded text-xs focus:ring-1 focus:ring-blue-400 outline-none" />
+            </div>
+            <div class="w-32">
+              <input v-model="item.monto" type="number" step="0.01" placeholder="Monto" class="w-full border p-2 rounded text-xs focus:ring-1 focus:ring-blue-400 outline-none" />
+            </div>
+            <button @click="removeProveedor(index)" v-if="form.tabla.proveedores?.length > 1" class="text-red-500 p-2">✕</button>
+          </div>
         </div>
       </div>
       <div class="flex flex-col mt-2">
-        <label class="text-[10px] font-bold text-gray-500">MONTO TOTAL</label>
-        <input v-model="form.tabla.total" class="border p-2 rounded text-xs font-bold bg-blue-50 focus:ring-1 focus:ring-blue-400 outline-none" />
+        <label class="text-[10px] font-bold text-gray-500">MONTO TOTAL CALCULADO (BS.)</label>
+        <div class="border p-2 rounded text-xs font-bold bg-blue-50 text-blue-800">
+          {{ calcularTotal }}
+        </div>
       </div>
     </div>
 
@@ -139,7 +140,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { Http } from '@/utils/Http';
 import init from '@/utils/Http/init';
@@ -152,6 +153,21 @@ const props = defineProps({
 const route = useRoute();
 const http = new Http(init);
 const loadingSearch = ref(false);
+
+const addProveedor = () => {
+  if (!props.form.tabla.proveedores) props.form.tabla.proveedores = [];
+  props.form.tabla.proveedores.push({ nombre: '', monto: 0 });
+};
+
+const removeProveedor = (index) => {
+  props.form.tabla.proveedores.splice(index, 1);
+};
+
+const calcularTotal = computed(() => {
+  const total = (props.form.tabla.proveedores || []).reduce((acc, curr) => acc + (parseFloat(curr.monto) || 0), 0);
+  props.form.tabla.total = total.toFixed(2);
+  return props.form.tabla.total;
+});
 
 const buscarPuntoCuenta = async (numero) => {
   if (!numero) return;
@@ -167,7 +183,12 @@ const buscarPuntoCuenta = async (numero) => {
       props.form.tabla.solicitante = pc.solicitante;
       props.form.tabla.cedula = pc.cedula;
       props.form.tabla.monto = pc.monto;
-      props.form.tabla.proveedor = pc.proveedor;
+      
+      if (pc.proveedores && pc.proveedores.length > 0) {
+        props.form.tabla.proveedores = pc.proveedores.map(p => ({ nombre: p.nombre, monto: p.monto }));
+      } else {
+        props.form.tabla.proveedores = [{ nombre: pc.proveedor || '', monto: pc.monto || 0 }];
+      }
       
       if (pc.asunto) {
         props.form.asunto = `Remisión de Punto de Cuenta N° ${pc.numero_punto}.`;

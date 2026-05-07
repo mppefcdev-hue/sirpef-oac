@@ -55,7 +55,16 @@
         </tr>
       </thead>
       <tbody>
-        <tr class="h-16 text-center align-middle">
+        <tr v-for="(item, index) in (data.tabla?.proveedores || [])" :key="index" class="h-12 text-center align-middle">
+          <td v-if="index === 0" :rowspan="data.tabla?.proveedores?.length" class="border border-gray-400 p-2">{{ data.tabla?.pto_cta }}</td>
+          <td v-if="index === 0" :rowspan="data.tabla?.proveedores?.length" class="border border-gray-400 p-2">{{ formatDisplayDate(data.tabla?.fecha) }}</td>
+          <td v-if="index === 0" :rowspan="data.tabla?.proveedores?.length" class="border border-gray-400 p-2">{{ data.tabla?.solicitante }}</td>
+          <td v-if="index === 0" :rowspan="data.tabla?.proveedores?.length" class="border border-gray-400 p-2">{{ data.tabla?.cedula }}</td>
+          <td class="border border-gray-400 p-2">{{ item.monto }}</td>
+          <td class="border border-gray-400 p-2 text-left">{{ item.nombre }}</td>
+        </tr>
+        <!-- Fallback if no suppliers array exists -->
+        <tr v-if="(!data.tabla?.proveedores || data.tabla?.proveedores.length === 0)" class="h-16 text-center align-middle">
           <td class="border border-gray-400 p-2">{{ data.tabla?.pto_cta }}</td>
           <td class="border border-gray-400 p-2">{{ formatDisplayDate(data.tabla?.fecha) }}</td>
           <td class="border border-gray-400 p-2">{{ data.tabla?.solicitante }}</td>
