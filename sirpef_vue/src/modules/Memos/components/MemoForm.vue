@@ -140,6 +140,7 @@
 
 <script lang="ts" setup>
 import { ref, watch, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import { Http } from '@/utils/Http';
 import init from '@/utils/Http/init';
 import { alerta } from '@/utils/alert';
@@ -148,6 +149,7 @@ const props = defineProps({
   form: Object
 });
 
+const route = useRoute();
 const http = new Http(init);
 const loadingSearch = ref(false);
 
@@ -222,6 +224,12 @@ watch(() => props.form.tabla.monto, (newVal) => {
   props.form.tabla.total = newVal;
 });
 
+onMounted(() => {
+  if (route.query.numero) {
+    props.form.tabla.pto_cta = route.query.numero;
+    buscarPuntoCuenta(route.query.numero);
+  }
+});
 
 const activeTab = ref('info');
 
