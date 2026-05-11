@@ -39,10 +39,6 @@ class Registro extends Model
         return $this->belongsTo(PuntoCuenta::class, 'punto_cuenta_id');
     }
 
-    public function proveedores()
-    {
-        return $this->hasMany(Proveedor::class, 'registro_id');
-    }
 
     public function recaudos()
     {

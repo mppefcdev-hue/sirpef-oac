@@ -24,7 +24,9 @@ class CreateMemoService
         $registro = \App\Models\Registro::whereHas('puntoCuenta', function ($query) use ($numero) {
             $query->where('numero_punto', 'LIKE', trim($numero));
         })
-        ->with(['puntoCuenta.memorandum.proveedores', 'eventoPersona.persona'])
+        ->with(['puntoCuenta.memorandum.proveedores' => function($query) {
+            $query->withPivot('monto_relacionado');
+        }, 'eventoPersona.persona'])
         ->first();
 
         if (!$registro || !$registro->puntoCuenta) {
@@ -40,10 +42,9 @@ class CreateMemoService
         // Buscamos si ya existe un memorándum para este punto de cuenta
         $memorandum = $puntoCuenta->memorandum;
 
-        // Si existe memo, los proveedores vienen de ahí, si no, intentamos obtenerlos del registro (si la columna existiera)
-        // Como el error dice que no existe registro_id en proveedores, los obtenemos del memorandum
+        // Si existe memo, los proveedores vienen de ahí
         $proveedores = $memorandum ? $memorandum->proveedores : collect();
-        $montoTotal = $proveedores->sum('monto');
+        $montoTotal = $proveedores->sum('pivot.monto_relacionado');
 
         Log::info('Checking memorandum existence for PC:', [
             'pc_id' => $puntoCuenta->id,
@@ -153,8 +154,6 @@ class CreateMemoService
                             $proveedor = \App\Models\Proveedor::create([
                                 'nombre' => $nombreProv,
                                 'cedula_rif' => $prov['cedula_rif'] ?? null,
-                                'memorandum_id' => $memorandum->id,
-                                'registro_id' => $puntoCuenta->registros->first()?->id
                             ]);
 
                             // Vincular en la tabla pivote con el monto
@@ -286,8 +285,6 @@ class CreateMemoService
                             $proveedor = \App\Models\Proveedor::create([
                                 'nombre' => $nombreProv,
                                 'cedula_rif' => $prov['cedula_rif'] ?? null,
-                                'memorandum_id' => $memorandum->id,
-                                'registro_id' => $memorandum->puntoCuenta->registros->first()?->id
                             ]);
 
                             $memorandum->proveedores()->attach($proveedor->id, [

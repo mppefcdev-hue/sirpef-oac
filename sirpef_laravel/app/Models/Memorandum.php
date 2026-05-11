@@ -40,6 +40,8 @@ class Memorandum extends Model
 
     public function proveedores()
     {
-        return $this->hasMany(Proveedor::class, 'memorandum_id');
+        return $this->belongsToMany(Proveedor::class, 'tbl_pago_proveedor', 'memorandum_id', 'proveedor_id')
+            ->withPivot('monto_relacionado')
+            ->withTimestamps();
     }
 }
