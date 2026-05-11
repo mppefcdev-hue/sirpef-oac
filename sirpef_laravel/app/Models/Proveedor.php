@@ -14,15 +14,8 @@ class Proveedor extends Model
     protected $fillable = [
         'cedula_rif',
         'nombre',
-        'monto',
-        'registro_id',
         'memorandum_id'
     ];
-
-    public function registro()
-    {
-        return $this->belongsTo(Registro::class, 'registro_id');
-    }
 
     public function memorandum()
     {
