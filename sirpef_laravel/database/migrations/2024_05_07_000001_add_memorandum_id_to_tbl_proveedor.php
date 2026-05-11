@@ -11,18 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('tbl_proveedor', function (Blueprint $table) {
-            if (!Schema::hasColumn('tbl_proveedor', 'memorandum_id')) {
-                $table->foreignId('memorandum_id')
-                      ->nullable()
-                      ->constrained('tbl_memorandums')
-                      ->onDelete('cascade');
-            }
-
-            if (!Schema::hasColumn('tbl_proveedor', 'monto')) {
-                $table->decimal('monto', 15, 2)->default(0);
-            }
-        });
+        // This migration previously added memorandum_id and monto.
+        // These fields are being removed in a subsequent migration.
     }
 
     /**
@@ -30,15 +20,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('tbl_proveedor', function (Blueprint $table) {
-            if (Schema::hasColumn('tbl_proveedor', 'memorandum_id')) {
-                $table->dropForeign(['memorandum_id']);
-                $table->dropColumn('memorandum_id');
-            }
-            
-            if (Schema::hasColumn('tbl_proveedor', 'monto')) {
-                $table->dropColumn('monto');
-            }
-        });
+        //
     }
 };
