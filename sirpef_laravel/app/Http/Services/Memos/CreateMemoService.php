@@ -150,10 +150,12 @@ class CreateMemoService
                     foreach ($request->input('proveedores') as $prov) {
                         $nombreProv = $prov['nombre'] ?? null;
                         if (!empty($nombreProv)) {
-                            $memorandum->proveedores()->create([
+                            \App\Models\Proveedor::create([
                                 'nombre' => $nombreProv,
                                 'monto' => (float) ($prov['monto'] ?? 0),
                                 'cedula_rif' => $prov['cedula_rif'] ?? null,
+                                'memorandum_id' => $memorandum->id,
+                                'registro_id' => $puntoCuenta->registros->first()?->id
                             ]);
                         }
                     }
@@ -275,11 +277,12 @@ class CreateMemoService
                     foreach ($request->input('proveedores') as $prov) {
                         $nombreProv = $prov['nombre'] ?? null;
                         if (!empty($nombreProv)) {
-                            $memorandum->proveedores()->create([
+                            \App\Models\Proveedor::create([
                                 'nombre' => $nombreProv,
                                 'monto' => (float) ($prov['monto'] ?? 0),
                                 'cedula_rif' => $prov['cedula_rif'] ?? null,
-                                'memorandum_id' => $memorandum->id
+                                'memorandum_id' => $memorandum->id,
+                                'registro_id' => $memorandum->puntoCuenta->registros->first()?->id
                             ]);
                         }
                     }
