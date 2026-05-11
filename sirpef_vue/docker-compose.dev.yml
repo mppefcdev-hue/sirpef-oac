@@ -3,7 +3,7 @@ services:
  oac_vue_dev_9020:    
     image: node:18.8.0
     ports:
-      - "9002:81"
+      - "5173:81"
     volumes:
       - ".:/app"
     environment:

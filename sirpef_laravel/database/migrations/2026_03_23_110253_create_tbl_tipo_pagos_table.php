@@ -11,18 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('tbl_personas', function (Blueprint $table) {
-            //
+        Schema::create('tbl_tipo_pagos', function (Blueprint $table) {
+            $table->id();
+            $table->string('nombre')->nullable();      // Opcional
+            $table->text('descripcion')->nullable();   // Opcional
+            $table->timestamps();
         });
     }
-
-    /**
-     * Reverse the migrations.
-     */
+    
     public function down(): void
     {
-        Schema::table('tbl_personas', function (Blueprint $table) {
-            //
-        });
+        Schema::dropIfExists('tbl_tipo_pagos');
     }
 };

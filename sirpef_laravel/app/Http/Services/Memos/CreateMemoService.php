@@ -34,7 +34,7 @@ class CreateMemoService
         // Intentamos obtener la persona y proveedores desde el primer registro asociado
         $registro = $puntoCuenta->registros->first();
         $persona = ($registro && $registro->eventoPersona) ? $registro->eventoPersona->persona : null;
-        
+
         // Obtenemos todos los proveedores y el monto total
         $proveedores = ($registro) ? $registro->proveedores : collect();
         $montoTotal = ($registro) ? $registro->proveedores->sum('monto') : 0;
@@ -58,8 +58,8 @@ class CreateMemoService
                 'cedula' => $persona ? $persona->cedula : 'N/A',
                 'asunto' => $puntoCuenta->asunto,
                 'monto' => $montoTotal,
-                'proveedores' => $proveedores->map(function($p) {
-                    return ['nombre' => $p->nombre, 'monto' => (float)$p->monto];
+                'proveedores' => $proveedores->map(function ($p) {
+                    return ['nombre' => $p->nombre, 'monto' => (float) $p->monto];
                 }),
                 'existing_memo' => $memorandum ? [
                     'id' => $memorandum->id,
@@ -70,8 +70,8 @@ class CreateMemoService
                     'fecha' => $memorandum->fecha->format('Y-m-d'),
                     'motivo' => $memorandum->cuerpo,
                     'monto' => $memorandum->monto,
-                    'proveedores' => $memorandum->proveedores->map(function($p) {
-                        return ['nombre' => $p->nombre, 'monto' => (float)$p->monto];
+                    'proveedores' => $memorandum->proveedores->map(function ($p) {
+                        return ['nombre' => $p->nombre, 'monto' => (float) $p->monto];
                     })->toArray(),
                     'header_img' => $memorandum->header_img,
                     'footer_img' => $memorandum->footer_img,
@@ -141,9 +141,7 @@ class CreateMemoService
                         if (!empty($nombreProv)) {
                             $memorandum->proveedores()->create([
                                 'nombre' => $nombreProv,
-                                'monto' => (float) ($prov['monto'] ?? 0),
-                                'registro_id' => $puntoCuenta->registros()->first()?->id,
-                                'memorandum_id' => $memorandum->id
+                                'monto' => (float) ($prov['monto'] ?? 0)
                             ]);
                         }
                     }
@@ -202,10 +200,10 @@ class CreateMemoService
                     'fecha' => $memo->fecha ? $memo->fecha->format('Y-m-d') : 'N/A',
                     'solicitante' => $persona ? $persona->nombre_completo : 'N/A',
                     'cedula' => $persona ? $persona->cedula : 'N/A',
-                    'proveedores' => $memo->proveedores->map(function($p) {
-                        return ['nombre' => $p->nombre, 'monto' => (float)$p->monto];
+                    'proveedores' => $memo->proveedores->map(function ($p) {
+                        return ['nombre' => $p->nombre, 'monto' => (float) $p->monto];
                     })->toArray(),
-                    'total' => (float)$memo->proveedores->sum('monto')
+                    'total' => (float) $memo->proveedores->sum('monto')
                 ],
                 'headerImg' => $memo->header_img,
                 'footerImg' => $memo->footer_img,

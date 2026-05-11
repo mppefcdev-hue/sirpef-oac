@@ -104,7 +104,7 @@ const memoData = ref({
     solicitante: '',
     ci: '',
     monto: '',
-    proveedor: '',
+    proveedores: [{ nombre: '', monto: 0 }],
     total: ''
   },
   cuerpo_final: 'Agradeciendo la receptividad que tenga a bien dispensar a la presente, en girar la instrucción correspondiente a fin de realizar el trámite de orden de pago, quedo de usted.',
@@ -137,7 +137,7 @@ const saveMemo = async () => {
       fecha: memoData.value.tabla.fecha,
       cuerpo: memoData.value.motivo,
       monto: memoData.value.tabla.monto,
-      proveedor: memoData.value.tabla.proveedor,
+      proveedores: memoData.value.tabla.proveedores,
       header_img: memoData.value.header_img || null,
       footer_img: memoData.value.footer_img || null,
       firma_img: memoData.value.firma_img || null
