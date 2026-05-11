@@ -12,12 +12,31 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('tbl_proveedor', function (Blueprint $table) {
-            // Drop foreign key constraints first
-            $table->dropForeign(['registro_id']);
-            $table->dropForeign(['memorandum_id']);
+            // Drop foreign key constraints first if they exist
+            if (Schema::hasColumn('tbl_proveedor', 'registro_id')) {
+                try {
+                    $table->dropForeign(['registro_id']);
+                } catch (\Exception $e) {
+                    // Constraint might not exist or have a different name
+                }
+            }
 
-            // Drop columns
-            $table->dropColumn(['registro_id', 'memorandum_id', 'monto']);
+            if (Schema::hasColumn('tbl_proveedor', 'memorandum_id')) {
+                try {
+                    $table->dropForeign(['memorandum_id']);
+                } catch (\Exception $e) {
+                    // Constraint might not exist or have a different name
+                }
+            }
+
+            // Drop columns if they exist
+            $columnsToDrop = array_filter(['registro_id', 'memorandum_id', 'monto'], function($column) {
+                return Schema::hasColumn('tbl_proveedor', $column);
+            });
+
+            if (!empty($columnsToDrop)) {
+                $table->dropColumn($columnsToDrop);
+            }
         });
     }
 
