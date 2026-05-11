@@ -20,27 +20,30 @@ class CreateMemoService
      */
     public static function buscarPuntoCuenta(string $numero): JsonResponse
     {
-        $puntoCuenta = PuntoCuenta::where('numero_punto', 'LIKE', trim($numero))
-            ->with(['registros.eventoPersona.persona', 'registros.proveedores', 'memorandum.proveedores'])
-            ->first();
+        // Buscamos el registro que contenga el punto de cuenta solicitado
+        $registro = \App\Models\Registro::whereHas('puntoCuenta', function ($query) use ($numero) {
+            $query->where('numero_punto', 'LIKE', trim($numero));
+        })
+        ->with(['puntoCuenta.memorandum.proveedores', 'eventoPersona.persona'])
+        ->first();
 
-        if (!$puntoCuenta) {
+        if (!$registro || !$registro->puntoCuenta) {
             return response()->json([
-                'message' => 'Punto de Cuenta no encontrado',
+                'message' => 'Punto de Cuenta no encontrado a través de los registros',
                 'success' => false
             ], 404);
         }
 
-        // Intentamos obtener la persona y proveedores desde el primer registro asociado
-        $registro = $puntoCuenta->registros->first();
-        $persona = ($registro && $registro->eventoPersona) ? $registro->eventoPersona->persona : null;
-
-        // Obtenemos todos los proveedores y el monto total
-        $proveedores = ($registro) ? $registro->proveedores : collect();
-        $montoTotal = ($registro) ? $registro->proveedores->sum('monto') : 0;
+        $puntoCuenta = $registro->puntoCuenta;
+        $persona = ($registro->eventoPersona) ? $registro->eventoPersona->persona : null;
 
         // Buscamos si ya existe un memorándum para este punto de cuenta
         $memorandum = $puntoCuenta->memorandum;
+
+        // Si existe memo, los proveedores vienen de ahí, si no, intentamos obtenerlos del registro (si la columna existiera)
+        // Como el error dice que no existe registro_id en proveedores, los obtenemos del memorandum
+        $proveedores = $memorandum ? $memorandum->proveedores : collect();
+        $montoTotal = $proveedores->sum('monto');
 
         Log::info('Checking memorandum existence for PC:', [
             'pc_id' => $puntoCuenta->id,
@@ -151,7 +154,6 @@ class CreateMemoService
                                 'nombre' => $nombreProv,
                                 'monto' => (float) ($prov['monto'] ?? 0),
                                 'cedula_rif' => $prov['cedula_rif'] ?? null,
-                                'registro_id' => $puntoCuenta->registros()->first()?->id
                             ]);
                         }
                     }
@@ -277,7 +279,6 @@ class CreateMemoService
                                 'nombre' => $nombreProv,
                                 'monto' => (float) ($prov['monto'] ?? 0),
                                 'cedula_rif' => $prov['cedula_rif'] ?? null,
-                                'registro_id' => $memorandum->puntoCuenta->registros()->first()?->id,
                                 'memorandum_id' => $memorandum->id
                             ]);
                         }
