@@ -13,6 +13,7 @@ class Registro extends Model
     protected $table = 'tbl_registros';
 
     protected $fillable = [
+        'user_id',
         'voto',
         'descripcion',
         'hora_voto',

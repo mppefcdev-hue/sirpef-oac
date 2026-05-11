@@ -15,6 +15,7 @@ class Recaudo extends Model
         'nombre',
         'path',
         'registro_id',
+        'pago_id',
         'mime_type' 
     ];
 

@@ -12,6 +12,7 @@ class Proveedor extends Model
     protected $table = 'tbl_proveedor';
 
     protected $fillable = [
+        'cedula_rif',
         'nombre',
         'monto',
         'registro_id',

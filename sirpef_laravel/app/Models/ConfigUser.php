@@ -16,6 +16,7 @@ class ConfigUser extends Model
         'evento_activo',
         'unid_activa',
         'menu_ids',
+        'nuevo_campo',
     ];
 
    
