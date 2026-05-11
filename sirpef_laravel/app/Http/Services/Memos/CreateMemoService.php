@@ -59,7 +59,11 @@ class CreateMemoService
                 'asunto' => $puntoCuenta->asunto,
                 'monto' => $montoTotal,
                 'proveedores' => $proveedores->map(function ($p) {
-                    return ['nombre' => $p->nombre, 'monto' => (float) $p->monto];
+                    return [
+                        'nombre' => $p->nombre,
+                        'monto' => (float) $p->monto,
+                        'cedula_rif' => $p->cedula_rif
+                    ];
                 }),
                 'existing_memo' => $memorandum ? [
                     'id' => $memorandum->id,
@@ -71,7 +75,11 @@ class CreateMemoService
                     'motivo' => $memorandum->cuerpo,
                     'monto' => $memorandum->monto,
                     'proveedores' => $memorandum->proveedores->map(function ($p) {
-                        return ['nombre' => $p->nombre, 'monto' => (float) $p->monto];
+                        return [
+                            'nombre' => $p->nombre,
+                            'monto' => (float) $p->monto,
+                            'cedula_rif' => $p->cedula_rif
+                        ];
                     })->toArray(),
                     'header_img' => $memorandum->header_img,
                     'footer_img' => $memorandum->footer_img,
@@ -135,13 +143,15 @@ class CreateMemoService
                     'firma_img' => $validated['firma_img'] ?? null,
                 ]);
 
-                if ($request->has('tabla.proveedores') && is_array($request->input('tabla.proveedores'))) {
-                    foreach ($request->input('tabla.proveedores') as $prov) {
+                if ($request->has('proveedores') && is_array($request->input('proveedores'))) {
+                    foreach ($request->input('proveedores') as $prov) {
                         $nombreProv = $prov['nombre'] ?? null;
                         if (!empty($nombreProv)) {
                             $memorandum->proveedores()->create([
                                 'nombre' => $nombreProv,
-                                'monto' => (float) ($prov['monto'] ?? 0)
+                                'monto' => (float) ($prov['monto'] ?? 0),
+                                'cedula_rif' => $prov['cedula_rif'] ?? null,
+                                'registro_id' => $puntoCuenta->registros()->first()?->id
                             ]);
                         }
                     }
@@ -201,7 +211,11 @@ class CreateMemoService
                     'solicitante' => $persona ? $persona->nombre_completo : 'N/A',
                     'cedula' => $persona ? $persona->cedula : 'N/A',
                     'proveedores' => $memo->proveedores->map(function ($p) {
-                        return ['nombre' => $p->nombre, 'monto' => (float) $p->monto];
+                        return [
+                            'nombre' => $p->nombre,
+                            'monto' => (float) $p->monto,
+                            'cedula_rif' => $p->cedula_rif
+                        ];
                     })->toArray(),
                     'total' => (float) $memo->proveedores->sum('monto')
                 ],
@@ -254,14 +268,15 @@ class CreateMemoService
                     'firma_img' => $validated['firma_img'] ?? $memorandum->firma_img,
                 ]);
 
-                if ($request->has('tabla.proveedores') && is_array($request->input('tabla.proveedores'))) {
+                if ($request->has('proveedores') && is_array($request->input('proveedores'))) {
                     $memorandum->proveedores()->delete();
-                    foreach ($request->input('tabla.proveedores') as $prov) {
+                    foreach ($request->input('proveedores') as $prov) {
                         $nombreProv = $prov['nombre'] ?? null;
                         if (!empty($nombreProv)) {
                             $memorandum->proveedores()->create([
                                 'nombre' => $nombreProv,
                                 'monto' => (float) ($prov['monto'] ?? 0),
+                                'cedula_rif' => $prov['cedula_rif'] ?? null,
                                 'registro_id' => $memorandum->puntoCuenta->registros()->first()?->id,
                                 'memorandum_id' => $memorandum->id
                             ]);

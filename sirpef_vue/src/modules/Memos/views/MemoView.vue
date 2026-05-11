@@ -137,7 +137,11 @@ const saveMemo = async () => {
       fecha: memoData.value.tabla.fecha,
       cuerpo: memoData.value.motivo,
       monto: memoData.value.tabla.monto,
-      proveedores: memoData.value.tabla.proveedores,
+      proveedores: memoData.value.tabla.proveedores.map(p => ({
+        nombre: p.nombre,
+        monto: p.monto,
+        cedula_rif: p.cedula_rif
+      })),
       header_img: memoData.value.header_img || null,
       footer_img: memoData.value.footer_img || null,
       firma_img: memoData.value.firma_img || null
