@@ -64,7 +64,7 @@ class CreateMemoService
                 'proveedores' => $proveedores->map(function ($p) {
                     return [
                         'nombre' => $p->nombre,
-                        'monto' => (float) $p->monto,
+                        'monto' => (float) ($p->pivot->monto_relacionado ?? 0),
                         'cedula_rif' => $p->cedula_rif
                     ];
                 }),
@@ -150,12 +150,16 @@ class CreateMemoService
                     foreach ($request->input('proveedores') as $prov) {
                         $nombreProv = $prov['nombre'] ?? null;
                         if (!empty($nombreProv)) {
-                            \App\Models\Proveedor::create([
+                            $proveedor = \App\Models\Proveedor::create([
                                 'nombre' => $nombreProv,
-                                'monto' => (float) ($prov['monto'] ?? 0),
                                 'cedula_rif' => $prov['cedula_rif'] ?? null,
                                 'memorandum_id' => $memorandum->id,
                                 'registro_id' => $puntoCuenta->registros->first()?->id
+                            ]);
+
+                            // Vincular en la tabla pivote con el monto
+                            $memorandum->proveedores()->attach($proveedor->id, [
+                                'monto_relacionado' => (float) ($prov['monto'] ?? 0)
                             ]);
                         }
                     }
@@ -217,11 +221,11 @@ class CreateMemoService
                     'proveedores' => $memo->proveedores->map(function ($p) {
                         return [
                             'nombre' => $p->nombre,
-                            'monto' => (float) $p->monto,
+                            'monto' => (float) ($p->pivot->monto_relacionado ?? 0),
                             'cedula_rif' => $p->cedula_rif
                         ];
                     })->toArray(),
-                    'total' => (float) $memo->proveedores->sum('monto')
+                    'total' => (float) $memo->proveedores->sum('pivot.monto_relacionado')
                 ],
                 'headerImg' => $memo->header_img,
                 'footerImg' => $memo->footer_img,
@@ -273,16 +277,21 @@ class CreateMemoService
                 ]);
 
                 if ($request->has('proveedores') && is_array($request->input('proveedores'))) {
-                    $memorandum->proveedores()->delete();
+                    // Desvincular proveedores anteriores de la tabla pivote
+                    $memorandum->proveedores()->detach();
+                    
                     foreach ($request->input('proveedores') as $prov) {
                         $nombreProv = $prov['nombre'] ?? null;
                         if (!empty($nombreProv)) {
-                            \App\Models\Proveedor::create([
+                            $proveedor = \App\Models\Proveedor::create([
                                 'nombre' => $nombreProv,
-                                'monto' => (float) ($prov['monto'] ?? 0),
                                 'cedula_rif' => $prov['cedula_rif'] ?? null,
                                 'memorandum_id' => $memorandum->id,
                                 'registro_id' => $memorandum->puntoCuenta->registros->first()?->id
+                            ]);
+
+                            $memorandum->proveedores()->attach($proveedor->id, [
+                                'monto_relacionado' => (float) ($prov['monto'] ?? 0)
                             ]);
                         }
                     }

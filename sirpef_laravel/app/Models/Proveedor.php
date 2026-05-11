@@ -14,7 +14,6 @@ class Proveedor extends Model
     protected $fillable = [
         'cedula_rif',
         'nombre',
-        'monto',
         'registro_id',
         'memorandum_id'
     ];
