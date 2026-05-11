@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('tbl_pago_proveedor', function (Blueprint $table) {
             $table->id();
             
-            // Relación con la tabla de Pagos
-            $table->foreignId('pago_id')
-                  ->constrained('tbl_pagos')
+            // Relación con la tabla de Memorandums
+            $table->foreignId('memorandum_id')
+                  ->constrained('tbl_memorandums')
                   ->onDelete('cascade');
 
             // Relación con la tabla de Proveedores
