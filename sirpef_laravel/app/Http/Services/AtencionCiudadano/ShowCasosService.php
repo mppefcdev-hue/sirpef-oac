@@ -98,7 +98,10 @@ class ShowCasosService {
                         'cuerpo' => $registro->puntoCuenta->memorandum->cuerpo,
                         'monto' => $registro->puntoCuenta->memorandum->monto,
                         'proveedores' => optional($registro->puntoCuenta->memorandum->proveedores)->map(function($p) {
-                            return ['nombre' => $p->nombre, 'monto' => $p->monto];
+                            return [
+                                'nombre' => $p->nombre,
+                                'monto' => (float)($p->pivot->monto_relacionado ?? 0)
+                            ];
                         }) ?? [],
                         'header_img' => $registro->puntoCuenta->memorandum->header_img,
                         'footer_img' => $registro->puntoCuenta->memorandum->footer_img,
