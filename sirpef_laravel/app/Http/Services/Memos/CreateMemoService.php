@@ -78,6 +78,7 @@ class CreateMemoService
                         'cedula_rif' => $p->cedula_rif
                     ];
                 }),
+                'monto_total' => $montoTotal,
                 'existing_memo' => $memorandum ? [
                     'id' => $memorandum->id,
                     'codigo' => $memorandum->codigo,
@@ -86,7 +87,7 @@ class CreateMemoService
                     'asunto' => $memorandum->asunto,
                     'fecha' => $memorandum->fecha->format('Y-m-d'),
                     'motivo' => $memorandum->cuerpo,
-                    'monto' => $memorandum->monto,
+                    'monto' => (float) $memorandum->proveedores->sum('pivot.monto_relacionado'),
                     'proveedores' => $memorandum->proveedores->map(function ($p) {
                         return [
                             'nombre' => $p->nombre,

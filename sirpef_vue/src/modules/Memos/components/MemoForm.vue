@@ -172,10 +172,12 @@ const removeProveedor = (index) => {
 const calcularTotal = computed(() => {
   const total = (props.form.tabla.proveedores || []).reduce((acc, curr) => acc + (parseFloat(curr.monto) || 0), 0);
   const fixedTotal = total.toFixed(2);
-  // Asignamos directamente al objeto reactivo para asegurar que se incluya en el envío
-  if (props.form && props.form.tabla) {
-    props.form.tabla.total = fixedTotal;
-    props.form.tabla.monto = fixedTotal; // Sincronizamos con el campo monto de la tabla
+  
+  if (props.form) {
+    if (props.form.tabla) {
+      props.form.tabla.total = fixedTotal;
+      props.form.tabla.monto = fixedTotal;
+    }
     props.form.monto = fixedTotal;
   }
   return fixedTotal;
@@ -227,7 +229,7 @@ const buscarPuntoCuenta = async (numero) => {
             fecha: pc.existing_memo.fecha,
             monto: pc.existing_memo.monto,
             total: pc.existing_memo.monto,
-            proveedor: pc.existing_memo.proveedor,
+            proveedores: pc.existing_memo.proveedores.map(p => ({ nombre: p.nombre, monto: parseFloat(p.monto) || 0, cedula_rif: p.cedula_rif })),
           }
         });
       }
