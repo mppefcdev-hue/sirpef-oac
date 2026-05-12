@@ -104,7 +104,7 @@ const createMemoFromPDC = async () => {
                 cedula: caseData.value.persona.cedula,
                 monto: memo.monto,
                 total: memo.monto,
-                proveedor: memo.proveedor
+                proveedores: memo.proveedores || []
             },
             cuerpo_final: 'Agradeciendo la receptividad que tenga a bien dispensar a la presente, en girar la instrucción correspondiente a fin de realizar el trámite de orden de pago, quedo de usted.',
             resolucion: 'Resolución N° 006-2024 publicada en la Gaceta Oficial de la República Bolivariana de Venezuela N° 42.958 ambos de fecha 06 de septiembre de 2024',
