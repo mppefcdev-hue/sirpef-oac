@@ -42,8 +42,8 @@ class CreateMemoService
         // Buscamos si ya existe un memorándum para este punto de cuenta
         $memorandum = $puntoCuenta->memorandum;
 
-        // Si existe memo, los proveedores vienen de ahí
-        $proveedores = $memorandum ? $memorandum->proveedores : collect();
+        // Si existe memo, los proveedores vienen de ahí, sino del punto de cuenta si estuvieran vinculados
+        $proveedores = $memorandum ? $memorandum->proveedores : ($puntoCuenta->proveedores ?? collect());
         $montoTotal = $proveedores->sum('pivot.monto_relacionado');
 
         Log::info('Checking memorandum existence for PC:', [
@@ -81,7 +81,7 @@ class CreateMemoService
                     'proveedores' => $memorandum->proveedores->map(function ($p) {
                         return [
                             'nombre' => $p->nombre,
-                            'monto' => (float) $p->monto,
+                            'monto' => (float) ($p->pivot->monto_relacionado ?? 0),
                             'cedula_rif' => $p->cedula_rif
                         ];
                     })->toArray(),
