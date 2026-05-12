@@ -24,9 +24,15 @@ class CreateMemoService
         $registro = \App\Models\Registro::whereHas('puntoCuenta', function ($query) use ($numero) {
             $query->where('numero_punto', 'LIKE', trim($numero));
         })
-        ->with(['puntoCuenta.memorandum.proveedores' => function($query) {
-            $query->withPivot('monto_relacionado');
-        }, 'eventoPersona.persona'])
+        ->with([
+            'puntoCuenta.memorandum.proveedores' => function($query) {
+                $query->withPivot('monto_relacionado');
+            }, 
+            'puntoCuenta.proveedores' => function($query) {
+                $query->withPivot('monto_relacionado');
+            },
+            'eventoPersona.persona'
+        ])
         ->first();
 
         if (!$registro || !$registro->puntoCuenta) {
@@ -43,8 +49,11 @@ class CreateMemoService
         $memorandum = $puntoCuenta->memorandum;
 
         // Si existe memo, los proveedores vienen de ahí, sino del punto de cuenta si estuvieran vinculados
-        $proveedores = $memorandum ? $memorandum->proveedores : ($puntoCuenta->proveedores ?? collect());
-        $montoTotal = $proveedores->sum('pivot.monto_relacionado');
+        $proveedores = ($memorandum && $memorandum->proveedores->isNotEmpty()) 
+            ? $memorandum->proveedores 
+            : ($puntoCuenta->proveedores ?? collect());
+            
+        $montoTotal = (float) $proveedores->sum('pivot.monto_relacionado');
 
         Log::info('Checking memorandum existence for PC:', [
             'pc_id' => $puntoCuenta->id,
