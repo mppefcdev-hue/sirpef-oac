@@ -112,8 +112,15 @@
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue';
+
+const props = defineProps({
   data: Object
+});
+
+const totalCalculado = computed(() => {
+  if (!props.data?.tabla?.proveedores) return props.data?.tabla?.total || 0;
+  return props.data.tabla.proveedores.reduce((acc, curr) => acc + (parseFloat(curr.monto) || 0), 0);
 });
 
 const formatDisplayDate = (dateStr) => {

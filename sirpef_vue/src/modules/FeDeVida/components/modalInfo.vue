@@ -90,6 +90,9 @@ const viewMemo = async () => {
 const createMemoFromPDC = async () => {
     const memo = caseData.value?.punto_cuenta?.memorandum;
     if (memo?.id) {
+        const providers = memo.proveedores || [];
+        const total = providers.reduce((acc, curr) => acc + (parseFloat(curr.monto) || 0), 0);
+
         memoToPrint.value = {
             ...memo,
             para_nombre: memo.para,
@@ -102,9 +105,9 @@ const createMemoFromPDC = async () => {
                 fecha: memo.fecha,
                 solicitante: caseData.value.persona.nombre_completo,
                 cedula: caseData.value.persona.cedula,
-                monto: memo.monto,
-                total: memo.monto,
-                proveedores: memo.proveedores || []
+                monto: total,
+                total: total,
+                proveedores: providers
             },
             cuerpo_final: 'Agradeciendo la receptividad que tenga a bien dispensar a la presente, en girar la instrucción correspondiente a fin de realizar el trámite de orden de pago, quedo de usted.',
             resolucion: 'Resolución N° 006-2024 publicada en la Gaceta Oficial de la República Bolivariana de Venezuela N° 42.958 ambos de fecha 06 de septiembre de 2024',
