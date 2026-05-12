@@ -68,7 +68,7 @@ const openRecaudo = (reca: any) => {
 
 const viewPuntoPdf = () => {
     if (caseData.value?.punto_cuenta?.id) {
-        window.open(`${import.meta.env.VITE_APP_API_URL}/api/oac/punto-cuenta/pdf/${caseData.value.punto_cuenta.id}`, '_blank');
+        window.open(`${import.meta.env.VITE_APP_API_URL}/oac/punto-cuenta/pdf/${caseData.value.punto_cuenta.id}`, '_blank');
     }
 };
 
