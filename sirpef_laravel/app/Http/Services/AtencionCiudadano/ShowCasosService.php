@@ -29,8 +29,7 @@ class ShowCasosService {
             $registro = Registro::with([
                 'eventoPersona.persona.parroquia.municipio.estado',
                 'tipoCaso',
-                'puntoCuenta.memorandum',
-                'proveedores',
+                'puntoCuenta.memorandum.proveedores',
                 'recaudos',
             ])->findOrFail($id);
 
@@ -107,13 +106,13 @@ class ShowCasosService {
                     ] : null,
                 ] : null,
 
-                // Lista de proveedores (usando la relación definida)
-                'proveedores' => $registro->proveedores->map(function($proveedor) {
+                // Lista de proveedores (obtenidos a través de Punto de Cuenta -> Memorandum)
+                'proveedores' => optional($registro->puntoCuenta?->memorandum?->proveedores)->map(function($proveedor) {
                     return [
                         'nombre' => $proveedor->nombre,
-                        'monto' => (float)$proveedor->monto
+                        'monto' => (float)($proveedor->pivot->monto_relacionado ?? 0)
                     ];
-                })->toArray(),
+                })?->toArray() ?? [],
 
                 // Lista de recaudos
                 'recaudos' => $registro->recaudos->map(function($recaudo) {

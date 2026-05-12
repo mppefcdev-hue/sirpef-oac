@@ -417,7 +417,7 @@ const createMemoFromPDC = async () => {
 
                 <nav class="w-full rounded-full bottom-10 flex items-center justify-left gap-5 absolute mx-auto py-2">
 
-                    <div @click="createPunto"
+                    <div @click="caseData?.punto_cuenta?.id ? editPunto() : createPunto()"
                         class="border cursor-pointer w-[200px] h-[300px] border-gray-200 rounded-lg overflow-hidden flex flex-col justify-between shadow-md hover:shadow-2xl transition-shadow duration-300 bg-white">
                         <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
                             <h3 class="font-medium text-gray-700 capitalize truncate">Punto de cuenta</h3>
@@ -425,14 +425,14 @@ const createMemoFromPDC = async () => {
 
                         <div class="flex justify-center items-center p-4 overflow-hidden min-h-[150px]">
                             <img class="max-w-full max-h-[180px] object-contain rounded"
-                                :src="`/${caseData.punto_cuenta && caseData?.punto_cuenta?.estatus == true ? 'punto-cuenta.png' : 'form-punto.png'}`"
+                                :src="`/${caseData?.punto_cuenta?.id ? 'punto-cuenta.png' : 'form-punto.png'}`"
                                 alt="" />
                         </div>
                         <div class="px-4 py-3 border-t border-gray-200 text-center">
                             <button
-                                class="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition-colors duration-200">
-                                <font-awesome-icon icon="eye" />
-                                {{ caseData.punto_cuenta && caseData?.punto_cuenta?.estatus == true ? 'Ver punto de cuenta' : 'Punto de cuenta' }}
+                                :class="`inline-flex items-center gap-2 text-white px-4 py-2 rounded transition-colors duration-200 ${caseData?.punto_cuenta?.id ? 'bg-blue-500 hover:bg-blue-600' : 'bg-orange-500 hover:bg-orange-600'}`">
+                                <font-awesome-icon :icon="caseData?.punto_cuenta?.id ? 'eye' : 'plus'" />
+                                {{ caseData?.punto_cuenta?.id ? 'Ver punto de cuenta' : 'Crear punto de cuenta' }}
                             </button>
                         </div>
                     </div>
