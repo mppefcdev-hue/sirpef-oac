@@ -77,7 +77,7 @@
           <td class="border-x border-gray-400"></td>
           <td class="border-x border-gray-400"></td>
           <td class="border border-gray-400 p-2 font-bold text-center bg-gray-50" style="-webkit-print-color-adjust: exact;">TOTAL</td>
-          <td class="border border-gray-400 p-2 font-bold">{{ formatCurrency(data.tabla?.total) }}</td>
+          <td class="border border-gray-400 p-2 font-bold">{{ formatCurrency(totalCalculado) }}</td>
           <td class="border border-gray-400"></td>
         </tr>
       </tbody>
