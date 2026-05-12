@@ -6,6 +6,7 @@ import CardHistory from './cardHistory.vue';
 import { useRoute, useRouter } from 'vue-router';
 import { nextTick, ref } from 'vue';
 import MemoPreview from '../../Memos/components/MemoPreview.vue';
+import PuntoPreview from './PuntoPreview.vue';
 import { generateMemoPdf } from '../../Memos/services/PdfService';
 
 const {
@@ -33,6 +34,7 @@ const $emit = defineEmits(['close'])
 const route = useRoute()
 const router = useRouter()
 const memoToPrint = ref(null);
+const puntoToPrint = ref(null);
 
 const hidden = (e?: PointerEvent) => {
     if(route.name == 'case-fedevida') router.back()
@@ -66,9 +68,15 @@ const openRecaudo = (reca: any) => {
     window.open(reca.path, '_blank', 'noopener, noreferrer');
 }
 
-const viewPuntoPdf = () => {
+const viewPuntoPdf = async () => {
     if (caseData.value?.punto_cuenta?.id) {
-        window.open(`${import.meta.env.VITE_APP_API_URL}/api/oac/punto-cuenta/pdf/${caseData.value.punto_cuenta.id}`, '_blank');
+        puntoToPrint.value = {
+            ...caseData.value.punto_cuenta,
+            descripcion: caseData.value.descripcion,
+            created_at: caseData.value.fecha_registro
+        };
+        await nextTick();
+        await generateMemoPdf('punto-printable-hidden');
     }
 };
 
@@ -474,6 +482,10 @@ const createMemoFromPDC = async () => {
     <div v-if="memoToPrint" id="memo-printable-hidden" class="hidden">
         <MemoPreview :data="memoToPrint" />
     </div>
+
+    <div v-if="puntoToPrint" id="punto-printable-hidden" class="hidden">
+        <PuntoPreview :data="puntoToPrint" />
+    </div>
 </template>
 
 <style scoped>
@@ -508,10 +520,11 @@ const createMemoFromPDC = async () => {
   body * {
     visibility: hidden;
   }
-  #memo-printable-hidden, #memo-printable-hidden * {
+  #memo-printable-hidden, #memo-printable-hidden *,
+  #punto-printable-hidden, #punto-printable-hidden * {
     visibility: visible;
   }
-  #memo-printable-hidden {
+  #memo-printable-hidden, #punto-printable-hidden {
     position: absolute;
     left: 0;
     top: 0;
