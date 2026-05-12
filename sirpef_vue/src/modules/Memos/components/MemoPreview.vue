@@ -60,7 +60,7 @@
           <td v-if="index === 0" :rowspan="data.tabla?.proveedores?.length" class="border border-gray-400 p-2">{{ formatDisplayDate(data.tabla?.fecha) }}</td>
           <td v-if="index === 0" :rowspan="data.tabla?.proveedores?.length" class="border border-gray-400 p-2">{{ data.tabla?.solicitante }}</td>
           <td v-if="index === 0" :rowspan="data.tabla?.proveedores?.length" class="border border-gray-400 p-2">{{ data.tabla?.cedula }}</td>
-          <td class="border border-gray-400 p-2">{{ item.monto }}</td>
+          <td class="border border-gray-400 p-2 font-bold">{{ formatCurrency(item.monto) }}</td>
           <td class="border border-gray-400 p-2 text-left">{{ item.nombre }}</td>
         </tr>
         <!-- Fallback if no suppliers array exists -->
@@ -69,7 +69,7 @@
           <td class="border border-gray-400 p-2">{{ formatDisplayDate(data.tabla?.fecha) }}</td>
           <td class="border border-gray-400 p-2">{{ data.tabla?.solicitante }}</td>
           <td class="border border-gray-400 p-2">{{ data.tabla?.cedula }}</td>
-          <td class="border border-gray-400 p-2">{{ data.tabla?.monto }}</td>
+          <td class="border border-gray-400 p-2 font-bold">{{ formatCurrency(data.tabla?.monto) }}</td>
           <td class="border border-gray-400 p-2">{{ data.tabla?.proveedor }}</td>
         </tr>
         <tr class="h-10 text-center align-middle">
@@ -77,7 +77,7 @@
           <td class="border-x border-gray-400"></td>
           <td class="border-x border-gray-400"></td>
           <td class="border border-gray-400 p-2 font-bold text-center bg-gray-50" style="-webkit-print-color-adjust: exact;">TOTAL</td>
-          <td class="border border-gray-400 p-2 font-bold">{{ data.tabla?.total }}</td>
+          <td class="border border-gray-400 p-2 font-bold">{{ formatCurrency(data.tabla?.total) }}</td>
           <td class="border border-gray-400"></td>
         </tr>
       </tbody>
@@ -121,6 +121,13 @@ const formatDisplayDate = (dateStr) => {
   const [year, month, day] = dateStr.split('-');
   if (!year || !month || !day) return dateStr;
   return `${day}/${month}/${year}`;
+};
+
+const formatCurrency = (value) => {
+  if (value === undefined || value === null || value === '') return '0,00';
+  const number = typeof value === 'string' ? parseFloat(value.replace(',', '.')) : value;
+  if (isNaN(number)) return '0,00';
+  return number.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 </script>
 
