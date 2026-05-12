@@ -66,6 +66,12 @@ const openRecaudo = (reca: any) => {
     window.open(reca.path, '_blank', 'noopener, noreferrer');
 }
 
+const viewPuntoPdf = () => {
+    if (caseData.value?.punto_cuenta?.id) {
+        window.open(`${import.meta.env.VITE_APP_API_URL}/api/oac/punto-cuenta/pdf/${caseData.value.punto_cuenta.id}`, '_blank');
+    }
+};
+
 const viewMemo = () => {
     router.push({
         path: '/oac/memos/form',
@@ -417,7 +423,7 @@ const createMemoFromPDC = async () => {
 
                 <nav class="w-full rounded-full bottom-10 flex items-center justify-left gap-5 absolute mx-auto py-2">
 
-                    <div @click="caseData?.punto_cuenta?.id ? editPunto() : createPunto()"
+                    <div @click="caseData?.punto_cuenta?.id ? viewPuntoPdf() : createPunto()"
                         class="border cursor-pointer w-[200px] h-[300px] border-gray-200 rounded-lg overflow-hidden flex flex-col justify-between shadow-md hover:shadow-2xl transition-shadow duration-300 bg-white">
                         <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
                             <h3 class="font-medium text-gray-700 capitalize truncate">Punto de cuenta</h3>

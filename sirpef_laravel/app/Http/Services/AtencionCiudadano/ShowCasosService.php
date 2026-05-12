@@ -87,7 +87,7 @@ class ShowCasosService {
                     'numero_punto' => $registro->puntoCuenta->numero_punto,
                     'asunto' => $registro->puntoCuenta->asunto,
                     'decision' => $registro->puntoCuenta->decision,
-                    'estatus' => $registro->puntoCuenta->estatus_pc,
+                    'estatus' => (bool)$registro->puntoCuenta->estatus_pc,
                     'memorandum' => $registro->puntoCuenta->memorandum ? [
                         'id' => $registro->puntoCuenta->memorandum->id,
                         'codigo' => $registro->puntoCuenta->memorandum->codigo,
