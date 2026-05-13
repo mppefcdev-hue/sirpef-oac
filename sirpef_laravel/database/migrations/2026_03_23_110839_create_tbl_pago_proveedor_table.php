@@ -16,6 +16,7 @@ return new class extends Migration
             
             // Relación con la tabla de Memorandums
             $table->foreignId('memorandum_id')
+                  ->nullable()
                   ->constrained('tbl_memorandums')
                   ->onDelete('cascade');
 
