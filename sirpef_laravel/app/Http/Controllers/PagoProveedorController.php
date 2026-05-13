@@ -29,8 +29,11 @@ class PagoProveedorController extends Controller
         }
 
         $pago = $pagoProveedor->pago;
+
+        // Soft delete the pivot record
         $pagoProveedor->delete();
 
+        // Soft delete the main payment record
         if ($pago) {
             $pago->delete();
         }
