@@ -16,15 +16,13 @@ class PagoProveedorController extends Controller
      */
     public function destroy(int $id): JsonResponse
     {
-        // Intentamos buscar por ID de la tabla pivot o por pago_id
-        $pagoProveedor = PagoProveedor::where('id', $id)
-            ->orWhere('pago_id', $id)
-            ->first();
+        // El ID recibido corresponde al ID de la tabla tbl_pagos
+        $pagoProveedor = PagoProveedor::where('pago_id', $id)->first();
 
         if (!$pagoProveedor) {
             return response()->json([
                 'success' => false,
-                'msg' => 'Registro no encontrado'
+                'msg' => 'Relación de pago no encontrada'
             ], 404);
         }
 
