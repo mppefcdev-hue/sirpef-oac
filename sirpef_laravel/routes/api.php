@@ -94,6 +94,17 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::delete('/tipoCaso/{tipoCaso}', [TipoCasoController::class, 'destroy']);
 
 
+        // registro de pagos
+    Route::get('/buscar-proveedor/{documento}', [AtencionCiudadanoController::class, 'buscarProveedor']);
+    Route::get('/preparar-pago/{numeroPunto}', [AtencionCiudadanoController::class, 'obtenerDatosPagoPorPunto'])
+     ->where('numeroPunto', '.*');
+    Route::post('/registrar-pago/{registroId}', [AtencionCiudadanoController::class, 'storePago']);
+    Route::get('/estatus-pagos', [AtencionCiudadanoController::class, 'getEstatusPagos']);
+    // Ruta rápida sin pasar por el controlador
+    Route::get('/tipos-pagos', function () {return response()->json(['success' => true,'data' => \App\Models\TipoPago::all(['id', 'nombre'])]);});
+    Route::get('/pagos', [AtencionCiudadanoController::class, 'indexPagos']);
+    
+
  });
 
 
