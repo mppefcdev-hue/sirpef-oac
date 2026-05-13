@@ -103,7 +103,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Ruta rápida sin pasar por el controlador
     Route::get('/tipos-pagos', function () {return response()->json(['success' => true,'data' => \App\Models\TipoPago::all(['id', 'nombre'])]);});
     Route::get('/pagos', [AtencionCiudadanoController::class, 'indexPagos']);
-    
+    Route::delete('/pago-proveedor/{id}', [\App\Http\Controllers\PagoProveedorController::class, 'destroy']);
 
  });
 
