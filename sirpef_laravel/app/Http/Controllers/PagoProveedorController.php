@@ -16,24 +16,27 @@ class PagoProveedorController extends Controller
      */
     public function destroy(int $id): JsonResponse
     {
-        // El ID recibido corresponde al ID de la tabla tbl_pagos
+        // Buscamos la relación en la tabla pivot usando el ID de tbl_pagos
         $pagoProveedor = PagoProveedor::where('pago_id', $id)->first();
 
-        if (!$pagoProveedor) {
-            return response()->json([
-                'success' => false,
-                'msg' => 'Relación de pago no encontrada'
-            ], 404);
-        }
-
-        $pago = $pagoProveedor->pago;
-
-        // Soft delete the pivot record
-        $pagoProveedor->delete();
-
-        // Soft delete the main payment record
-        if ($pago) {
-            $pago->delete();
+        // Si existe la relación, eliminamos ambos
+        if ($pagoProveedor) {
+            $pago = $pagoProveedor->pago;
+            $pagoProveedor->delete();
+            if ($pago) {
+                $pago->delete();
+            }
+        } else {
+            // Si no existe la relación en la pivot, intentamos eliminar el pago directamente
+            $pago = \App\Models\Pago::find($id);
+            if ($pago) {
+                $pago->delete();
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'msg' => 'Registro no encontrado'
+                ], 404);
+            }
         }
 
         return response()->json([
