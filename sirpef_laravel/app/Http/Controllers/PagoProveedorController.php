@@ -28,7 +28,12 @@ class PagoProveedorController extends Controller
             ], 404);
         }
 
+        $pago = $pagoProveedor->pago;
         $pagoProveedor->delete();
+
+        if ($pago) {
+            $pago->delete();
+        }
 
         return response()->json([
             'success' => true,
