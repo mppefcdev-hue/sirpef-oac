@@ -114,7 +114,7 @@ watch(foundCaseId, (newId) => {
             
             <button title="Eliminar"
               class="bg-red-700 text-white p-2 rounded-lg hover:bg-red-900"
-              @click="() => deleteCaso(row.id)">
+              @click="deleteCaso(row.id)">
               <font-awesome-icon icon="trash-can" />
             </button>
           </div>
@@ -136,7 +136,7 @@ watch(foundCaseId, (newId) => {
     <CardInfoUser :UserData="result[0]" title="Datos personales" icon="fa-solid fa-user" />
     <CardInfoUser :UserData="result[1]" title="Punto de cuenta" icon="fa-solid fa-location-dot"
       @seePDC="({ registro_id }) => casePersona_id = registro_id"
-      @deletePDC="({ registro_id }) => deleteCaso(registro_id)" />
+      @deletePDC="(data) => deleteCaso(data.registro_id)" />
 
   </section>
 
