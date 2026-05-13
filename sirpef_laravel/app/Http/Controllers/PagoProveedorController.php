@@ -16,7 +16,10 @@ class PagoProveedorController extends Controller
      */
     public function destroy(int $id): JsonResponse
     {
-        $pagoProveedor = PagoProveedor::find($id);
+        // Intentamos buscar por ID de la tabla pivot o por pago_id
+        $pagoProveedor = PagoProveedor::where('id', $id)
+            ->orWhere('pago_id', $id)
+            ->first();
 
         if (!$pagoProveedor) {
             return response()->json([
