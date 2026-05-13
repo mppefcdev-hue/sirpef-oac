@@ -51,7 +51,7 @@ class Pago extends Model
 
     public function proveedores(): BelongsToMany
     {
-        return $this->belongsToMany(Proveedor::class, 'tbl_pago_proveedor', 'pago_id', 'proveedor_id')
+        return $this->belongsToMany(Proveedor::class, 'tbl_pago_proveedor', 'memorandum_id', 'proveedor_id')
                     ->withPivot('monto_relacionado')
                     ->withTimestamps();
     }
