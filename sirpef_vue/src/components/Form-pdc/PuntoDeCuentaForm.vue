@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { reactive, ref, onMounted, computed } from 'vue';
-import { createPDC, getPDC, updatePDC } from '@/modules/FeDeVida/services';
+import { createPDC, getPDC, updatePDC } from '@/modules/OAC/services';
 import { alerta } from '@/utils/alert';
 import { useRoute, useRouter } from 'vue-router';
 import { QuillEditor } from '@vueup/vue-quill';
@@ -34,55 +34,6 @@ interface PuntoDeCuentaData {
   propuestaCompleta: string;
 }
 
-
-// --- 1. Definir los perfiles predefinidos ---
-const perfilesPresentadoA = [
-  {
-    id: 1,
-    etiqueta: 'Consultoría Jurídica (Anmy Pérez)',
-    nombre: 'ANMY IVONETT PÉREZ GONZÁLEZ',
-    cargo: 'Directora General (E) de la Consultoría Jurídica',
-    resolucion: 'Resolución N° 001-2026 de fecha 10 de febrero del 2026, publicada en Gaceta Oficial de la República Bolivariana de Venezuela N° 43.319 de fecha 19 de febrero del 2026'
-  },
-
-    {
-    id: 2,
-    etiqueta: 'HÉCTOR JOSÉ CASTILLO RIERA (Despacho)',
-    nombre: 'HÉCTOR JOSÉ CASTILLO RIERA',
-    cargo: 'Director General (E) del Despacho',
-    resolucion: 'Resolución N° 001-2024 de fecha 02 de septiembre de 2024, publicada en Gaceta Oficial ordinaria de la República Bolivariana de Venezuela N° 42.955 de fecha 03 de septiembre de 2024: y actuando según delegación de firma publicada en la Resolución N° 009-2024 de fecha 30/09/2024'
-  },
-
-
-    {
-    id: 3,
-    etiqueta: 'ANABEL PEREIRA FERNÁNDEZ (ministra)',
-    nombre: 'ANABEL PEREIRA FERNÁNDEZ',
-    cargo: 'Ministra del Poder Popular de Economia y Finanzas',
-    resolucion: 'Decreto N° 4.981 de fecha 27 de agosto de 2024, publicada en Gaceta Oficial Extraordinario de la República Bolivariana de Venezuela N° 6.830 de 27 de agosto de 2024'
-  },
-];
-
-const perfilSeleccionado = ref('');
-
-const aplicarPerfil = (event: Event) => {
-  const target = event.target as HTMLSelectElement;
-  FindPerfil(target.value);
-};
-
-const FindPerfil = (nombre_perfil: any) => {
-  const perfil = perfilesPresentadoA.find(p => p.nombre === nombre_perfil);
-  if (perfil) {
-    form.presentadoA_nombre = perfil.nombre;
-    form.presentadoA_cargo = perfil.cargo;
-
-    form.firmaDerecha.nombre = perfil.nombre;
-    form.firmaDerecha.cargo = perfil.cargo;
-    form.firmaDerecha.resolucion2 = perfil.resolucion;
-  }
-};
-
-
 // --- Lógica del Componente ---
 const createInitialState = (): PuntoDeCuentaData => ({
   puntoNro: '',
@@ -94,8 +45,8 @@ const createInitialState = (): PuntoDeCuentaData => ({
   decision: '',
   otrasInstrucciones: '',
   anexos: 'Si',
-  presentadoA_nombre: '',
-  presentadoA_cargo: '',
+  presentadoA_nombre: 'ANMY IVONETT PÉREZ GONZÁLEZ',
+  presentadoA_cargo: 'Directora General de la Consultoría Jurídica',
   presentadoPor_nombre: 'OLIVER EZEQUIEL RIVAS PAREDES',
   presentadoPor_cargo: 'Director General (E) de la Oficina de Atención al Ciudadano',
   firmaIzquierda: {
@@ -105,10 +56,10 @@ const createInitialState = (): PuntoDeCuentaData => ({
     resolucion2: ''
   },
   firmaDerecha: {
-    nombre: '',
-    cargo: '',
+    nombre: 'ANMY IVONETT PÉREZ GONZÁLEZ',
+    cargo: 'Directora General de la Consultora Jurídica',
     resolucion1: '',
-    resolucion2: '',
+    resolucion2: 'Resolución N° 004-2024 de fecha 02 de septiembre del 2024, publicada en Gaceta Oficial de la R.B.V N° 42.955 de fecha 03 de septiembre del 2024 y actuando según delegación de firma en Resolución N° 010-2024 publicada en la Gaceta Oficial de la R.B.V N° 42.975 de fecha 30/09/2024.',
   },
 });
 
@@ -116,7 +67,7 @@ const turndownService = new TurndownService();
 turndownService.addRule('strong', { filter: ['strong', 'b'], replacement: (content) => `**${content}**` });
 
 const form = reactive<PuntoDeCuentaData>(createInitialState());
-const $toast = useToast();
+const $toast = useToast(); 
 
 const asuntoHtml = ref('');
 const exposicionHtml = ref('');
@@ -135,9 +86,9 @@ const updateMarkdown = (htmlContent: string, key: 'asunto' | 'exposicionDeMotivo
 };
 
 const updateEditorContent = () => {
-  asuntoHtml.value = marked(form.asunto) as string;
-  exposicionHtml.value = marked(form.exposicionDeMotivosCompleta) as string;
-  propuestaHtml.value = marked(form.propuestaCompleta) as string;
+    asuntoHtml.value = marked(form.asunto) as string;
+    exposicionHtml.value = marked(form.exposicionDeMotivosCompleta) as string;
+    propuestaHtml.value = marked(form.propuestaCompleta) as string;
 }
 
 const route = useRoute();
@@ -150,7 +101,7 @@ const getPDCToEdit = async () => {
   try {
     const response = await getPDC(pdc_id);
     const punto = response.data;
-
+    
     form.puntoNro = punto.numero_punto || '';
     form.fechaDocumento = punto.fecha;
     form.asunto = punto.asunto || '';
@@ -182,8 +133,6 @@ onMounted(() => {
     getPDCToEdit();
   } else {
     updateEditorContent();
-    perfilSeleccionado.value = 'ANMY IVONETT PÉREZ GONZÁLEZ';
-    FindPerfil(perfilSeleccionado.value);
   }
 });
 
@@ -239,139 +188,119 @@ const sendInfo = async () => {
 
     <form @submit.prevent="sendInfo" class="space-y-8">
       <div class="bg-white dark:bg-slate-800 shadow-lg rounded-lg p-6">
-        <h2
-          class="text-xl font-semibold mb-4 text-sky-600 dark:text-sky-300 border-b pb-2 border-sky-200 dark:border-slate-700">
+        <h2 class="text-xl font-semibold mb-4 text-sky-600 dark:text-sky-300 border-b pb-2 border-sky-200 dark:border-slate-700">
           Datos Generales
         </h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-4">
           <div>
-            <label for="puntoNro" class="block text-sm font-medium text-gray-700 dark:text-gray-300">**PUNTO
-              N°**</label>
+            <label for="puntoNro" class="block text-sm font-medium text-gray-700 dark:text-gray-300">**PUNTO N°**</label>
             <input type="text" id="puntoNro" v-model="form.puntoNro" class="mt-1 inputForm" />
           </div>
           <div>
             <!-- <<<--- 2. ACTUALIZACIÓN DEL TEMPLATE --- >>> -->
             <label for="fechaDocumento" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Fecha Documento
-
+          
             </label>
             <input type="date" id="fechaDocumento" v-model="form.fechaDocumento" class="mt-1 inputForm" />
           </div>
         </div>
       </div>
-
       <div class="bg-white dark:bg-slate-800 shadow-lg rounded-lg p-6">
-        <div
-          class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b pb-2 border-sky-200 dark:border-slate-700">
-          <h2 class="text-xl font-semibold text-sky-600 dark:text-sky-300">
-            Presentado
-          </h2>
-
-          <div class="flex items-center gap-2 mt-2 sm:mt-0">
-            <span class="text-xs font-bold text-gray-500 uppercase">Auto-completar destino:</span>
-            <select v-model="perfilSeleccionado" @change="aplicarPerfil"
-              class="text-sm border rounded-md p-1 bg-sky-50 dark:bg-slate-700 dark:text-white border-sky-300 focus:ring-2 focus:ring-sky-500">
-              <option value="" disabled>Seleccione una autoridad...</option>
-              <option v-for="perfil in perfilesPresentadoA" :key="perfil.id" :value="perfil.nombre">
-                {{ perfil.etiqueta }}
-              </option>
-            </select>
-          </div>
-        </div>
-
+        <h2 class="text-xl font-semibold mb-4 text-sky-600 dark:text-sky-300 border-b pb-2 border-sky-200 dark:border-slate-700">
+          Presentado
+        </h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
           <div>
-            <label for="presentadoA_nombre" class="block text-sm font-medium text-gray-700 dark:text-gray-300">**A
-              (Nombre)**</label>
+            <label for="presentadoA_nombre" class="block text-sm font-medium text-gray-700 dark:text-gray-300">**A (Nombre)**</label>
             <input type="text" id="presentadoA_nombre" v-model="form.presentadoA_nombre" class="mt-1 inputForm" />
-
-            <label for="presentadoA_cargo" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mt-2">Cargo
-              (A)</label>
+            <label for="presentadoA_cargo" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mt-2">Cargo (A)</label>
             <input type="text" id="presentadoA_cargo" v-model="form.presentadoA_cargo" class="mt-1 inputForm" />
           </div>
-
           <div>
-            <label for="presentadoPor_nombre" class="block text-sm font-medium text-gray-700 dark:text-gray-300">**Por
-              (Nombre)**</label>
+            <label for="presentadoPor_nombre" class="block text-sm font-medium text-gray-700 dark:text-gray-300">**Por (Nombre)**</label>
             <input type="text" id="presentadoPor_nombre" v-model="form.presentadoPor_nombre" class="mt-1 inputForm" />
-
-            <label for="presentadoPor_cargo"
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mt-2">Cargo (Por)</label>
+            <label for="presentadoPor_cargo" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mt-2">Cargo (Por)</label>
             <input type="text" id="presentadoPor_cargo" v-model="form.presentadoPor_cargo" class="mt-1 inputForm" />
           </div>
         </div>
       </div>
-
+      
       <div class="bg-white dark:bg-slate-800 shadow-lg rounded-lg p-6">
-        <h2
-          class="text-xl font-semibold mb-4 text-sky-600 dark:text-sky-300 border-b pb-2 border-sky-200 dark:border-slate-700">
+        <h2 class="text-xl font-semibold mb-4 text-sky-600 dark:text-sky-300 border-b pb-2 border-sky-200 dark:border-slate-700">
           Asunto
         </h2>
-        <QuillEditor theme="snow" :toolbar="[['bold']]" contentType="html" v-model:content="asuntoHtml"
-          @update:content="updateMarkdown(asuntoHtml, 'asunto')" />
+        <QuillEditor
+            theme="snow"
+            :toolbar="[['bold']]"
+            contentType="html"
+            v-model:content="asuntoHtml"
+            @update:content="updateMarkdown(asuntoHtml, 'asunto')"
+        />
       </div>
 
       <div class="bg-white dark:bg-slate-800 shadow-lg rounded-lg p-6">
-        <h2
-          class="text-xl font-semibold mb-4 text-sky-600 dark:text-sky-300 border-b pb-2 border-sky-200 dark:border-slate-700">
+        <h2 class="text-xl font-semibold mb-4 text-sky-600 dark:text-sky-300 border-b pb-2 border-sky-200 dark:border-slate-700">
           Exposición de Motivos
         </h2>
-        <QuillEditor theme="snow" :toolbar="[['bold']]" contentType="html" v-model:content="exposicionHtml"
-          @update:content="updateMarkdown(exposicionHtml, 'exposicionDeMotivosCompleta')" style="min-height: 300px;" />
+        <QuillEditor
+            theme="snow"
+            :toolbar="[['bold']]"
+            contentType="html"
+            v-model:content="exposicionHtml"
+            @update:content="updateMarkdown(exposicionHtml, 'exposicionDeMotivosCompleta')"
+            style="min-height: 300px;"
+        />
       </div>
 
       <div class="bg-white dark:bg-slate-800 shadow-lg rounded-lg p-6">
-        <h2
-          class="text-xl font-semibold mb-4 text-sky-600 dark:text-sky-300 border-b pb-2 border-sky-200 dark:border-slate-700">
+        <h2 class="text-xl font-semibold mb-4 text-sky-600 dark:text-sky-300 border-b pb-2 border-sky-200 dark:border-slate-700">
           Propuesta
         </h2>
-        <QuillEditor theme="snow" :toolbar="[['bold']]" contentType="html" v-model:content="propuestaHtml"
-          @update:content="updateMarkdown(propuestaHtml, 'propuestaCompleta')" style="min-height: 300px;" />
+        <QuillEditor
+            theme="snow"
+            :toolbar="[['bold']]"
+            contentType="html"
+            v-model:content="propuestaHtml"
+            @update:content="updateMarkdown(propuestaHtml, 'propuestaCompleta')"
+            style="min-height: 300px;"
+        />
       </div>
-
+      
       <div class="bg-white hidden dark:bg-slate-800 shadow-lg rounded-lg p-6">
-        <h2
-          class="text-xl font-semibold mb-4 text-sky-600 dark:text-sky-300 border-b pb-2 border-sky-200 dark:border-slate-700">
+        <h2 class="text-xl font-semibold mb-4 text-sky-600 dark:text-sky-300 border-b pb-2 border-sky-200 dark:border-slate-700">
           Decisión e Instrucciones
         </h2>
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">**DECISIÓN**</label>
           <div class="flex flex-wrap gap-x-6 gap-y-3">
-            <div v-for="option in ['N/A', 'APROBADO', 'NEGADO', 'VISTO', 'DIFERIDO', 'OTRO']" :key="option"
-              class="flex items-center">
-              <input type="radio" :id="`decision-${option}`" :value="option" v-model="form.decision"
-                name="decisionRadio" class="h-4 w-4 text-sky-600 border-gray-300 focus:ring-sky-500" />
-              <label :for="`decision-${option}`" class="ml-2 block text-sm text-gray-900 dark:text-gray-200">{{ option
-              }}</label>
+            <div v-for="option in ['N/A', 'APROBADO', 'NEGADO', 'VISTO', 'DIFERIDO', 'OTRO']" :key="option" class="flex items-center">
+              <input type="radio" :id="`decision-${option}`" :value="option" v-model="form.decision" name="decisionRadio" class="h-4 w-4 text-sky-600 border-gray-300 focus:ring-sky-500" />
+              <label :for="`decision-${option}`" class="ml-2 block text-sm text-gray-900 dark:text-gray-200">{{ option }}</label>
             </div>
           </div>
         </div>
         <div class="mt-6">
-          <label for="otrasInstrucciones" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Otras
-            instrucciones:</label>
-          <textarea id="otrasInstrucciones" v-model="form.otrasInstrucciones" rows="2"
-            class="mt-1 inputForm resize-y"></textarea>
+          <label for="otrasInstrucciones" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Otras instrucciones:</label>
+          <textarea id="otrasInstrucciones" v-model="form.otrasInstrucciones" rows="2" class="mt-1 inputForm resize-y"></textarea>
         </div>
         <div class="mt-6">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Anexos :</label>
           <div class="flex gap-x-6 gap-y-3">
             <div class="flex items-center">
-              <input type="radio" id="anexosSi" value="Si" v-model="form.anexos" name="anexosRadio"
-                class="h-4 w-4 text-sky-600 border-gray-300 focus:ring-sky-500" />
+              <input type="radio" id="anexosSi" value="Si" v-model="form.anexos" name="anexosRadio" class="h-4 w-4 text-sky-600 border-gray-300 focus:ring-sky-500" />
               <label for="anexosSi" class="ml-2 block text-sm text-gray-900 dark:text-gray-200">Si</label>
             </div>
             <div class="flex items-center">
-              <input type="radio" id="anexosNo" value="No" v-model="form.anexos" name="anexosRadio"
-                class="h-4 w-4 text-sky-600 border-gray-300 focus:ring-sky-500" />
+              <input type="radio" id="anexosNo" value="No" v-model="form.anexos" name="anexosRadio" class="h-4 w-4 text-sky-600 border-gray-300 focus:ring-sky-500" />
               <label for="anexosNo" class="ml-2 block text-sm text-gray-900 dark:text-gray-200">No</label>
             </div>
           </div>
         </div>
       </div>
-
+      
       <div class="bg-white dark:bg-slate-800 shadow-lg rounded-lg p-6">
-        <h2
-          class="text-xl font-semibold mb-4 text-sky-600 dark:text-sky-300 border-b pb-2 border-sky-200 dark:border-slate-700">
+        <h2 class="text-xl font-semibold mb-4 text-sky-600 dark:text-sky-300 border-b pb-2 border-sky-200 dark:border-slate-700">
           Firmantes
         </h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
@@ -425,7 +354,6 @@ const sendInfo = async () => {
 .inputForm {
   @apply block w-full rounded-md border-gray-300 shadow-sm p-2 focus:border-sky-500 focus:ring-sky-500 sm:text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-gray-200 dark:placeholder-gray-400;
 }
-
 .container {
   max-width: 1024px;
 }

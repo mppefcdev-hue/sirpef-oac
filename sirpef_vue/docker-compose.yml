@@ -1,6 +1,6 @@
 version: "3.9"
 services:
-  oac_votos:
+  oac_vue_mppef:
     build:
       context: .
       dockerfile: Dockerfile
