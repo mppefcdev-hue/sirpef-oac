@@ -18,6 +18,14 @@ use App\Http\Services\AtencionCiudadano\UpdatePuntoCuentaEstatusService;
 use App\Http\Services\AtencionCiudadano\BuscarSeguimientosService;
 use App\Http\Services\AtencionCiudadano\GetAllEstatusTramiteService;
 
+
+use App\Http\Services\AtencionCiudadano\BuscarProveedorService;
+use App\Http\Services\AtencionCiudadano\BuscarRegistroPorPuntoService;
+use App\Http\Services\AtencionCiudadano\StorePagoService;
+use App\Http\Services\AtencionCiudadano\GetEstatusPagoService;
+use App\Http\Services\AtencionCiudadano\IndexPagoService;
+
+
 class AtencionCiudadanoController extends Controller
 {
     public function index(Request $request)
@@ -96,4 +104,31 @@ class AtencionCiudadanoController extends Controller
         return $getAllEstatusTramiteService->getAllEstatusTramite();
     }
 
+
+    public function buscarProveedor(string $documento): JsonResponse
+    {
+        return BuscarProveedorService::buscarPorDocumento($documento);
+    }
+
+
+    public function obtenerDatosPagoPorPunto(string $numeroPunto): JsonResponse
+    {
+        return BuscarRegistroPorPuntoService::obtenerDataParaPago($numeroPunto);
+    }
+
+
+    public function storePago(Request $request, int $registroId): JsonResponse
+    {
+        return StorePagoService::crearPago($request, $registroId);
+    }
+
+    public function getEstatusPagos(): JsonResponse
+    {
+        return GetEstatusPagoService::getAllEstatusPago();
+    }
+
+    public function indexPagos(Request $request): JsonResponse
+    {
+        return IndexPagoService::index($request);
+    }
 }

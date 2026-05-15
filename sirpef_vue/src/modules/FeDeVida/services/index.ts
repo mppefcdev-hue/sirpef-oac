@@ -80,7 +80,7 @@ export const getHistorialCaso = async (id: string) => {
 }
 
 export const deleteCasoService = async (id: any) => {
-    const response  = await Http.delete(`/api/oac/delete-caso/${id}`)
+    const response  = await Http.delete(`/api/oac/pagos/${id}`)
     return response.data
 }
 
@@ -131,5 +131,20 @@ export const getTreeviewData = async () => {
 
 export const getTramiteStatus = async () => {
     const response  = await Http.get(`/api/oac/estatus-tramite/`)
+    return response.data
+}
+
+
+
+// administracion
+
+
+export const getPagosCasos = async (query: string) => {
+    const response  = await Http.get(`/api/oac/pagos?${query}`)
+    return response
+}
+
+export const registerPay = async (id: string, payload: any) => {
+    const response  = await Http.post(`/api/oac/registrar-pago/${id}`, payload)
     return response.data
 }
