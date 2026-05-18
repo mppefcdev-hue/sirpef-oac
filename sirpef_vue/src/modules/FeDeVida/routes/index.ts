@@ -87,4 +87,18 @@ export default [
         meta: { middleware: [auth, admin], layout: "default" },
         component: () => import("@/modules/FeDeVida/components/modalInfo.vue").then(m => m.default)
     },
+
+        {
+        path: "/casos/administracion",
+        name: "casesAdminIndex",
+        meta: { middleware: [auth] },
+        component: () => import("@/modules/FeDeVida/views/administracion/index.vue").then(m => m.default)
+    },
+
+    {
+        path: "/casos/administracion/form",
+        name: "CasesAdminForm",
+        meta: { middleware: [auth]},
+        component: () => import("@/modules/FeDeVida/views/administracion/form.vue").then(m => m.default)
+    },
 ]
