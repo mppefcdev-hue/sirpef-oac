@@ -1,9 +1,9 @@
 version: "3.9"
 services:
  oac_vue_mppef_dev:    
-    image: node:18.8.0
+    image: node:22
     ports:
-      - "5173:81"
+      - "5174:81"
     volumes:
       - ".:/app"
     environment:
