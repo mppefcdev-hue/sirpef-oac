@@ -74,12 +74,6 @@ onMounted(() => {
         <input name="fecha_pago_financiero" class="w-full bg-gray-100 text-gray-900 mt-1 p-3 rounded-lg" type="date"
           v-model="values.fecha_pago_financiero" />
       </div>
-
-      <div>
-        <label class="block font-medium text-gray-700 ml-1">Cuota de Compromiso Disponible</label>
-        <input name="cuota_compromiso_disponible" class="w-full bg-gray-100 text-gray-900 mt-1 p-3 rounded-lg"
-          type="text" placeholder="Monto disponible" v-model="values.cuota_compromiso_disponible" />
-      </div>
     </div>
     <Controls :step="step" />
   </form>

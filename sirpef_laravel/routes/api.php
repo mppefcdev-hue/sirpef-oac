@@ -22,6 +22,7 @@ use App\Http\Controllers\TipoCasoController;
 use App\Http\Controllers\MemorandumController;
 
 use App\Http\Controllers\PersonaAutorizadaController;
+use App\Http\Controllers\CuotaCompromisoController;
 
 use App\Http\Controllers\Configurations\{EnteController};
 
@@ -104,6 +105,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/tipos-pagos', function () {return response()->json(['success' => true,'data' => \App\Models\TipoPago::all(['id', 'nombre'])]);});
     Route::get('/pagos', [AtencionCiudadanoController::class, 'indexPagos']);
     Route::delete('/pagos/{id}', [\App\Http\Controllers\PagoProveedorController::class, 'destroy']);
+
+    // Cuotas de Compromiso
+    Route::get('/cuotas', [CuotaCompromisoController::class, 'index']);
+    Route::post('/cuotas', [CuotaCompromisoController::class, 'store']);
+    Route::put('/cuotas', [CuotaCompromisoController::class, 'update']);
+    Route::delete('/cuotas/{id}', [CuotaCompromisoController::class, 'destroy']);
 
  });
 

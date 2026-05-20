@@ -19,7 +19,7 @@ class resetEventService
 
             try {
 
-                $EventoPersona
+                #$EventoPersona
 
                 return response()->json([
                     'mensaje' => 'Evento reestablecido con éxito',

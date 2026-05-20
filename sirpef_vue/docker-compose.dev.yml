@@ -1,9 +1,9 @@
 version: "3.9"
 services:
  oac_vue_mppef_dev:    
-    image: node:18.8.0
+    image: node:22
     ports:
-      - "5173:81"
+      - "5174:81"
     volumes:
       - ".:/app"
     environment:
@@ -11,3 +11,5 @@ services:
     working_dir: /app
     container_name: oac_vue_mppef_dev
     command: sh -c "cd /app; npm install; npm run dev -- --host"
+
+#docker compose -f docker-compose.dev.yml up

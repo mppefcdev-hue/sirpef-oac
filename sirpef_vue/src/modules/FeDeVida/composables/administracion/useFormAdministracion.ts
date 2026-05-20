@@ -25,7 +25,6 @@ export default (punto: any) => {
         fecha_pago_financiero: '',
         saldo_deudor: '',
         saldo_acreedor: '',
-        cuota_compromiso_disponible: '',
         recaudos: [] as any[]
     })
 
@@ -112,7 +111,6 @@ export default (punto: any) => {
                 fecha_pago_financiero: data.fecha_pago_financiero || '',
                 saldo_deudor: data.saldo_deudor || '',
                 saldo_acreedor: data.saldo_acreedor || '',
-                cuota_compromiso_disponible: data.cuota_compromiso_disponible || '',
             }
 
             mode.value = 'PUT'
