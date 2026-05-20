@@ -88,7 +88,7 @@ export default [
         component: () => import("@/modules/FeDeVida/components/modalInfo.vue").then(m => m.default)
     },
 
-        {
+    {
         path: "/casos/administracion",
         name: "casesAdminIndex",
         meta: { middleware: [auth] },
@@ -100,5 +100,12 @@ export default [
         name: "CasesAdminForm",
         meta: { middleware: [auth]},
         component: () => import("@/modules/FeDeVida/views/administracion/form.vue").then(m => m.default)
+    },
+
+    {
+        path: "/casos/administracion/cuotas",
+        name: "casesAdminCuotas",
+        meta: { middleware: [auth] },
+        component: () => import("@/modules/FeDeVida/views/administracion/cuotas.vue").then(m => m.default)
     },
 ]
