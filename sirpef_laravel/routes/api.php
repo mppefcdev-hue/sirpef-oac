@@ -20,21 +20,24 @@ use App\Http\Controllers\FeDeVidaController;
 use App\Http\Controllers\AtencionCiudadanoController;
 use App\Http\Controllers\TipoCasoController;
 use App\Http\Controllers\MemorandumController;
+use App\Http\Middleware\CheckProxyApiKey;
 
 use App\Http\Controllers\PersonaAutorizadaController;
 
 use App\Http\Controllers\Configurations\{EnteController};
 
-Route::post('/login', NewLoginController::class);
-Route::post('/sanctum/token', TokenController::class);
+Route::prefix('auth')->group(function () {
+    Route::post('/login', NewLoginController::class);
+    Route::post('/sanctum/token', TokenController::class);
+});
 
 //Route::get('/findByCedula/fedevida/search/{cedula}',[ ConstController::class, 'checkpdf']);
-//Route::get('/findByCedula/fedevida/{cedula}', [ConstController::class, 'obtenerPorCedulaFeDeVida']);
+//Route::get('/findByCedula/fedevida/{cedula}', [ConstController::class, 'obtenerPorCedulaFeDeVida']) ;
 //
 //Route::post('/feDeVida/{id}', [FeDeVidaController::class, 'actualizarJubilado']);
 //
 //Route::get('/unids/ministerio', [EstadisticaController::class, 'getunidadesAdscritasGeneral']);
-
+ 
 //Route::get('/registro/getpaises', [ConfiguracionController::class, 'getPaises']);
 //Route::get('/registro/getdireccion', [ConfiguracionController::class, 'getDireccion']);
 //Route::get('/registro/municipio/{estado}', [ConfiguracionController::class, 'getMunicipio']);
@@ -44,6 +47,11 @@ Route::post('/sanctum/token', TokenController::class);
 //
 
 //Route::get('/findByCedula/{cedula}', [ConstController::class, 'findByCedula']);
+
+Route::middleware(['proxy.key'])->group(function () {
+    Route::post('/oac/create/proxy', [AtencionCiudadanoController::class, 'createProxy']);
+});
+
 
 Route::middleware(['auth:sanctum'])->group(function () {
     //Route::prefix('users')->middleware(['role:admin'])->group(function () {

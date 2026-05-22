@@ -50,7 +50,7 @@ class DeletedVoteService
             $user = Auth::user();
             $unidadActiva = 'Administrador';
 
-            if ($user && $user->configUser) {
+            /*if ($user && $user->configUser) {
                 if ($user->isAdmin() || !empty($user->configUser->unid_activa)) {
                     $unidActivaIds = json_decode($user->configUser->unid_activa, true);
                     
@@ -61,7 +61,7 @@ class DeletedVoteService
                         }
                     }
                 }
-            }
+            }*/
 
             // 5. Crear mensaje de auditoría
             $message = "El usuario {$user->name} de la unidad adscrita {$unidadActiva} realizó una eliminación lógica del registro (ID: {$id}) de {$personaName}";

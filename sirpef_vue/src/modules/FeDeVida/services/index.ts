@@ -80,7 +80,7 @@ export const getHistorialCaso = async (id: string) => {
 }
 
 export const deleteCasoService = async (id: any) => {
-    const response  = await Http.delete(`/api/oac/pagos/${id}`)
+    const response  = await Http.delete(`/api/oac/delete-caso/${id}`)
     return response.data
 }
 

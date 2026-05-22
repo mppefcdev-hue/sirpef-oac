@@ -38,6 +38,11 @@ class AtencionCiudadanoController extends Controller
         return CreateCasosService::create($request);
     }
 
+        public function createProxy(Request $request)
+    {
+        return CreateCasosService::createProxy($request);
+    }
+
     public function show($id)
     {
         return ShowCasosService::show($id);

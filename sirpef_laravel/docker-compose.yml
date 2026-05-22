@@ -26,7 +26,7 @@ services:
       - "./public:/var/www/html/public:ro"
       - "./storage/app:/var/www/html/storage/app:ro"
     ports:
-      - "443:80"
+      - "442:80"
     networks:
       - store-network      
 

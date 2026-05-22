@@ -40,8 +40,12 @@ class NewLoginController extends Controller
 
         while ($attempts < $maxRetries) {
             try {
-                $response = $client->post('10.50.0.29:443/auth', [
+                $response = $client->post('http://localhost:8080/auth', [
                     'json' => ['token' => $tokenSVA],
+                    'headers' => [
+                        'Accept'        => 'application/json',
+                        'x-api-key' => 'Bearer 89c429ad-bbe9-4877-9c96-94fa2520ef1e',
+                    ],
                 ]);
 
                 if ($response->getStatusCode() === 200) {

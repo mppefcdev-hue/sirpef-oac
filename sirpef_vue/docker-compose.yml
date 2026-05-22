@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "80:81"
+      - "5173:81"
     environment:
       NODE_ENV: production
     container_name: oac_vue
