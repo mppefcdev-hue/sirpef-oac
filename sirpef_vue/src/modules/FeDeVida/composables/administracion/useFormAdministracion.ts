@@ -1,7 +1,8 @@
 import { alerta } from "@/utils/alert";
-import { onMounted, ref } from "vue"
+import { onMounted, ref, watch } from "vue"
 import { editCase, getCaseSingle, registerPay } from "../../services";
 import { useRoute, useRouter } from "vue-router";
+import Swal from "sweetalert2";
 
 export default (punto: any) => {
     const router = useRouter()
@@ -30,11 +31,45 @@ export default (punto: any) => {
 
     const mode = ref('POST')
 
+    watch(
+      () => [UserInfo.value.monto, UserInfo.value.saldo_acreedor],
+      ([nuevoMonto, nuevoAcreedor]) => {
+        const monto = parseFloat(nuevoMonto as any) || 0;
+        const acreedor = parseFloat(nuevoAcreedor as any) || 0;
+        UserInfo.value.saldo_deudor = (monto - acreedor).toFixed(2);
+      }
+    );
+
     const emitForm = async (e: Event) => {
         if (step.value == 1) {
             step.value = 2
             estado.value.push(1)
         } else if (step.value == 2) {
+            if (!UserInfo.value.nro_factura) {
+                const confirmarFactura = await Swal.fire({
+                    title: 'Factura pendiente',
+                    html: 'El proveedor no ha entregado la factura. Se registrará una alerta en el expediente. ¿Desea continuar?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, continuar',
+                    cancelButtonText: 'Completar factura'
+                });
+                if (!confirmarFactura.isConfirmed) return;
+            }
+
+            const deudor = parseFloat(UserInfo.value.saldo_deudor as any) || 0;
+            if (deudor !== 0) {
+                const confirmarDeudor = await Swal.fire({
+                    title: '¿Continuar con Saldo Deudor?',
+                    html: `El saldo deudor es de <b>Bs. ${UserInfo.value.saldo_deudor}</b> (no es cero). Se gestionará un reintegro.`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, registrar deudor',
+                    cancelButtonText: 'Corregir montos'
+                });
+                if (!confirmarDeudor.isConfirmed) return;
+            }
+
             estado.value.push(2)
             step.value = 3
         } else if (step.value == 3) {

@@ -27,13 +27,17 @@ class CuotaCompromisoController extends Controller
                 ->whereNull('deleted_at')
                 ->sum('monto');
 
+            $limiteTotal = floatval($cuota->monto) + floatval($cuota->monto_acumulado_anterior ?? 0);
+
             return [
                 'id' => $cuota->id,
                 'ano' => $cuota->year,
                 'mes' => $cuota->mes,
                 'monto_limite' => floatval($cuota->monto),
+                'monto_acumulado_anterior' => floatval($cuota->monto_acumulado_anterior ?? 0),
+                'monto_limite_total' => $limiteTotal,
                 'monto_ejecutado' => floatval($montoEjecutado),
-                'monto_disponible' => floatval($cuota->monto) - floatval($montoEjecutado),
+                'monto_disponible' => $limiteTotal - floatval($montoEjecutado),
                 'created_at' => $cuota->created_at ? $cuota->created_at->toIso8601String() : null,
                 'updated_at' => $cuota->updated_at ? $cuota->updated_at->toIso8601String() : null,
             ];
@@ -57,9 +61,13 @@ class CuotaCompromisoController extends Controller
             'monto' => 'required|numeric|min:0',
         ]);
 
+        $ano = intval($request->ano);
+        $mes = intval($request->mes);
+        $nuevoMonto = floatval($request->monto);
+
         // Once a monthly quota is set, it cannot be modified via store
-        $exists = CuotaCompromiso::where('year', $request->ano)
-            ->where('mes', $request->mes)
+        $exists = CuotaCompromiso::where('year', $ano)
+            ->where('mes', $mes)
             ->exists();
 
         if ($exists) {
@@ -69,10 +77,38 @@ class CuotaCompromisoController extends Controller
             ], 422);
         }
 
+        // Calcular el mes y año inmediatamente anterior
+        $mesAnterior = $mes === 1 ? 12 : $mes - 1;
+        $anoAnterior = $mes === 1 ? $ano - 1 : $ano;
+
+        $montoAcumular = 0;
+
+        // Verificar si el mes anterior NO fue un corte trimestral (3, 6, 9, 12)
+        if (!in_array($mesAnterior, [3, 6, 9, 12])) {
+            $cuotaAnterior = CuotaCompromiso::where('year', $anoAnterior)
+                ->where('mes', $mesAnterior)
+                ->first();
+
+            if ($cuotaAnterior) {
+                $ejecutadoAnterior = DB::table('tbl_pagos')
+                    ->whereYear(DB::raw("COALESCE(fecha_orden_pago, fecha_pago_financiero, created_at)"), $anoAnterior)
+                    ->whereMonth(DB::raw("COALESCE(fecha_orden_pago, fecha_pago_financiero, created_at)"), $mesAnterior)
+                    ->whereNull('deleted_at')
+                    ->sum('monto');
+
+                $disponibleAnterior = (floatval($cuotaAnterior->monto) + floatval($cuotaAnterior->monto_acumulado_anterior ?? 0)) - floatval($ejecutadoAnterior);
+
+                if ($disponibleAnterior > 0) {
+                    $montoAcumular = $disponibleAnterior;
+                }
+            }
+        }
+
         $cuota = CuotaCompromiso::create([
-            'year' => $request->ano,
-            'mes' => $request->mes,
-            'monto' => $request->monto
+            'year' => $ano,
+            'mes' => $mes,
+            'monto' => $nuevoMonto,
+            'monto_acumulado_anterior' => $montoAcumular
         ]);
 
         return response()->json([
