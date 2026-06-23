@@ -367,7 +367,7 @@ const createMemoFromPDC = async () => {
                                     <p>RIF / C.I.</p>
                                 </dt>
                                 <dd class="mt-1 text-sm text-gray-900 font-bold sm:mt-0">
-                                    {{ prov.cedula_rif || prov.pivot?.cedula_rif || 'Sin información' }}
+                                    {{ prov.cedula_rif || prov.pivot?.cedula_rif || prov.pivot?.monto_relacionado || 'Sin información' }}
                                 </dd>
                             </div>
                             <div class="py-3 sm:py-5 sm:grid sm:grid-cols-2 sm:gap-4 sm:px-6">
@@ -376,7 +376,7 @@ const createMemoFromPDC = async () => {
                                     <p>Monto</p>
                                 </dt>
                                 <dd class="mt-1 text-sm text-gray-900 font-bold sm:mt-0">
-                                    {{ prov.monto || 'Sin información' }}
+                                    {{ prov.pivot?.monto_relacionado || prov.monto || 'Sin información' }}
                                 </dd>
                             </div>
                         </dl>
