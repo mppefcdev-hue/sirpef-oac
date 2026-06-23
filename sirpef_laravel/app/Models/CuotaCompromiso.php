@@ -15,5 +15,6 @@ class CuotaCompromiso extends Model
         'year',
         'mes',
         'monto',
+        'monto_acumulado_anterior',
     ];
 }

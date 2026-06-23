@@ -23,15 +23,19 @@ class StorePagoService
                 // 1. Verificar que el Registro (Caso) exista
                 $registro = Registro::findOrFail($registroId);
 
+                $monto = floatval($request->monto);
+                $saldoAcreedor = floatval($request->saldo_acreedor ?? 0);
+                $saldoDeudor = $monto - $saldoAcreedor;
+
                 // 2. Crear el registro principal del Pago
                 $pago = Pago::create([
                     'orden_pago'           => $request->orden_pago,
                     'fecha_orden_pago'     => $request->fecha_orden_pago,
-                    'monto'                => $request->monto,
+                    'monto'                => $monto,
                     'descripcion'          => $request->descripcion,
                     'fecha_pago_financiero'=> $request->fecha_pago_financiero,
-                    'saldo_deudor'         => $request->saldo_deudor ?? $request->monto,
-                    'saldo_acreedor'       => $request->saldo_acreedor ?? 0,
+                    'saldo_deudor'         => $saldoDeudor,
+                    'saldo_acreedor'       => $saldoAcreedor,
                     'cuota_compromiso_disponible' => $request->cuota_compromiso ?? 0,
                     'estatus_pago_id'      => $request->estatus_pago_id,
                     'tipo_pago_id'         => $request->tipo_pago_id,
