@@ -363,6 +363,15 @@ const createMemoFromPDC = async () => {
                             </div>
                             <div class="py-3 sm:py-5 sm:grid sm:grid-cols-2 sm:gap-4 sm:px-6">
                                 <dt class="text-sm font-medium text-gray-800 flex items-center justify-left gap-5">
+                                    <font-awesome-icon class="scale-[1.3]" icon="address-card" />
+                                    <p>RIF / C.I.</p>
+                                </dt>
+                                <dd class="mt-1 text-sm text-gray-900 font-bold sm:mt-0">
+                                    {{ prov.cedula_rif || 'Sin información' }}
+                                </dd>
+                            </div>
+                            <div class="py-3 sm:py-5 sm:grid sm:grid-cols-2 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-800 flex items-center justify-left gap-5">
                                     <font-awesome-icon class="scale-[1.3]" icon="dollar-sign" />
                                     <p>Monto</p>
                                 </dt>
