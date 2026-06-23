@@ -33,6 +33,7 @@ export function useLogin(): StandaloneLogin {
     } catch (err) {
       error.value = getError(err);
       console.log(err)
+      
       location.href = `${import.meta.env.VITE_SVA_URL}/login?redirect=/dashboard`;
     } finally {
       sending.value = false;
