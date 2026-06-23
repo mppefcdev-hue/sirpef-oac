@@ -79,7 +79,7 @@
           <div v-for="(item, index) in props.form.tabla.proveedores" :key="index" class="flex gap-2 items-end">
             <div class="flex-1">
               <label class="text-[9px] font-bold text-gray-400 uppercase"> RIF Proveedor</label>
-              <input v-model="props.form.tabla.proveedores[index].nombre" placeholder="Rif del proveedor" class="w-full border p-2 rounded text-xs focus:ring-1 focus:ring-blue-400 outline-none" />
+              <input v-model="props.form.tabla.proveedores[index].cedula_rif" placeholder="Rif del proveedor" class="w-full border p-2 rounded text-xs focus:ring-1 focus:ring-blue-400 outline-none" />
             </div>
             <div class="flex-1">
               <label class="text-[9px] font-bold text-gray-400 uppercase">Proveedor</label>
@@ -164,7 +164,7 @@ const addProveedor = () => {
   if (!props.form.tabla.proveedores) {
     props.form.tabla.proveedores = [];
   }
-  props.form.tabla.proveedores.push({ nombre: '', monto: 0 });
+  props.form.tabla.proveedores.push({ nombre: '', monto: 0, cedula_rif: '' });
 };
 
 const removeProveedor = (index) => {
@@ -267,7 +267,7 @@ watch(() => props.form.tabla.monto, (newVal) => {
 
 onMounted(() => {
   if (!props.form.tabla.proveedores || props.form.tabla.proveedores.length === 0) {
-    props.form.tabla.proveedores = [{ nombre: '', monto: 0 }];
+    props.form.tabla.proveedores = [{ nombre: '', monto: 0, cedula_rif: '' }];
   }
 
   if (route.query.numero) {
