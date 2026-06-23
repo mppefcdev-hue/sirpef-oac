@@ -35,12 +35,26 @@ export default () => {
                 ...response.data,
                 recaudos
             };
+console.log(response.data)
+
         } catch (error) {
             console.error("Error al obtener la información del caso:", error);
         }
     };
 
     const createPunto = async () => {
+       const params = {
+                id: caseData.value.registro_id,
+                pdc_id: caseData.value.punto_cuenta?.id || ''
+            };
+
+            router.push({
+                name: 'pdc',
+                params
+            });
+
+            console.log(params)
+            return
         if (caseData.value.punto_cuenta && caseData.value.punto_cuenta?.estatus === true) {
             try {
                 const punto = await getPDC(caseData.value.punto_cuenta.id);
