@@ -6,6 +6,7 @@ import { onMounted } from 'vue';
 
 
 const pagos = ref([])
+const cuotaDisponible = ref(0)
 
 const props = defineProps<{
   emitForm: (event: Event) => void,
@@ -18,9 +19,26 @@ const getPay = async () => {
   pagos.value = res.data.data
 };
 
+const getCuota = async () => {
+  try {
+    const res = await Http.get('/api/oac/cuotas');
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1;
+    
+    // Find the current month's quota
+    const currentCuota = res.data.data.find((c: any) => c.ano === currentYear && c.mes === currentMonth);
+    if (currentCuota) {
+      cuotaDisponible.value = currentCuota.monto_disponible;
+    }
+  } catch (error) {
+    console.error("Error obteniendo la cuota:", error);
+  }
+};
 
 onMounted(() => {
   getPay()
+  getCuota()
 })
 
 
@@ -61,6 +79,17 @@ onMounted(() => {
         <label class="block font-medium text-gray-700 ml-1">Monto</label>
         <input name="monto" class="w-full bg-gray-100 text-gray-900 mt-1 p-3 rounded-lg" type="number" step="0.01"
           placeholder="0.00" v-model="values.monto" />
+      </div>
+
+      <div>
+        <label class="block font-medium text-gray-700 ml-1">Cuota de Compromiso Disponible</label>
+        <input 
+          class="w-full bg-gray-200 text-gray-500 font-bold mt-1 p-3 rounded-lg cursor-not-allowed" 
+          type="text" 
+          :value="Math.max(0, cuotaDisponible - (values.monto || 0)).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })" 
+          readonly 
+          disabled
+        />
       </div>
 
       <div>

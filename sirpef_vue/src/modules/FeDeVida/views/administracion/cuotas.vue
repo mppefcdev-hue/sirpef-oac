@@ -135,7 +135,17 @@ const columns = [
   { data: 'ano', title: 'Año' },
   { 
     data: 'monto_limite', 
-    title: 'Cuota Límite',
+    title: 'Cuota Inicial',
+    render: (data) => formatCurrency(data)
+  },
+  { 
+    data: 'monto_acumulado_anterior', 
+    title: 'Acumulado Anterior',
+    render: (data) => formatCurrency(data)
+  },
+  { 
+    data: 'monto_limite_total', 
+    title: 'Límite Total',
     render: (data) => formatCurrency(data)
   },
   { 
@@ -259,7 +269,9 @@ const dtOptions = {
           <tr>
             <th>Mes</th>
             <th>Año</th>
-            <th>Cuota Límite</th>
+            <th>Cuota Inicial</th>
+            <th>Acumulado Anterior</th>
+            <th>Límite Total</th>
             <th>Monto Ejecutado</th>
             <th>Monto Disponible</th>
             <th>Última Modificación</th>
