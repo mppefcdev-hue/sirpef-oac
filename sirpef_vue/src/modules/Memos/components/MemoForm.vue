@@ -284,6 +284,7 @@ const personasPara = [
 
 const personasDe = [
   { nombre: 'OLIVER EZEQUIEL RIVAS PAREDES', cargo: 'Director General (E) de la Oficina de Atención al Ciudadano' },
+  
 ];
 
 // Se asume que el componente padre maneja el guardado. 

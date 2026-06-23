@@ -110,7 +110,7 @@ const createMemoFromPDC = async () => {
                 proveedores: providers.map(p => ({
                     nombre: p.nombre,
                     monto: p.pivot?.monto_relacionado || p.monto || 0,
-                    cedula_rif: p.cedula_rif
+                    cedula_rif: p.rif
                 }))
             },
             cuerpo_final: 'Agradeciendo la receptividad que tenga a bien dispensar a la presente, en girar la instrucción correspondiente a fin de realizar el trámite de orden de pago, quedo de usted.',
@@ -367,7 +367,7 @@ const createMemoFromPDC = async () => {
                                     <p>RIF / C.I.</p>
                                 </dt>
                                 <dd class="mt-1 text-sm text-gray-900 font-bold sm:mt-0">
-                                    {{ prov.cedula_rif || prov.pivot?.cedula_rif || prov.pivot?.monto_relacionado || 'Sin información' }}
+                                    {{ prov.cedula_rif || 'Sin información' }}
                                 </dd>
                             </div>
                             <div class="py-3 sm:py-5 sm:grid sm:grid-cols-2 sm:gap-4 sm:px-6">
@@ -376,7 +376,7 @@ const createMemoFromPDC = async () => {
                                     <p>Monto</p>
                                 </dt>
                                 <dd class="mt-1 text-sm text-gray-900 font-bold sm:mt-0">
-                                    {{ prov.pivot?.monto_relacionado || prov.monto || 'Sin información' }}
+                                    {{ prov.monto || 'Sin información' }}
                                 </dd>
                             </div>
                         </dl>
