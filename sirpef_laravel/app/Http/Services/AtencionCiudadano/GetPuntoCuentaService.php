@@ -31,6 +31,7 @@ class GetPuntoCuentaService {
                 'data' => [
                     'id'                  => $puntoCuenta->id,
                     'presentado_a'        => $puntoCuenta->presentado_a,
+                    'estatus' => $puntoCuenta->estatus_pc,
                     'presentado_por'      => $puntoCuenta->presentado_por,
                     'fecha'               => $puntoCuenta->fecha->format('Y-m-d'),
                     'numero_punto'        => $puntoCuenta->numero_punto,

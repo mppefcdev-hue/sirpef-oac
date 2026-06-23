@@ -7,19 +7,18 @@ import { onMounted, onUnmounted } from "vue"
 
 const { ConnectSocket, DisconnectSocket, GetUser } = useWebsockets()
 
-
 onMounted(async () => {
   await GetUser()
-  ConnectSocket()
+  //ConnectSocket()
 })
 onUnmounted(() => {
-  DisconnectSocket()
+ // DisconnectSocket()
 })
 </script>
 
 <template>
   <Header />
-  <div class="section pt-[10vh]">
+  <main class="section pt-[10vh] main-container-print">
     <div id="Containerdelmain" class="flex-1 flex flex-col">
       <main id="ContainerMain" class="flex-1 overflow-y-auto">
         <div class="">
@@ -27,7 +26,7 @@ onUnmounted(() => {
         </div>
       </main>
     </div>
-  </div>
+  </main>
 </template>
 
 <style>
@@ -37,5 +36,24 @@ onUnmounted(() => {
 
 #Containerdelmain{
   overflow: hidden;
+}
+
+/* --- SOLUCIÓN DE ESPACIO SUPERIOR PARA IMPRESIÓN --- */
+@media print {
+  /* Forzamos a que el main pierda el padding-top de 10vh solo al imprimir */
+  main.section.pt-\[10vh\],
+  .main-container-print {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+
+  /* Nos aseguramos de que los contenedores hijos tampoco tengan márgenes remanentes */
+  #Containerdelmain,
+  #ContainerMain,
+  #ContainerMain > div {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+    overflow: visible !important; /* Evita que se corte el documento si pasa a otra hoja */
+  }
 }
 </style>

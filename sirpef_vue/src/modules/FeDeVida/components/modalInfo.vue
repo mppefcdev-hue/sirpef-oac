@@ -4,10 +4,6 @@ import { onMounted, onUnmounted } from 'vue';
 import useModalInfo from '../composables/useModalInfo';
 import CardHistory from './cardHistory.vue';
 import { useRoute, useRouter } from 'vue-router';
-import { nextTick, ref } from 'vue';
-import MemoPreview from '../../Memos/components/MemoPreview.vue';
-import PuntoPreview from './PuntoPreview.vue';
-import { generateMemoPdf } from '../../Memos/services/PdfService';
 
 const {
     caseData,
@@ -33,8 +29,6 @@ const $emit = defineEmits(['close'])
 
 const route = useRoute()
 const router = useRouter()
-const memoToPrint = ref(null);
-const puntoToPrint = ref(null);
 
 const hidden = (e?: PointerEvent) => {
     if(route.name == 'case-fedevida') router.back()
@@ -67,61 +61,6 @@ onUnmounted(() => {
 const openRecaudo = (reca: any) => {
     window.open(reca.path, '_blank', 'noopener, noreferrer');
 }
-
-const viewPuntoPdf = () => {
-    if (caseData.value?.punto_cuenta?.id) {
-        window.open(`${import.meta.env.VITE_APP_API_URL}/api/oac/punto-cuenta/pdf/${caseData.value.punto_cuenta.id}`, '_blank');
-    }
-};
-
-
-const viewMemo = async () => {
-    if (caseData.value?.punto_cuenta?.id) {
-        puntoToPrint.value = {
-            ...caseData.value.punto_cuenta,
-            descripcion: caseData.value.descripcion,
-            created_at: caseData.value.fecha_registro
-        };
-        await nextTick();
-        await generateMemoPdf('punto-printable-hidden');
-    }
-};
-
-const createMemoFromPDC = async () => {
-    const memo = caseData.value?.punto_cuenta?.memorandum;
-    if (memo?.id) {
-        const providers = memo.proveedores || [];
-        const total = providers.reduce((acc, curr) => acc + (parseFloat(curr.monto) || 0), 0);
-
-        memoToPrint.value = {
-            ...memo,
-            para_nombre: memo.para,
-            para_cargo: 'Directora General (E) de la Oficina de Gestión Administrativa',
-            de_nombre: memo.de,
-            de_cargo: 'Director General (E) de la Oficina de Atención al Ciudadano',
-            motivo: memo.cuerpo,
-            tabla: {
-                pto_cta: `${caseData.value.punto_cuenta.numero_punto}`,
-                fecha: memo.fecha,
-                solicitante: caseData.value.persona.nombre_completo,
-                cedula: caseData.value.persona.cedula,
-                monto: total,
-                total: total,
-                proveedores: providers
-            },
-            cuerpo_final: 'Agradeciendo la receptividad que tenga a bien dispensar a la presente, en girar la instrucción correspondiente a fin de realizar el trámite de orden de pago, quedo de usted.',
-            resolucion: 'Resolución N° 006-2024 publicada en la Gaceta Oficial de la República Bolivariana de Venezuela N° 42.958 ambos de fecha 06 de septiembre de 2024',
-        };
-
-        await nextTick();
-        await generateMemoPdf('memo-printable-hidden');
-    } else if (caseData.value?.punto_cuenta?.numero_punto) {
-        router.push({
-            path: '/oac/memos/form',
-            query: { numero: caseData.value.punto_cuenta.numero_punto }
-        });
-    }
-};
 
 </script>
 
@@ -373,7 +312,7 @@ const createMemoFromPDC = async () => {
 
                 </div>
 
-                <nav class="grid gap-5 my-10">
+                <nav class="flex justify-between items-center my-10">
                     <button v-if="!store?.authUser?.isAdmin && caseData.voto == null" @click="sendToCheck"
                         class="w-[60%] py-5 mx-auto bg-[#010c41] block rounded-md font-bold hover:bg-[#1F52C7] text-white cursor-pointer transition-all">
                         Enviar a revisión
@@ -387,11 +326,10 @@ const createMemoFromPDC = async () => {
 
                     <button v-if="store?.authUser?.isAdmin && caseData?.punto_cuenta?.estatus == true"
                         @click="editPunto"
-                        class="w-[60%] py-5 mx-auto bg-[#010c41] block rounded-md font-bold hover:bg-[#1F52C7] text-white cursor-pointer transition-all">
-                        Punto de Cuenta
+                        class="w-[20%] py-5 mx-auto bg-[#010c41] block rounded-md font-bold hover:bg-[#1F52C7] text-white cursor-pointer transition-all">
+                        PDC
                         <font-awesome-icon icon="pen-to-square" class="ml-1" />
                     </button>
-
                 </nav>
 
             </aside>
@@ -432,7 +370,7 @@ const createMemoFromPDC = async () => {
 
                 </div>
 
-                <nav class="w-full rounded-full bottom-10 flex items-center justify-left gap-5 absolute mx-auto py-2">
+                <nav class="w-full rounded-full bottom-10 flex items-center justify-left absolute mx-auto py-2">
 
                     <div @click="createPunto"
                         class="border cursor-pointer w-[200px] h-[300px] border-gray-200 rounded-lg overflow-hidden flex flex-col justify-between shadow-md hover:shadow-2xl transition-shadow duration-300 bg-white">
@@ -454,41 +392,11 @@ const createMemoFromPDC = async () => {
                         </div>
                     </div>
 
-
-
-                    <div v-if="caseData?.punto_cuenta" @click="createMemoFromPDC"
-                        class="border cursor-pointer w-[200px] h-[300px] border-gray-200 rounded-lg overflow-hidden flex flex-col justify-between shadow-md hover:shadow-2xl transition-shadow duration-300 bg-white">
-                        <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
-                            <h3 class="font-medium text-gray-700 capitalize truncate">Memorándum</h3>
-                        </div>
-
-                        <div class="flex justify-center items-center p-4 overflow-hidden min-h-[150px]">
-                            <img class="max-w-full max-h-[180px] object-contain rounded"
-                                :src="`/memo.png`"
-                                alt="" />
-                        </div>
-                        <div class="px-4 py-3 border-t border-gray-200 text-center">
-                            <button
-                                class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition-colors duration-200">
-                                <font-awesome-icon :icon="caseData?.punto_cuenta?.memorandum?.id ? 'eye' : 'plus'" />
-                                {{ caseData?.punto_cuenta?.memorandum?.id ? 'Ver Memorándum' : 'Crear Memorándum' }}
-                            </button>
-                        </div>
-                    </div>
                 </nav>
             </div>
 
         </article>
     </section>
-
-    <!-- Hidden Printable Area -->
-    <div v-if="memoToPrint" id="memo-printable-hidden" class="hidden">
-        <MemoPreview :data="memoToPrint" />
-    </div>
-
-    <div v-if="puntoToPrint" id="punto-printable-hidden" class="hidden">
-        <PuntoPreview :data="puntoToPrint" />
-    </div>
 </template>
 
 <style scoped>
@@ -517,22 +425,5 @@ const createMemoFromPDC = async () => {
     background-image: url(/Bg-welcome.svg) !important;
     background-repeat: no-repeat;
     background-size: cover;
-}
-
-@media print {
-  body * {
-    visibility: hidden;
-  }
-  #memo-printable-hidden, #memo-printable-hidden *,
-  #punto-printable-hidden, #punto-printable-hidden * {
-    visibility: visible;
-  }
-  #memo-printable-hidden, #punto-printable-hidden {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    display: block !important;
-  }
 }
 </style>
