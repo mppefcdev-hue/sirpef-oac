@@ -33,6 +33,13 @@ watch(foundCaseId, (newId) => {
   }
 });
 
+const formatCurrency = (value: any) => {
+  if (value === undefined || value === null || value === '') return '0,00';
+  const number = typeof value === 'string' ? parseFloat(value) : value;
+  if (isNaN(number)) return '0,00';
+  return number.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
 </script>
 
 <template>
@@ -57,8 +64,10 @@ watch(foundCaseId, (newId) => {
             <tr class="">
               <th>ID / Orden</th>
               <th>Fecha Orden</th>
-              <th class="w-[20%] text-left">Proveedor</th>
+              <th class="w-[15%] text-left">Proveedor</th>
+              <th class="w-[15%] text-left">Beneficiario</th>
               <th>Monto</th>
+              <th>Factura</th>
               <th>Saldo Deudor</th>
               <th>Estatus</th>
               <th class="ubi_ads">Descripción</th>
@@ -84,12 +93,29 @@ watch(foundCaseId, (newId) => {
                 <span v-else>Sin proveedor</span>
               </td>
 
+              <td class="text-left capitalize">
+                <div v-if="row.beneficiario">
+                  <p class="font-semibold text-blue-600">{{ row.beneficiario }}</p>
+                  <p v-if="row.diagnostico" class="text-xs text-gray-500">Diag: {{ row.diagnostico }}</p>
+                </div>
+                <span v-else class="text-gray-400 text-xs">Sin beneficiario</span>
+              </td>
+
               <td class="text-center font-bold text-green-700">
-                {{ row.monto }}
+                {{ formatCurrency(row.monto) }}
+              </td>
+
+              <td class="text-center font-bold">
+                <span v-if="row.nro_factura" class="text-green-600">
+                  <font-awesome-icon icon="check-circle" /> Sí
+                </span>
+                <span v-else class="text-red-600">
+                  <font-awesome-icon icon="times-circle" /> No
+                </span>
               </td>
 
               <td class="text-center text-red-600">
-                {{ row.saldo_deudor }}
+                {{ formatCurrency((parseFloat(row.saldo_deudor) || 0) - (parseFloat(row.saldo_acreedor) || 0)) }}
               </td>
 
               <td class="text-center">
@@ -122,7 +148,7 @@ watch(foundCaseId, (newId) => {
             </tr>
             
             <tr v-if="data.rows.length == 0">
-              <td colspan="8" class="text-center py-10">No se encontraron registros de pagos.</td>
+              <td colspan="9" class="text-center py-10">No se encontraron registros de pagos.</td>
             </tr>
           </tbody>
         </table>

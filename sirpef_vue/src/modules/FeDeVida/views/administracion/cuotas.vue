@@ -6,6 +6,7 @@ import { useAuthStore } from '@/modules/Auth/stores';
 import { useRouter } from 'vue-router';
 import Http from "@/utils/Http";
 import { alerta } from "@/utils/alert";
+import Swal from 'sweetalert2';
 
 import DataTable from 'datatables.net-vue3';
 import DataTablesCore from 'datatables.net';
@@ -41,10 +42,12 @@ const loadCuotas = async () => {
   loadingCuotas.value = true;
   try {
     const res = await Http.get('/api/oac/cuotas');
-    cuotas.value = res.data.data.map((item: any) => ({
+    const data = res.data.data.map((item: any) => ({
       ...item,
       mes_nombre: meses[item.mes - 1]
     }));
+    // Sort current month first / descending
+    cuotas.value = data.sort((a: any, b: any) => b.ano !== a.ano ? b.ano - a.ano : b.mes - a.mes);
   } catch (error) {
     console.error(error);
   } finally {
@@ -120,13 +123,81 @@ const deleteCuota = async (id: number) => {
   }
 };
 
-const handleTableClick = (e: MouseEvent) => {
-  const target = e.target as HTMLElement;
+const handleTableClick = async (e: MouseEvent) => {
+  const target = (e.target as HTMLElement).closest('button');
+  if (!target) return;
+  
+  const id = target.getAttribute('data-id');
+  if (!id) return;
+  
+  const rowId = parseInt(id);
+  const row = cuotas.value.find((c: any) => c.id === rowId);
+  if (!row) return;
+
   if (target.classList.contains('btn-delete-quota')) {
-    const id = target.getAttribute('data-id');
-    if (id) {
-      deleteCuota(parseInt(id));
+    deleteCuota(rowId);
+  } else if (target.classList.contains('btn-edit-quota')) {
+    const { value: nuevoMonto } = await Swal.fire({
+      title: 'Modificar Cuota',
+      input: 'number',
+      inputLabel: `Nuevo monto para ${row.mes_nombre} ${row.ano}`,
+      inputValue: row.monto_limite,
+      showCancelButton: true,
+      confirmButtonText: 'Modificar',
+      cancelButtonText: 'Cancelar',
+      inputValidator: (value) => {
+        if (!value || parseFloat(value) < 0) return 'Ingrese un monto válido';
+      }
+    });
+    if (nuevoMonto) {
+      monto.value = parseFloat(nuevoMonto);
+      ano.value = row.ano;
+      mes.value = row.mes;
+      updateCuota();
     }
+  } else if (target.classList.contains('btn-extra-quota')) {
+    const { value: montoExtra } = await Swal.fire({
+      title: 'Agregar Cuota Extra',
+      input: 'number',
+      inputLabel: `Monto extra para ${row.mes_nombre} ${row.ano}`,
+      showCancelButton: true,
+      confirmButtonText: 'Agregar',
+      cancelButtonText: 'Cancelar',
+      inputValidator: (value) => {
+        if (!value || parseFloat(value) <= 0) return 'Ingrese un monto válido mayor a 0';
+      }
+    });
+    if (montoExtra) {
+      try {
+        const res = await Http.post('/api/oac/cuotas/extra', {
+          cuota_id: row.id,
+          monto: parseFloat(montoExtra)
+        });
+        if (res.data.success) {
+          alerta("Éxito", "Cuota extra agregada correctamente", "success");
+          loadCuotas();
+        }
+      } catch (e: any) {
+        console.error(e);
+        alerta("Error", e.response?.data?.message || "Error al agregar cuota extra", "error");
+      }
+    }
+  } else if (target.classList.contains('btn-detail-quota')) {
+    Swal.fire({
+      title: `Detalles de ${row.mes_nombre} ${row.ano}`,
+      html: `
+        <div class="text-left space-y-2 mt-4">
+          <p><strong>Cuota Inicial:</strong> Bs. ${formatCurrency(row.monto_limite)}</p>
+          <p><strong>Acumulado Anterior:</strong> Bs. ${formatCurrency(row.monto_acumulado_anterior)}</p>
+          <p><strong>Cuota Extra:</strong> Bs. ${formatCurrency(row.monto_extra || 0)}</p>
+          <p class="border-t pt-2"><strong>Límite Total:</strong> Bs. ${formatCurrency(row.monto_limite_total)}</p>
+          <p><strong>Monto Ejecutado:</strong> Bs. ${formatCurrency(row.monto_ejecutado)}</p>
+          <p class="text-lg mt-2 ${parseFloat(row.monto_disponible) >= 0 ? 'text-green-600' : 'text-red-600'}"><strong>Monto Disponible:</strong> Bs. ${formatCurrency(row.monto_disponible)}</p>
+        </div>
+      `,
+      icon: 'info',
+      confirmButtonText: 'Cerrar'
+    });
   }
 };
 
@@ -183,17 +254,28 @@ const columns = [
   }
 ];
 
-if (store.authUser?.role_id === 1) {
+if (store.authUser?.role_id === 1 || store.authUser?.role_id === 2) {
   columns.push({
     data: null,
     title: 'Acciones',
     render: (data, type, row) => {
-      return `<button class="btn-delete-quota bg-red-700 hover:bg-red-800 text-white font-bold py-1 px-3 rounded-lg text-xs transition duration-150" data-id="${row.id}">Eliminar</button>`;
+      return `
+        <div class="flex gap-3 justify-center items-center">
+          <button class="btn-detail-quota text-blue-600 hover:text-blue-800 hover:scale-110 font-bold transition-all text-sm" data-id="${row.id}" title="Detalles">Detalles</button>
+          <button class="btn-edit-quota text-[#eca008] hover:text-[#d68f07] hover:scale-110 font-bold transition-all text-sm" data-id="${row.id}" title="Modificar">Actualizar</button>
+          <button class="btn-delete-quota text-red-600 hover:text-red-800 hover:scale-110 transition-all text-sm flex items-center gap-1" data-id="${row.id}" title="Eliminar">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        </div>
+      `;
     }
   });
 }
 
 const dtOptions = {
+  order: [], // Previene el ordenamiento por defecto para respetar el orden del array
   language: {
     search: "Buscar",
     info: "Mostrando del _START_ a _END_ de _TOTAL_ registros",
@@ -205,6 +287,9 @@ const dtOptions = {
       extend: 'csv',
       text: 'Exportar a CSV',
       filename: "cuotas_compromiso",
+      exportOptions: {
+        columns: [0, 1, 2, 3, 4, 5, 6, 7]
+      }
     }
   ]
 };
@@ -245,9 +330,6 @@ const dtOptions = {
         <div class="flex flex-col gap-2">
           <button type="submit" class="w-full bg-[#eca008] hover:bg-[#d68f07] text-white font-bold py-3 px-6 rounded-lg transition duration-150 focus:outline-none">
             Guardar Cuota
-          </button>
-          <button type="button" @click="updateCuota" class="w-full bg-[#010c41] hover:bg-[#021360] text-white font-bold py-3 px-6 rounded-lg transition duration-150 focus:outline-none">
-            Modificar Cuota
           </button>
         </div>
       </form>
@@ -335,6 +417,11 @@ const dtOptions = {
   display: flex;
   align-items: flex-end;
   justify-content: right;
+}
+
+#Tbl_Cuotas table {
+  grid-column: 1 / -1;
+  width: 100% !important;
 }
 
 #Tbl_Cuotas tr {

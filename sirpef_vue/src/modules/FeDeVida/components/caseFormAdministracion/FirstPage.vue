@@ -14,6 +14,14 @@ const props = defineProps<{
   values: any,
 }>()
 
+import { computed } from 'vue';
+
+const tipoPagoNombre = computed(() => {
+  if (!props.values.tipo_pago) return '';
+  const pago = pagos.value.find((p: any) => p.id === props.values.tipo_pago);
+  return pago ? pago.nombre.toLowerCase() : '';
+});
+
 const getPay = async () => {
   const res = await Http.get(`/api/oac/tipos-pagos/`);
   pagos.value = res.data.data
@@ -57,7 +65,7 @@ onMounted(() => {
         </select>
       </div>
 
-      <div>
+      <div v-if="tipoPagoNombre.includes('financier')">
         <label class="block font-medium text-gray-700 ml-1">Nro. Referencia Pago Financiero</label>
         <input name="nro_referencia_pago" class="w-full bg-gray-100 text-gray-900 mt-1 p-3 rounded-lg" type="text"
           placeholder="Ingrese nro de referencia" v-model="values.nro_referencia_pago" />
@@ -67,6 +75,18 @@ onMounted(() => {
         <label class="block font-medium text-gray-700 ml-1">Proveedor / Contacto</label>
         <input name="proveedor" class="w-full bg-gray-100 text-gray-900 mt-1 p-3 rounded-lg" type="text"
           placeholder="Nombre del proveedor" v-model="values.proveedor" />
+      </div>
+
+      <div>
+        <label class="block font-medium text-gray-700 ml-1">Beneficiario (Paciente)</label>
+        <input name="beneficiario" class="w-full bg-gray-100 text-gray-900 mt-1 p-3 rounded-lg" type="text"
+          placeholder="Nombre del beneficiario" v-model="values.beneficiario" />
+      </div>
+
+      <div>
+        <label class="block font-medium text-gray-700 ml-1">Diagnóstico</label>
+        <input name="diagnostico" class="w-full bg-gray-100 text-gray-900 mt-1 p-3 rounded-lg" type="text"
+          placeholder="Diagnóstico" v-model="values.diagnostico" />
       </div>
 
       <div>
@@ -92,13 +112,19 @@ onMounted(() => {
         />
       </div>
 
-      <div>
+      <div v-if="tipoPagoNombre !== ''">
         <label class="block font-medium text-gray-700 ml-1">Orden de Pago</label>
         <input name="nro_orden_pago" class="w-full bg-gray-100 text-gray-900 mt-1 p-3 rounded-lg" type="text"
           placeholder="Nro. de orden" v-model="values.nro_orden_pago" />
       </div>
 
-      <div>
+      <div v-if="tipoPagoNombre !== ''">
+        <label class="block font-medium text-gray-700 ml-1">Fecha de la Orden de Pago</label>
+        <input name="fecha_orden_pago" class="w-full bg-gray-100 text-gray-900 mt-1 p-3 rounded-lg" type="date"
+          v-model="values.fecha_orden_pago" />
+      </div>
+
+      <div v-if="tipoPagoNombre.includes('financier')">
         <label class="block font-medium text-gray-700 ml-1">Fecha de Pago Financiero</label>
         <input name="fecha_pago_financiero" class="w-full bg-gray-100 text-gray-900 mt-1 p-3 rounded-lg" type="date"
           v-model="values.fecha_pago_financiero" />

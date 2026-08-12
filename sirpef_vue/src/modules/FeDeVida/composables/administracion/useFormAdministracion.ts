@@ -23,6 +23,8 @@ export default (punto: any) => {
         nro_factura: "",
         estatus: "",
         descripcion: "",
+        beneficiario: "",
+        diagnostico: "",
         fecha_pago_financiero: '',
         saldo_deudor: '',
         saldo_acreedor: '',
@@ -87,6 +89,8 @@ export default (punto: any) => {
             formData.append('nro_factura', UserInfo.value.nro_factura);
             formData.append('estatus_pago_id', UserInfo.value.estatus);
             formData.append('descripcion', UserInfo.value.descripcion);
+            formData.append('beneficiario', UserInfo.value.beneficiario);
+            formData.append('diagnostico', UserInfo.value.diagnostico);
 
             const proveedoresEnvio = [
                 {
@@ -142,6 +146,8 @@ export default (punto: any) => {
                 nro_factura: data.nro_factura || '',
                 estatus: data.estatus || '',
                 descripcion: data.descripcion || '',
+                beneficiario: data.beneficiario || '',
+                diagnostico: data.diagnostico || '',
                 recaudos: data.recaudos?.map((e: any) => ({ ...e, type: e.mime_type })) || [],
                 fecha_pago_financiero: data.fecha_pago_financiero || '',
                 saldo_deudor: data.saldo_deudor || '',
