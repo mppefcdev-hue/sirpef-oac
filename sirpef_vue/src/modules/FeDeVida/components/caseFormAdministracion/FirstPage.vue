@@ -59,7 +59,7 @@ onMounted(() => {
       <div>
         <label class="block font-medium text-gray-700 ml-1">Tipo de Pago</label>
         <select name="tipo_pago" class="w-full bg-gray-100 text-gray-900 mt-1 p-3 rounded-lg"
-          v-model="values.tipo_pago">
+          v-model="values.tipo_pago" required>
           <option value="">Sin seleccion</option>
           <option :value="pago.id" v-for="pago in pagos">{{pago.nombre}}</option>
         </select>
@@ -68,37 +68,43 @@ onMounted(() => {
       <div v-if="tipoPagoNombre.includes('financier')">
         <label class="block font-medium text-gray-700 ml-1">Nro. Referencia Pago Financiero</label>
         <input name="nro_referencia_pago" class="w-full bg-gray-100 text-gray-900 mt-1 p-3 rounded-lg" type="text"
-          placeholder="Ingrese nro de referencia" v-model="values.nro_referencia_pago" />
+          placeholder="Ingrese nro de referencia" v-model="values.nro_referencia_pago" required />
       </div>
 
       <div>
-        <label class="block font-medium text-gray-700 ml-1">Proveedor / Contacto</label>
+        <label class="block font-medium text-gray-700 ml-1">Proveedor</label>
         <input name="proveedor" class="w-full bg-gray-100 text-gray-900 mt-1 p-3 rounded-lg" type="text"
-          placeholder="Nombre del proveedor" v-model="values.proveedor" />
+          placeholder="Nombre del proveedor" v-model="values.proveedor" required />
+      </div>
+
+      <div>
+        <label class="block font-medium text-gray-700 ml-1">Contacto</label>
+        <input name="contacto" class="w-full bg-gray-100 text-gray-900 mt-1 p-3 rounded-lg" type="number"
+          placeholder="Ej: 04121234567" v-model="values.contacto" required />
       </div>
 
       <div>
         <label class="block font-medium text-gray-700 ml-1">Beneficiario (Paciente)</label>
         <input name="beneficiario" class="w-full bg-gray-100 text-gray-900 mt-1 p-3 rounded-lg" type="text"
-          placeholder="Nombre del beneficiario" v-model="values.beneficiario" />
+          placeholder="Nombre del beneficiario" v-model="values.beneficiario" required />
       </div>
 
       <div>
         <label class="block font-medium text-gray-700 ml-1">Diagnóstico</label>
         <input name="diagnostico" class="w-full bg-gray-100 text-gray-900 mt-1 p-3 rounded-lg" type="text"
-          placeholder="Diagnóstico" v-model="values.diagnostico" />
+          placeholder="Diagnóstico" v-model="values.diagnostico" required />
       </div>
 
       <div>
         <label class="block font-medium text-gray-700 ml-1">RIF del Proveedor</label>
         <input name="rif_proveedor" class="w-full bg-gray-100 text-gray-900 mt-1 p-3 rounded-lg" type="text"
-          placeholder="Ej: J-12345678-9" v-model="values.rif_proveedor" />
+          placeholder="Ej: J-12345678-9" v-model="values.rif_proveedor" required />
       </div>
 
       <div>
         <label class="block font-medium text-gray-700 ml-1">Monto</label>
         <input name="monto" class="w-full bg-gray-100 text-gray-900 mt-1 p-3 rounded-lg" type="number" step="0.01"
-          placeholder="0.00" v-model="values.monto" />
+          placeholder="0.00" v-model="values.monto" required />
       </div>
 
       <div>
@@ -115,19 +121,19 @@ onMounted(() => {
       <div v-if="tipoPagoNombre !== ''">
         <label class="block font-medium text-gray-700 ml-1">Orden de Pago</label>
         <input name="nro_orden_pago" class="w-full bg-gray-100 text-gray-900 mt-1 p-3 rounded-lg" type="text"
-          placeholder="Nro. de orden" v-model="values.nro_orden_pago" />
+          placeholder="Nro. de orden" v-model="values.nro_orden_pago" required />
       </div>
 
       <div v-if="tipoPagoNombre !== ''">
         <label class="block font-medium text-gray-700 ml-1">Fecha de la Orden de Pago</label>
         <input name="fecha_orden_pago" class="w-full bg-gray-100 text-gray-900 mt-1 p-3 rounded-lg" type="date"
-          v-model="values.fecha_orden_pago" />
+          v-model="values.fecha_orden_pago" required />
       </div>
 
       <div v-if="tipoPagoNombre.includes('financier')">
         <label class="block font-medium text-gray-700 ml-1">Fecha de Pago Financiero</label>
         <input name="fecha_pago_financiero" class="w-full bg-gray-100 text-gray-900 mt-1 p-3 rounded-lg" type="date"
-          v-model="values.fecha_pago_financiero" />
+          v-model="values.fecha_pago_financiero" required />
       </div>
     </div>
     <Controls :step="step" />
