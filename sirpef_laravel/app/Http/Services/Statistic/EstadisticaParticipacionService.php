@@ -20,13 +20,40 @@ class EstadisticaParticipacionService
      * @param int $tipo_caso_id ID del tipo de caso para filtrar, o 0 para no aplicar filtro.
      * @return \Illuminate\Http\JsonResponse|array Resumen de datos estadísticos o mensaje de error.
      */
-    static public function GetResumenData($fechaDesde = null, $fechaHasta = null, $tipo_caso_id = 0)
-    {
+
+    static public function GetResumenData($fechaDesde = null, $fechaHasta = null, $tipo_caso_id = 0) {
         $user = auth()->user();
         if (!$user) {
             return response()->json(['message' => 'No autenticado'], 401);
         }
 
+        $ministerio_id = $user->persona->ministerio_id;
+        $data = [];
+
+        if($ministerio_id == 25) $data = self::DataOAC($fechaDesde, $fechaHasta, $tipo_caso_id, $user);
+        else if($ministerio_id == 28){
+            $dataOAC = self::DataOAC($fechaDesde, $fechaHasta, $tipo_caso_id, $user);
+            $dataAdmin = self::DataAdmin($fechaDesde, $fechaHasta, $tipo_caso_id, $user);
+            $data = array_merge($dataOAC, $dataAdmin);
+        }
+
+        return response()->json($data, 200);
+    }
+
+    static public function DataAdmin($fechaDesde = null, $fechaHasta = null, $tipo_caso_id = 0, $user = null){
+            return [
+            'g' => ['Total de Casos Registrados', 0, '#80B0EC'], // Casos con cualquier estatus
+            'h' => ['Casos En Trámite', 0, '#4B7EB6'],
+            'i' => ['Casos Especiales', 0, '#609053'],
+            'j' => ['Casos Normales', 0, '#FFA500'],
+            'k' => ['Casos Regularizados', 0, '#8d1d1dff'],
+
+        ];
+    }
+    
+    static public function DataOAC($fechaDesde = null, $fechaHasta = null, $tipo_caso_id = 0, $user = null)
+    {
+   
         // Obtén las personas que cumplen con los criterios generales
         // Asegúrate de pasar el usuario si ObtenerPersonasService lo necesita
         $personasQuery = ObtenerPersonasService::obtenerPersonas($user); 
@@ -120,7 +147,7 @@ class EstadisticaParticipacionService
             'c' => ['Casos Orientados', $totalOrientados, '#609053'],
             'd' => ['Casos con Resultado Directo', $totalResultadoDirecto, '#c80036'],
             'e' => ['Casos Remitidos a Otro', $totalRemitidos, '#FFA500'],
-            'f' => ['Casos Cerrados', $totalCerrados, '#808080'],
+            'f' => ['Casos Cerrados', $totalCerrados, '#8d1d1dff'],
 
         ];
     }
