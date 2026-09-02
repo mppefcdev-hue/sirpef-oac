@@ -31,23 +31,24 @@ class EstadisticaParticipacionService
         $data = [];
 
         if($ministerio_id == 25) $data = self::DataOAC($fechaDesde, $fechaHasta, $tipo_caso_id, $user);
+        else if($ministerio_id == 19) $data = self::DataOGA($fechaDesde, $fechaHasta, $tipo_caso_id, $user);
+
         else if($ministerio_id == 28){
             $dataOAC = self::DataOAC($fechaDesde, $fechaHasta, $tipo_caso_id, $user);
-            $dataAdmin = self::DataAdmin($fechaDesde, $fechaHasta, $tipo_caso_id, $user);
-            $data = array_merge($dataOAC, $dataAdmin);
+            $dataOGA = self::DataOGA($fechaDesde, $fechaHasta, $tipo_caso_id, $user);
+            $data = array_merge($dataOAC, $dataOGA);
         }
 
         return response()->json($data, 200);
     }
 
-    static public function DataAdmin($fechaDesde = null, $fechaHasta = null, $tipo_caso_id = 0, $user = null){
-            return [
+    static public function DataOGA($fechaDesde = null, $fechaHasta = null, $tipo_caso_id = 0, $user = null){
+        return [
             'g' => ['Total de Casos Registrados', 0, '#80B0EC'], // Casos con cualquier estatus
             'h' => ['Casos En Trámite', 0, '#4B7EB6'],
             'i' => ['Casos Especiales', 0, '#609053'],
             'j' => ['Casos Normales', 0, '#FFA500'],
             'k' => ['Casos Regularizados', 0, '#8d1d1dff'],
-
         ];
     }
     
