@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // @ts-nocheck
 import Welcome from "@/components/sirpef/welcome.vue";
-import { ref, watch } from "vue";
+import { ref, watch, computed } from "vue";
 import { useAuthStore } from '@/modules/Auth/stores';
 import AppPaginationD from "@/components/AppPaginationD.vue";
 import FormInput from "@/modules/SIRPEF/components/FormInput.vue";
@@ -13,19 +13,35 @@ import AdministracionTable from "@/modules/FeDeVida/composables/administracion/i
 const store = useAuthStore()
 const casePersona_id = ref(null)
 const descripcion = ref(null)
+const showFilters = ref(true)
 
 const {
   errors,
   data,
+  filters,
   router,
   result,
   confirmacion,
   setSearch,
   setSort,
+  applyFilters,
+  clearFilters,
   GetUser,
   deleteCaso,
   foundCaseId
 } = AdministracionTable()
+
+const hasActiveFilters = computed(() => {
+  return !!(
+    (data.search && data.search.trim()) ||
+    filters.mes ||
+    (filters.factura && filters.factura.trim()) ||
+    (filters.proveedor && filters.proveedor.trim()) ||
+    (filters.paciente && filters.paciente.trim()) ||
+    (filters.punto_cuenta && filters.punto_cuenta.trim()) ||
+    (filters.orden_pago && filters.orden_pago.trim())
+  );
+});
 
 watch(foundCaseId, (newId) => {
   if (newId) {
@@ -58,6 +74,150 @@ const formatCurrency = (value: any) => {
   <div class="col-start-2 col-end-4 mx-auto w-[90%] panel" v-if="Object.keys(result).length == 0">
 
     <div>
+      <!-- SECCIÓN DE BÚSQUEDA Y FILTROS -->
+      <div class="mb-6 p-5 bg-white shadow-sm rounded-2xl border border-gray-200">
+        <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pb-3 border-b border-gray-100">
+          <!-- Input de Buscador Rápido -->
+          <div class="relative flex-1">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400 pointer-events-none">
+              <font-awesome-icon icon="magnifying-glass" class="text-sm" />
+            </span>
+            <input
+              v-model="data.search"
+              @keyup.enter="applyFilters"
+              type="text"
+              placeholder="Buscar por orden de pago, factura, proveedor, paciente o punto de cuenta..."
+              class="w-full pl-10 pr-4 py-2.5 bg-gray-50 hover:bg-gray-100/70 focus:bg-white rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition text-sm text-gray-800 placeholder-gray-400"
+            />
+          </div>
+
+          <!-- Botones de Acción -->
+          <div class="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              @click="showFilters = !showFilters"
+              class="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border text-sm font-medium transition cursor-pointer"
+              :class="showFilters || hasActiveFilters 
+                ? 'bg-blue-50 text-blue-700 border-blue-200' 
+                : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'"
+            >
+              <font-awesome-icon icon="sliders" />
+              <span>Filtros</span>
+              <span v-if="hasActiveFilters" class="w-2 h-2 rounded-full bg-blue-600"></span>
+            </button>
+
+            <button
+              type="button"
+              @click="applyFilters"
+              class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#2052C7] hover:bg-blue-800 text-white text-sm font-semibold shadow-sm hover:shadow transition cursor-pointer"
+            >
+              <font-awesome-icon icon="magnifying-glass" />
+              <span>Buscar</span>
+            </button>
+
+            <button
+              type="button"
+              v-if="hasActiveFilters"
+              @click="clearFilters"
+              title="Limpiar todos los filtros"
+              class="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold transition cursor-pointer"
+            >
+              <font-awesome-icon icon="rotate-left" />
+              <span>Limpiar</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Cuadrícula de Filtros Específicos -->
+        <transition name="fade">
+          <div v-show="showFilters" class="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            <!-- 1. Filtrar por mes -->
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 mb-1">Mes</label>
+              <select
+                v-model="filters.mes"
+                @change="applyFilters"
+                class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-700 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
+              >
+                <option value="">Todos los meses</option>
+                <option value="1">Enero</option>
+                <option value="2">Febrero</option>
+                <option value="3">Marzo</option>
+                <option value="4">Abril</option>
+                <option value="5">Mayo</option>
+                <option value="6">Junio</option>
+                <option value="7">Julio</option>
+                <option value="8">Agosto</option>
+                <option value="9">Septiembre</option>
+                <option value="10">Octubre</option>
+                <option value="11">Noviembre</option>
+                <option value="12">Diciembre</option>
+              </select>
+            </div>
+
+            <!-- 2. Filtro por factura -->
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 mb-1">Factura</label>
+              <input
+                v-model="filters.factura"
+                @keyup.enter="applyFilters"
+                type="text"
+                placeholder="Nro. o con/sin factura"
+                class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-700 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
+              />
+            </div>
+
+            <!-- 3. Filtro por proveedor -->
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 mb-1">Proveedor</label>
+              <input
+                v-model="filters.proveedor"
+                @keyup.enter="applyFilters"
+                type="text"
+                placeholder="Nombre o RIF"
+                class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-700 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
+              />
+            </div>
+
+            <!-- 4. Filtro por paciente -->
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 mb-1">Paciente</label>
+              <input
+                v-model="filters.paciente"
+                @keyup.enter="applyFilters"
+                type="text"
+                placeholder="Nombre o Cédula"
+                class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-700 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
+              />
+            </div>
+
+            <!-- 5. Filtro por punto de cuenta -->
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 mb-1">Punto de Cuenta</label>
+              <input
+                v-model="filters.punto_cuenta"
+                @keyup.enter="applyFilters"
+                type="text"
+                placeholder="Nro. punto cuenta"
+                class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-700 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
+              />
+            </div>
+
+            <!-- 6. Filtro por orden de pago -->
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 mb-1">Orden de Pago</label>
+              <input
+                v-model="filters.orden_pago"
+                @keyup.enter="applyFilters"
+                type="text"
+                placeholder="Nro. orden pago"
+                class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-700 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
+              />
+            </div>
+          </div>
+        </transition>
+      </div>
+
       <div class="table-data__wrapper">
         <table class="table-data">
           <thead>
@@ -106,10 +266,10 @@ const formatCurrency = (value: any) => {
               </td>
 
               <td class="text-center font-bold">
-                <span v-if="row.nro_factura" class="text-green-600">
+                <span v-if="row.nro_factura" class="text-green-600 flex items-center justify-center gap-1">
                   <font-awesome-icon icon="check-circle" /> Sí
                 </span>
-                <span v-else class="text-red-600">
+                <span v-else class="text-red-600 flex items-center justify-center gap-1">
                   <font-awesome-icon icon="times-circle" /> No
                 </span>
               </td>
@@ -133,13 +293,13 @@ const formatCurrency = (value: any) => {
               <td class="text-center">
                 <div class="flex justify-center gap-2">
                   <button title="Ver Recaudos"
-                    class="bg-[#2052C7] text-white p-2 rounded-lg hover:opacity-80"
+                    class="bg-[#2052C7] text-white p-2 rounded-lg hover:opacity-80 cursor-pointer"
                     @click="() => casePersona_id = row.registro_id">
                     Ver punto
                   </button>
                   
                   <button title="Eliminar"
-                    class="bg-red-700 text-white p-2 rounded-lg hover:bg-red-900"
+                    class="bg-red-700 text-white p-2 rounded-lg hover:bg-red-900 cursor-pointer"
                     @click="deleteCaso(row.id)">
                     <font-awesome-icon icon="trash-can" />
                   </button>
@@ -148,14 +308,16 @@ const formatCurrency = (value: any) => {
             </tr>
             
             <tr v-if="data.rows.length == 0">
-              <td colspan="9" class="text-center py-10">No se encontraron registros de pagos.</td>
+              <td colspan="10" class="text-center py-10 text-gray-500">
+                No se encontraron registros de pagos que coincidan con los filtros de búsqueda.
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
 
       <span v-if="Object.keys(errors).length > 0" class="text-red-500">{{ errors }}</span>
-      <AppPaginationD v-if="data.links" :links="data.links"></AppPaginationD>
+      <AppPaginationD v-if="data.links && data.links.length > 0" :links="data.links"></AppPaginationD>
     </div>
 
   </div>
@@ -180,5 +342,15 @@ const formatCurrency = (value: any) => {
   grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
   gap: 20px;
   margin: 30px auto;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

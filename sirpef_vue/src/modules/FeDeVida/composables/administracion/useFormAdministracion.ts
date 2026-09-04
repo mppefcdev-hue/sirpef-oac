@@ -3,6 +3,7 @@ import { onMounted, ref, watch } from "vue"
 import { editCase, getCaseSingle, registerPay } from "../../services";
 import { useRoute, useRouter } from "vue-router";
 import Swal from "sweetalert2";
+import Http from "@/utils/Http";
 
 export default (punto: any) => {
     const router = useRouter()
@@ -184,6 +185,18 @@ export default (punto: any) => {
         }
     }
 
+    const DataOGA = async (fechaDesde: string | null = null, fechaHasta: string | null = null, tipoCasoId: number = 0) => {
+        try {
+            const desde = fechaDesde || 'null';
+            const hasta = fechaHasta || 'null';
+            const res = await Http.get(`/api/registro/count/${desde}/${hasta}/${tipoCasoId}`);
+            return res.data;
+        } catch (error) {
+            console.error("Error al obtener DataOGA:", error);
+            return null;
+        }
+    };
+
     onMounted(() => {
         if (id) getInfo(id)
     })
@@ -193,5 +206,6 @@ export default (punto: any) => {
         estado,
         emitForm,
         UserInfo,
+        DataOGA,
     }
 }

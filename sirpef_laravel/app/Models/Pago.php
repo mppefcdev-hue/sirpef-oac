@@ -8,9 +8,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany; // <--- PASO 1: Importar esto
 
+use Illuminate\Database\Eloquent\SoftDeletes;
+
 class Pago extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'tbl_pagos';
 
@@ -28,17 +30,50 @@ class Pago extends Model
         'registro_id',
     ];
 
+    protected $appends = [
+        'beneficiario',
+        'diagnostico',
+        'nro_factura',
+    ];
+
+    public function getBeneficiarioAttribute(): ?string
+    {
+        return $this->registro?->eventoPersona?->persona?->nombre_completo ?? null;
+    }
+
+    public function getDiagnosticoAttribute(): ?string
+    {
+        return $this->registro?->descripcion 
+            ?? $this->registro?->puntoCuenta?->memorandum?->cuerpo 
+            ?? null;
+    }
+
+    public function getNroFacturaAttribute(): ?string
+    {
+        // Si hay recaudos asociados al pago o registro
+        if ($this->relationLoaded('recaudos') && $this->recaudos->isNotEmpty()) {
+            $recaudo = $this->recaudos->first(function ($r) {
+                return stripos($r->nombre, 'factura') !== false || !empty($r->path);
+            });
+            return $recaudo ? $recaudo->nombre : $this->recaudos->first()->nombre;
+        }
+
+        // Si la descripción contiene el tag [Factura: ...]
+        if (preg_match('/\[Factura:\s*([^\]]+)\]/i', $this->descripcion ?? '', $matches)) {
+            return trim($matches[1]);
+        }
+
+        return null;
+    }
+
     /**
-     * PASO 2: Definir la relación de Recaudos
-     * Un Pago tiene muchos Recaudos asociados.
+     * Relación de Recaudos
      */
     public function recaudos(): HasMany
     {
         return $this->hasMany(Recaudo::class, 'pago_id');
     }
 
-    // ... tus otras relaciones (estatus, tipoPago, registro, proveedores) ...
-    
     public function estatus(): BelongsTo
     {
         return $this->belongsTo(EstatusPago::class, 'estatus_pago_id');
@@ -47,6 +82,11 @@ class Pago extends Model
     public function tipoPago(): BelongsTo
     {
         return $this->belongsTo(TipoPago::class, 'tipo_pago_id');
+    }
+
+    public function registro(): BelongsTo
+    {
+        return $this->belongsTo(Registro::class, 'registro_id');
     }
 
     public function proveedores(): BelongsToMany

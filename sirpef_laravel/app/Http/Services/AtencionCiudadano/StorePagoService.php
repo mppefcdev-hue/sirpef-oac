@@ -27,12 +27,17 @@ class StorePagoService
                 $saldoAcreedor = floatval($request->saldo_acreedor ?? 0);
                 $saldoDeudor = $monto - $saldoAcreedor;
 
+                $descripcion = $request->descripcion;
+                if (!empty($request->nro_factura) && stripos($descripcion ?? '', '[Factura:') === false) {
+                    $descripcion = trim(($descripcion ?? '') . " [Factura: " . trim($request->nro_factura) . "]");
+                }
+
                 // 2. Crear el registro principal del Pago
                 $pago = Pago::create([
                     'orden_pago'           => $request->orden_pago,
                     'fecha_orden_pago'     => $request->fecha_orden_pago,
                     'monto'                => $monto,
-                    'descripcion'          => $request->descripcion,
+                    'descripcion'          => $descripcion,
                     'fecha_pago_financiero'=> $request->fecha_pago_financiero,
                     'saldo_deudor'         => $saldoDeudor,
                     'saldo_acreedor'       => $saldoAcreedor,

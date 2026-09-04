@@ -369,11 +369,15 @@ export default () => {
         }]
       }
 
+      const totalKey = response.data?.a ? 'a' : Object.keys(response.data || {})[0];
+      const totalLabel = totalKey && response.data[totalKey] ? response.data[totalKey][0] : 'Total de Casos';
+      const totalValue = totalKey && response.data[totalKey] ? response.data[totalKey][1] : 0;
+
       PiePersonas.value = {
-        labels: [response.data.a[0]],
+        labels: [totalLabel],
         datasets: [{
           label: 'Resultados de Participación',
-          data: [response.data.a[1]],
+          data: [totalValue],
           backgroundColor: '#1A4968',
         }]
       }
