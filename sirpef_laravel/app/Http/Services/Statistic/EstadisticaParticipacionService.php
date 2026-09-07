@@ -11,6 +11,7 @@ use App\Models\Evento;
 use App\Models\TipoCaso; // ¡Importante: se añade el modelo TipoCaso!
 use App\Models\Pago;
 use App\Models\Recaudo;
+use App\Http\Services\AtencionCiudadano\IndexPagoService;
 
 class EstadisticaParticipacionService
 {
@@ -32,17 +33,14 @@ class EstadisticaParticipacionService
         $ministerio_id = $user->persona->ministerio_id ?? null;
         $data = [];
 
-        if ($ministerio_id == 25) {
-            $data = self::DataOAC($fechaDesde, $fechaHasta, $tipo_caso_id, $user);
-        } else if ($ministerio_id == 19) {
+        if ($ministerio_id == 19) {
+            // OGA: Solo estadísticas de pagos/administración
             $data = self::DataOGA($fechaDesde, $fechaHasta, $tipo_caso_id, $user, true);
-        } else if ($ministerio_id == 28) {
+        } else {
+            // OAC, OTIC y demás usuarios con acceso: combinación de casos OAC y estadísticas de pagos
             $dataOAC = self::DataOAC($fechaDesde, $fechaHasta, $tipo_caso_id, $user);
             $dataOGA = self::DataOGA($fechaDesde, $fechaHasta, $tipo_caso_id, $user, false);
             $data = array_merge($dataOAC, $dataOGA);
-        } else {
-            // Por defecto si es otro ministerio, intentar con OAC
-            $data = self::DataOAC($fechaDesde, $fechaHasta, $tipo_caso_id, $user);
         }
 
         return response()->json($data, 200);
@@ -50,111 +48,7 @@ class EstadisticaParticipacionService
 
     static public function DataOGA($fechaDesde = null, $fechaHasta = null, $tipo_caso_id = 0, $user = null, $standalone = true)
     {
-        $baseQuery = Pago::query();
-
-        // Filtro de fechas si se proporcionan
-        if ($fechaDesde && $fechaHasta && $fechaDesde !== 'null' && $fechaHasta !== 'null') {
-            $baseQuery->where(function ($q) use ($fechaDesde, $fechaHasta) {
-                $q->whereDate('created_at', '>=', $fechaDesde)
-                  ->whereDate('created_at', '<=', $fechaHasta)
-                  ->orWhere(function ($q2) use ($fechaDesde, $fechaHasta) {
-                      $q2->whereNotNull('fecha_orden_pago')
-                         ->whereDate('fecha_orden_pago', '>=', $fechaDesde)
-                         ->whereDate('fecha_orden_pago', '<=', $fechaHasta);
-                  });
-            });
-        }
-
-        // Filtro por tipo de caso si no es 0
-        if ($tipo_caso_id && $tipo_caso_id != 0 && $tipo_caso_id !== 'null') {
-            $baseQuery->whereHas('registro', function ($q) use ($tipo_caso_id) {
-                $q->where('id_tipo_caso', $tipo_caso_id);
-            });
-        }
-
-        // 1. Total general de casos OGA
-        $totalCasos = (clone $baseQuery)->count();
-
-        // 2. Casos Normales: tipo de pago seleccionado como 'normal'
-        $totalNormales = (clone $baseQuery)->where(function ($q) {
-            $q->where('tipo_pago_id', 2)
-              ->orWhereHas('tipoPago', function ($tp) {
-                  $tp->whereRaw('LOWER(nombre) LIKE ?', ['%normal%']);
-              });
-        })->count();
-
-        // 3. Casos Financieros: tipo de pago seleccionado como 'financiero'
-        $totalFinancieros = (clone $baseQuery)->where(function ($q) {
-            $q->where('tipo_pago_id', 1)
-              ->orWhereHas('tipoPago', function ($tp) {
-                  $tp->whereRaw('LOWER(nombre) LIKE ?', ['%financier%']);
-              });
-        })->count();
-
-        // 4. Casos Regularizados: estatus de procesados por el SIGECOF con estatus 'procesado'
-        $totalRegularizados = (clone $baseQuery)->where(function ($q) {
-            $q->where('estatus_pago_id', 1)
-              ->orWhereHas('estatus', function ($ep) {
-                  $ep->whereRaw('LOWER(nombre) LIKE ?', ['%procesado%']);
-              });
-        })->count();
-
-        // 5. Casos Facturas: procesos que tienen facturas agregadas (recaudos o en descripción)
-        $totalFacturas = (clone $baseQuery)->where(function ($q) {
-            $q->whereHas('recaudos')
-              ->orWhere('descripcion', 'LIKE', '%[Factura:%')
-              ->orWhere('descripcion', 'LIKE', '%factura%');
-        })->count();
-
-        // 6. Casos sin Factura: procesos abiertos que no tienen la factura agregada
-        $totalSinFactura = (clone $baseQuery)->whereDoesntHave('registro', function ($rq) {
-            $rq->where('estatus_caso', 'Cerrado');
-        })->where(function ($q) {
-            $q->whereDoesntHave('recaudos')
-              ->where(function ($dq) {
-                  $dq->whereNull('descripcion')
-                     ->orWhere(function ($dq2) {
-                         $dq2->where('descripcion', 'NOT LIKE', '%[Factura:%')
-                             ->where('descripcion', 'NOT LIKE', '%factura%');
-                     });
-              });
-        })->count();
-
-        // 7. Casos con reintegros: saldo deudor mayor a cero
-        $totalConReintegros = (clone $baseQuery)->where('saldo_deudor', '>', 0)->count();
-
-        // 8. Casos Cierre Administrativos: completados/cerrados en su totalidad con facturas agregadas
-        $totalCierreAdmin = (clone $baseQuery)->whereHas('registro', function ($rq) {
-            $rq->where('estatus_caso', 'Cerrado');
-        })->where(function ($q) {
-            $q->whereHas('recaudos')
-              ->orWhere('descripcion', 'LIKE', '%[Factura:%')
-              ->orWhere('descripcion', 'LIKE', '%factura%');
-        })->count();
-
-        if ($standalone) {
-            return [
-                'a' => ['Total de Casos Registrados', $totalCasos, '#80B0EC'],
-                'b' => ['Casos Normales', $totalNormales, '#FFA500'],
-                'c' => ['Casos Financieros', $totalFinancieros, '#4B7EB6'],
-                'd' => ['Casos Regularizados', $totalRegularizados, '#609053'],
-                'e' => ['Casos Facturas', $totalFacturas, '#2052C7'],
-                'f' => ['Casos sin Factura', $totalSinFactura, '#E05D5D'],
-                'g' => ['Casos con Reintegros', $totalConReintegros, '#D97706'],
-                'h' => ['Casos Cierre Administrativos', $totalCierreAdmin, '#8d1d1dff'],
-            ];
-        }
-
-        return [
-            'g' => ['Total de Casos OGA', $totalCasos, '#80B0EC'],
-            'h' => ['Casos Normales', $totalNormales, '#FFA500'],
-            'i' => ['Casos Financieros', $totalFinancieros, '#4B7EB6'],
-            'j' => ['Casos Regularizados', $totalRegularizados, '#609053'],
-            'k' => ['Casos Facturas', $totalFacturas, '#2052C7'],
-            'l' => ['Casos sin Factura', $totalSinFactura, '#E05D5D'],
-            'm' => ['Casos con Reintegros', $totalConReintegros, '#D97706'],
-            'n' => ['Casos Cierre Administrativos', $totalCierreAdmin, '#8d1d1dff'],
-        ];
+        return IndexPagoService::getEstadisticas($fechaDesde, $fechaHasta, $tipo_caso_id, $standalone);
     }
     
     static public function DataOAC($fechaDesde = null, $fechaHasta = null, $tipo_caso_id = 0, $user = null)

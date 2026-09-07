@@ -116,7 +116,40 @@ class IndexPagoService
                 $query->where('orden_pago', 'LIKE', "%{$ordenPago}%");
             }
 
-            // 8. Búsqueda rápida general (search)
+            // 8. Filtro por Tipo de Pago (normal / financiero o ID)
+            if ($request->filled('tipo_pago')) {
+                $tipoPago = trim($request->tipo_pago);
+                if (is_numeric($tipoPago)) {
+                    $query->where('tipo_pago_id', $tipoPago);
+                } else {
+                    $query->where(function ($q) use ($tipoPago) {
+                        $q->whereHas('tipoPago', function ($tp) use ($tipoPago) {
+                            $tp->whereRaw('LOWER(nombre) LIKE ?', ['%' . strtolower($tipoPago) . '%']);
+                        });
+                    });
+                }
+            }
+
+            // 9. Filtro por Estatus de Pago (procesado / regularizado o ID)
+            if ($request->filled('estatus_pago')) {
+                $estatusPago = trim($request->estatus_pago);
+                if (is_numeric($estatusPago)) {
+                    $query->where('estatus_pago_id', $estatusPago);
+                } elseif (strtolower($estatusPago) === 'procesado' || strtolower($estatusPago) === 'regularizado') {
+                    $query->where(function ($q) {
+                        $q->where('estatus_pago_id', 1)
+                          ->orWhereHas('estatus', function ($ep) {
+                              $ep->whereRaw('LOWER(TRIM(nombre)) = ?', ['procesado']);
+                          });
+                    });
+                } else {
+                    $query->whereHas('estatus', function ($ep) use ($estatusPago) {
+                        $ep->whereRaw('LOWER(nombre) LIKE ?', ['%' . strtolower($estatusPago) . '%']);
+                    });
+                }
+            }
+
+            // 10. Búsqueda rápida general (search)
             if ($request->filled('search')) {
                 $search = trim($request->search);
                 $query->where(function ($q) use ($search) {
@@ -167,5 +200,117 @@ class IndexPagoService
                 'error'   => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Obtiene las estadísticas resumidas de pagos (normales, financieros, regularizados, facturas, sin factura)
+     * consistentes con los datos mostrados en la pestaña Administración / Gestión de Pagos.
+     */
+    public static function getEstadisticas($fechaDesde = null, $fechaHasta = null, $tipo_caso_id = 0, bool $standalone = true): array
+    {
+        $baseQuery = Pago::query();
+
+        // Filtro por tipo de caso si se especifica
+        if ($tipo_caso_id && $tipo_caso_id != 0 && $tipo_caso_id !== 'null') {
+            $baseQuery->whereHas('registro', function ($q) use ($tipo_caso_id) {
+                $q->where('id_tipo_caso', $tipo_caso_id);
+            });
+        }
+
+        // Filtro de fechas: solo aplicar si no es el día por defecto (hoy) o si es un rango explícito
+        $isDefaultToday = ($fechaDesde && $fechaHasta && $fechaDesde === date('Y-m-d') && $fechaHasta === date('Y-m-d'));
+        if ($fechaDesde && $fechaHasta && $fechaDesde !== 'null' && $fechaHasta !== 'null' && !$isDefaultToday) {
+            $baseQuery->where(function ($q) use ($fechaDesde, $fechaHasta) {
+                $q->where(function ($q1) use ($fechaDesde, $fechaHasta) {
+                    $q1->whereNotNull('fecha_orden_pago')
+                       ->whereDate('fecha_orden_pago', '>=', $fechaDesde)
+                       ->whereDate('fecha_orden_pago', '<=', $fechaHasta);
+                })->orWhere(function ($q2) use ($fechaDesde, $fechaHasta) {
+                    $q2->whereNull('fecha_orden_pago')
+                       ->whereDate('created_at', '>=', $fechaDesde)
+                       ->whereDate('created_at', '<=', $fechaHasta);
+                });
+            });
+        }
+
+        // 1. Total general de pagos
+        $totalCasos = (clone $baseQuery)->count();
+
+        // 2. Casos Normales: tipo_pago_id = 2 o nombre 'Normal'
+        $totalNormales = (clone $baseQuery)->where(function ($q) {
+            $q->where('tipo_pago_id', 2)
+              ->orWhereHas('tipoPago', function ($tp) {
+                  $tp->whereRaw('LOWER(nombre) LIKE ?', ['%normal%']);
+              });
+        })->count();
+
+        // 3. Casos Financieros: tipo_pago_id = 1 o nombre 'Financiero'
+        $totalFinancieros = (clone $baseQuery)->where(function ($q) {
+            $q->where('tipo_pago_id', 1)
+              ->orWhereHas('tipoPago', function ($tp) {
+                  $tp->whereRaw('LOWER(nombre) LIKE ?', ['%financier%']);
+              });
+        })->count();
+
+        // 4. Casos Regularizados: estatus_pago_id = 1 o nombre 'Procesado' en SIGECOF
+        $totalRegularizados = (clone $baseQuery)->where(function ($q) {
+            $q->where('estatus_pago_id', 1)
+              ->orWhereHas('estatus', function ($ep) {
+                  $ep->whereRaw('LOWER(TRIM(nombre)) = ?', ['procesado']);
+              });
+        })->count();
+
+        // 5. Casos Facturas: procesos con recaudos asociados o tag [Factura: ...] o 'factura' en descripción
+        $totalFacturas = (clone $baseQuery)->where(function ($q) {
+            $q->whereHas('recaudos')
+              ->orWhere('descripcion', 'LIKE', '%[Factura:%')
+              ->orWhere('descripcion', 'LIKE', '%factura%');
+        })->count();
+
+        // 6. Casos sin Factura: procesos que NO tienen recaudos ni indicación de factura
+        $totalSinFactura = (clone $baseQuery)->whereDoesntHave('recaudos')
+            ->where(function ($q) {
+                $q->whereNull('descripcion')
+                  ->orWhere(function ($q2) {
+                      $q2->where('descripcion', 'NOT LIKE', '%[Factura:%')
+                         ->where('descripcion', 'NOT LIKE', '%factura%');
+                  });
+            })->count();
+
+        // 7. Casos con Reintegros: saldo deudor mayor a cero
+        $totalConReintegros = (clone $baseQuery)->where('saldo_deudor', '>', 0)->count();
+
+        // 8. Casos Cierre Administrativos: completados/cerrados con facturas agregadas
+        $totalCierreAdmin = (clone $baseQuery)->whereHas('registro', function ($rq) {
+            $rq->where('estatus_caso', 'Cerrado');
+        })->where(function ($q) {
+            $q->whereHas('recaudos')
+              ->orWhere('descripcion', 'LIKE', '%[Factura:%')
+              ->orWhere('descripcion', 'LIKE', '%factura%');
+        })->count();
+
+        if ($standalone) {
+            return [
+                'a' => ['Total de Pagos Registrados', $totalCasos, '#80B0EC'],
+                'b' => ['Casos Normales', $totalNormales, '#FFA500'],
+                'c' => ['Casos Financieros', $totalFinancieros, '#4B7EB6'],
+                'd' => ['Casos Regularizados', $totalRegularizados, '#609053'],
+                'e' => ['Casos Facturas', $totalFacturas, '#2052C7'],
+                'f' => ['Casos sin Factura', $totalSinFactura, '#E05D5D'],
+                'g' => ['Casos con Reintegros', $totalConReintegros, '#D97706'],
+                'h' => ['Casos Cierre Administrativos', $totalCierreAdmin, '#8d1d1dff'],
+            ];
+        }
+
+        return [
+            'g' => ['Total de Pagos Registrados', $totalCasos, '#80B0EC'],
+            'h' => ['Casos Normales', $totalNormales, '#FFA500'],
+            'i' => ['Casos Financieros', $totalFinancieros, '#4B7EB6'],
+            'j' => ['Casos Regularizados', $totalRegularizados, '#609053'],
+            'k' => ['Casos Facturas', $totalFacturas, '#2052C7'],
+            'l' => ['Casos sin Factura', $totalSinFactura, '#E05D5D'],
+            'm' => ['Casos con Reintegros', $totalConReintegros, '#D97706'],
+            'n' => ['Casos Cierre Administrativos', $totalCierreAdmin, '#8d1d1dff'],
+        ];
     }
 }

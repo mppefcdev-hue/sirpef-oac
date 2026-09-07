@@ -75,10 +75,10 @@ const formatCurrency = (value: any) => {
 
     <div>
       <!-- SECCIÓN DE BÚSQUEDA Y FILTROS -->
-      <div class="mb-6 p-5 bg-white shadow-sm rounded-2xl border border-gray-200">
+      <div class="mb-6 p-4 sm:p-5 bg-white shadow-sm rounded-2xl border border-gray-200">
         <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pb-3 border-b border-gray-100">
           <!-- Input de Buscador Rápido -->
-          <div class="relative flex-1">
+          <div class="relative flex-1 w-full min-w-0">
             <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400 pointer-events-none">
               <font-awesome-icon icon="magnifying-glass" class="text-sm" />
             </span>
@@ -87,16 +87,16 @@ const formatCurrency = (value: any) => {
               @keyup.enter="applyFilters"
               type="text"
               placeholder="Buscar por orden de pago, factura, proveedor, paciente o punto de cuenta..."
-              class="w-full pl-10 pr-4 py-2.5 bg-gray-50 hover:bg-gray-100/70 focus:bg-white rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition text-sm text-gray-800 placeholder-gray-400"
+              class="filter-input search-input w-full min-w-0 pl-10 pr-4 py-2.5 bg-gray-50 hover:bg-gray-100/70 focus:bg-white rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition text-sm text-gray-800 placeholder-gray-400"
             />
           </div>
 
           <!-- Botones de Acción -->
-          <div class="flex items-center gap-2 shrink-0">
+          <div class="flex flex-wrap sm:flex-nowrap items-center gap-2 shrink-0">
             <button
               type="button"
               @click="showFilters = !showFilters"
-              class="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border text-sm font-medium transition cursor-pointer"
+              class="flex-1 sm:flex-none justify-center flex items-center gap-2 px-3.5 py-2.5 rounded-xl border text-sm font-medium transition cursor-pointer"
               :class="showFilters || hasActiveFilters 
                 ? 'bg-blue-50 text-blue-700 border-blue-200' 
                 : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'"
@@ -109,7 +109,7 @@ const formatCurrency = (value: any) => {
             <button
               type="button"
               @click="applyFilters"
-              class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#2052C7] hover:bg-blue-800 text-white text-sm font-semibold shadow-sm hover:shadow transition cursor-pointer"
+              class="flex-1 sm:flex-none justify-center flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#2052C7] hover:bg-blue-800 text-white text-sm font-semibold shadow-sm hover:shadow transition cursor-pointer"
             >
               <font-awesome-icon icon="magnifying-glass" />
               <span>Buscar</span>
@@ -120,7 +120,7 @@ const formatCurrency = (value: any) => {
               v-if="hasActiveFilters"
               @click="clearFilters"
               title="Limpiar todos los filtros"
-              class="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold transition cursor-pointer"
+              class="flex-1 sm:flex-none justify-center flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold transition cursor-pointer"
             >
               <font-awesome-icon icon="rotate-left" />
               <span>Limpiar</span>
@@ -130,14 +130,14 @@ const formatCurrency = (value: any) => {
 
         <!-- Cuadrícula de Filtros Específicos -->
         <transition name="fade">
-          <div v-show="showFilters" class="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div v-show="showFilters" class="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
             <!-- 1. Filtrar por mes -->
-            <div>
-              <label class="block text-xs font-semibold text-gray-600 mb-1">Mes</label>
+            <div class="min-w-0 w-full">
+              <label class="block text-xs font-semibold text-gray-600 mb-1 truncate" title="Mes">Mes</label>
               <select
                 v-model="filters.mes"
                 @change="applyFilters"
-                class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-700 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
+                class="filter-input w-full min-w-0 px-3 py-2 bg-gray-50 hover:bg-gray-100/70 focus:bg-white border border-gray-200 rounded-lg text-xs sm:text-sm text-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
               >
                 <option value="">Todos los meses</option>
                 <option value="1">Enero</option>
@@ -156,62 +156,62 @@ const formatCurrency = (value: any) => {
             </div>
 
             <!-- 2. Filtro por factura -->
-            <div>
-              <label class="block text-xs font-semibold text-gray-600 mb-1">Factura</label>
+            <div class="min-w-0 w-full">
+              <label class="block text-xs font-semibold text-gray-600 mb-1 truncate" title="Factura">Factura</label>
               <input
                 v-model="filters.factura"
                 @keyup.enter="applyFilters"
                 type="text"
                 placeholder="Nro. o con/sin factura"
-                class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-700 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
+                class="filter-input w-full min-w-0 px-3 py-2 bg-gray-50 hover:bg-gray-100/70 focus:bg-white border border-gray-200 rounded-lg text-xs sm:text-sm text-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
               />
             </div>
 
             <!-- 3. Filtro por proveedor -->
-            <div>
-              <label class="block text-xs font-semibold text-gray-600 mb-1">Proveedor</label>
+            <div class="min-w-0 w-full">
+              <label class="block text-xs font-semibold text-gray-600 mb-1 truncate" title="Proveedor">Proveedor</label>
               <input
                 v-model="filters.proveedor"
                 @keyup.enter="applyFilters"
                 type="text"
                 placeholder="Nombre o RIF"
-                class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-700 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
+                class="filter-input w-full min-w-0 px-3 py-2 bg-gray-50 hover:bg-gray-100/70 focus:bg-white border border-gray-200 rounded-lg text-xs sm:text-sm text-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
               />
             </div>
 
             <!-- 4. Filtro por paciente -->
-            <div>
-              <label class="block text-xs font-semibold text-gray-600 mb-1">Paciente</label>
+            <div class="min-w-0 w-full">
+              <label class="block text-xs font-semibold text-gray-600 mb-1 truncate" title="Paciente">Paciente</label>
               <input
                 v-model="filters.paciente"
                 @keyup.enter="applyFilters"
                 type="text"
                 placeholder="Nombre o Cédula"
-                class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-700 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
+                class="filter-input w-full min-w-0 px-3 py-2 bg-gray-50 hover:bg-gray-100/70 focus:bg-white border border-gray-200 rounded-lg text-xs sm:text-sm text-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
               />
             </div>
 
             <!-- 5. Filtro por punto de cuenta -->
-            <div>
-              <label class="block text-xs font-semibold text-gray-600 mb-1">Punto de Cuenta</label>
+            <div class="min-w-0 w-full">
+              <label class="block text-xs font-semibold text-gray-600 mb-1 truncate" title="Punto de Cuenta">Punto de Cuenta</label>
               <input
                 v-model="filters.punto_cuenta"
                 @keyup.enter="applyFilters"
                 type="text"
                 placeholder="Nro. punto cuenta"
-                class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-700 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
+                class="filter-input w-full min-w-0 px-3 py-2 bg-gray-50 hover:bg-gray-100/70 focus:bg-white border border-gray-200 rounded-lg text-xs sm:text-sm text-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
               />
             </div>
 
             <!-- 6. Filtro por orden de pago -->
-            <div>
-              <label class="block text-xs font-semibold text-gray-600 mb-1">Orden de Pago</label>
+            <div class="min-w-0 w-full">
+              <label class="block text-xs font-semibold text-gray-600 mb-1 truncate" title="Orden de Pago">Orden de Pago</label>
               <input
                 v-model="filters.orden_pago"
                 @keyup.enter="applyFilters"
                 type="text"
                 placeholder="Nro. orden pago"
-                class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-700 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
+                class="filter-input w-full min-w-0 px-3 py-2 bg-gray-50 hover:bg-gray-100/70 focus:bg-white border border-gray-200 rounded-lg text-xs sm:text-sm text-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
               />
             </div>
           </div>
@@ -332,6 +332,32 @@ const formatCurrency = (value: any) => {
 </template>
 
 <style scoped>
+/* Anulación de width fijo y reglas rígidas impuestas por panels.css (.panel > div input { width: 500px!important; }) */
+.panel :deep(input),
+.panel :deep(select),
+.panel input,
+.panel select,
+.filter-input {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.panel :deep(.min-w-0),
+.panel .min-w-0,
+.panel :deep(.grid > div),
+.panel .grid > div {
+  width: 100% !important;
+}
+
+.panel input.filter-input {
+  border-radius: 0.5rem !important;
+}
+
+.panel input.search-input {
+  border-radius: 0.75rem !important;
+}
+
 .ubi_ads {
   width: 900px !important;
   white-space: wrap;
