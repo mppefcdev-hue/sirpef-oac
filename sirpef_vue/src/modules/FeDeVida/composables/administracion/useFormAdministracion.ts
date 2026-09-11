@@ -1,6 +1,6 @@
 import { alerta } from "@/utils/alert";
 import { onMounted, ref, watch } from "vue"
-import { editCase, getCaseSingle, registerPay } from "../../services";
+import { editCase, getCaseSingle, registerPay, getPagoSingle, updatePagoService } from "../../services";
 import { useRoute, useRouter } from "vue-router";
 import Swal from "sweetalert2";
 import Http from "@/utils/Http";
@@ -8,7 +8,7 @@ import Http from "@/utils/Http";
 export default (punto: any) => {
     const router = useRouter()
     const route = useRoute()
-    const id = route.params.id as string
+    const pagoId = (route.query.pago_id || route.params.id) as string
 
     const step = ref(1 as any);
     const estado = ref([] as number[])
@@ -82,8 +82,11 @@ export default (punto: any) => {
         });
 
         try {
-            if (mode.value == 'POST') await registerPay(punto.registro_id, formData)
-            else if (mode.value == 'PUT') await editCase(id, formData)
+            if (mode.value == 'POST') {
+                await registerPay(punto.registro_id, formData)
+            } else if (mode.value == 'PUT') {
+                await updatePagoService(pagoId, formData)
+            }
 
             estado.value.push(4)
             step.value = 4
@@ -153,22 +156,28 @@ export default (punto: any) => {
         }
     }
 
-    const getInfo = async (id: string) => {
+    const getInfo = async (pId: string) => {
         try {
-            const response = await getCaseSingle(id)
+            const response = await getPagoSingle(pId)
             const data = response.data
 
+            let nroFactura = data.nro_factura || '';
+            if (!nroFactura && data.descripcion) {
+                const match = data.descripcion.match(/\[Factura:\s*([^\]]+)\]/i);
+                if (match) nroFactura = match[1].trim();
+            }
+
             UserInfo.value = {
-                tipo_pago: data.tipo_pago || '',
+                tipo_pago: data.tipo_pago_id || '',
                 nro_referencia_pago: data.nro_referencia_pago || '',
-                proveedor: data.proveedor || '',
-                contacto: data.contacto || '',
-                rif_proveedor: data.rif_proveedor || '',
+                proveedor: data.proveedores?.[0]?.nombre || '',
+                contacto: data.proveedores?.[0]?.contacto || '',
+                rif_proveedor: data.proveedores?.[0]?.cedula_rif || '',
                 monto: data.monto || 0.0,
-                nro_orden_pago: data.nro_orden_pago || '',
+                nro_orden_pago: data.orden_pago || '',
                 fecha_orden_pago: data.fecha_orden_pago || '',
-                nro_factura: data.nro_factura || '',
-                estatus: data.estatus || '',
+                nro_factura: nroFactura,
+                estatus: data.estatus_pago_id || '',
                 descripcion: data.descripcion || '',
                 beneficiario: data.beneficiario || '',
                 diagnostico: data.diagnostico || '',
@@ -181,7 +190,7 @@ export default (punto: any) => {
             mode.value = 'PUT'
         } catch (error) {
             console.error(error)
-            alerta("error", `Error al obtener los datos del caso`, "error")
+            alerta("error", `Error al obtener los datos del pago`, "error")
         }
     }
 
@@ -198,7 +207,7 @@ export default (punto: any) => {
     };
 
     onMounted(() => {
-        if (id) getInfo(id)
+        if (pagoId) getInfo(pagoId)
     })
 
     return {

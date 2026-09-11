@@ -10,12 +10,17 @@ import ModalDescripcion from "../../components/ModalDescripcion.vue";
 import CardInfoUser from '@/components/Votos/CardInfoUser.vue';
 import AdministracionTable from "@/modules/FeDeVida/composables/administracion/indexTable";
 
+import { getPagosCasos } from "../../services";
+import { alerta } from "@/utils/alert";
+
 const store = useAuthStore()
 const casePersona_id = ref(null)
 const descripcion = ref(null)
 const showFilters = ref(true)
+const isExporting = ref(false)
 
 const {
+  route,
   errors,
   data,
   filters,
@@ -39,7 +44,8 @@ const hasActiveFilters = computed(() => {
     (filters.proveedor && filters.proveedor.trim()) ||
     (filters.paciente && filters.paciente.trim()) ||
     (filters.punto_cuenta && filters.punto_cuenta.trim()) ||
-    (filters.orden_pago && filters.orden_pago.trim())
+    (filters.orden_pago && filters.orden_pago.trim()) ||
+    filters.estatus_pago
   );
 });
 
@@ -49,11 +55,177 @@ watch(foundCaseId, (newId) => {
   }
 });
 
+import Swal from "sweetalert2";
+
 const formatCurrency = (value: any) => {
   if (value === undefined || value === null || value === '') return '0,00';
   const number = typeof value === 'string' ? parseFloat(value) : value;
   if (isNaN(number)) return '0,00';
   return number.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
+const verDetallesPago = (row: any) => {
+  const proveedorNombre = row.proveedores?.[0]?.nombre || 'Sin proveedor';
+  const proveedorRif = row.proveedores?.[0]?.cedula_rif ? `(RIF: ${row.proveedores[0].cedula_rif})` : '';
+  const tipoPago = row.tipo_pago?.nombre || row.tipoPago?.nombre || 'Normal';
+  const estatusNombre = row.estatus?.nombre || (row.estatus_pago_id === 1 ? 'Procesado' : 'No Procesado');
+  const saldoDeudor = (parseFloat(row.saldo_deudor) || 0) - (parseFloat(row.saldo_acreedor) || 0);
+
+  Swal.fire({
+    title: `Detalles del Pago #${row.id}`,
+    html: `
+      <div class="text-left space-y-2 mt-4 text-sm text-gray-700">
+        <p><strong>Nro. Orden de Pago:</strong> ${row.orden_pago || 'N/A'}</p>
+        <p><strong>Fecha Orden:</strong> ${row.fecha_orden_pago || 'N/A'}</p>
+        <p><strong>Proveedor:</strong> ${proveedorNombre} ${proveedorRif}</p>
+        <p><strong>Beneficiario:</strong> ${row.beneficiario || 'Sin beneficiario'}</p>
+        ${row.diagnostico ? `<p><strong>Diagnóstico:</strong> ${row.diagnostico}</p>` : ''}
+        <p class="border-t pt-2"><strong>Monto:</strong> <span class="text-green-700 font-bold">Bs. ${formatCurrency(row.monto)}</span></p>
+        <p><strong>Factura:</strong> ${row.nro_factura ? `<span class="text-green-600 font-semibold">${row.nro_factura}</span>` : '<span class="text-red-600 font-semibold">Sin factura</span>'}</p>
+        <p><strong>Saldo Deudor:</strong> <span class="${saldoDeudor > 0 ? 'text-red-600 font-bold' : 'text-gray-600'}">Bs. ${formatCurrency(saldoDeudor)}</span></p>
+        <p><strong>Tipo de Pago:</strong> <span class="capitalize font-semibold">${tipoPago}</span></p>
+        <p><strong>Estatus:</strong> <span class="${row.estatus_pago_id === 1 ? 'text-green-600' : 'text-orange-500'} font-bold">${estatusNombre}</span></p>
+        <p class="border-t pt-2"><strong>Descripción:</strong> ${row.descripcion || 'Sin descripción'}</p>
+      </div>
+    `,
+    icon: 'info',
+    showCancelButton: !!row.registro_id,
+    confirmButtonText: 'Cerrar',
+    cancelButtonText: 'Ver Expediente / Punto',
+    cancelButtonColor: '#2052C7',
+    reverseButtons: true
+  }).then((res) => {
+    if (res.dismiss === Swal.DismissReason.cancel && row.registro_id) {
+      casePersona_id.value = row.registro_id;
+    }
+  });
+};
+
+const editarPago = (row: any) => {
+  const puntoNumero = row.registro?.punto_cuenta?.numero_punto || '';
+  router.push({
+    path: '/casos/administracion/form',
+    query: {
+      pago_id: row.id,
+      punto: puntoNumero || (row.registro_id ? String(row.registro_id) : ''),
+      registro_id: row.registro_id ? String(row.registro_id) : undefined
+    }
+  });
+};
+
+const exportToCSV = async () => {
+  if (isExporting.value) return;
+  isExporting.value = true;
+
+  try {
+    // 1. Filtrar parámetros actuales de la URL ignorando la paginación para exportar todo el conjunto
+    const filteredParams = new URLSearchParams();
+    if (route && route.query) {
+      Object.entries(route.query).forEach(([key, value]) => {
+        if (value && key !== 'page') {
+          filteredParams.append(key, String(value));
+        }
+      });
+    }
+    filteredParams.append('all', 'true');
+
+    // 2. Obtener los pagos que coinciden con los filtros actuales
+    const response = await getPagosCasos(filteredParams.toString());
+    const items = response.data.rows || response.data.data || [];
+
+    if (!items || items.length === 0) {
+      alerta("Información", "No hay pagos registrados para exportar con los filtros seleccionados.", "info");
+      isExporting.value = false;
+      return;
+    }
+
+    // 3. Encabezados de las columnas
+    const headers = [
+      'ID',
+      'Orden de Pago',
+      'Fecha Orden de Pago',
+      'Proveedor',
+      'RIF Proveedor',
+      'Beneficiario',
+      'Diagnostico',
+      'Monto (Bs.)',
+      'Factura',
+      'Saldo Facturado (Bs.)',
+      'Saldo Deudor (Bs.)',
+      'Tipo de Pago',
+      'Estatus',
+      'Punto de Cuenta',
+      'Fecha Pago Financiero',
+      'Descripcion'
+    ];
+
+    // Función de escape para caracteres delimitadores en CSV
+    const escapeCsv = (val: any) => {
+      if (val === null || val === undefined) return '';
+      const str = String(val);
+      if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r') || str.includes(';')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    // 4. Mapear datos
+    const rows = items.map((pago: any) => {
+      const prov = pago.proveedores && pago.proveedores.length > 0 ? pago.proveedores[0] : null;
+      const provNombre = prov ? prov.nombre : 'Sin proveedor';
+      const provRif = prov ? prov.cedula_rif : 'N/A';
+      const tipo = pago.tipo_pago?.nombre || pago.tipoPago?.nombre || 'Normal';
+      const estatus = pago.estatus?.nombre || (pago.estatus_pago_id === 1 ? 'Procesado' : 'No Procesado');
+      const saldoDeudor = (parseFloat(pago.saldo_deudor) || 0) - (parseFloat(pago.saldo_acreedor) || 0);
+      const puntoCuenta = pago.registro?.punto_cuenta?.numero_punto || 'N/A';
+      const montoFormatted = typeof pago.monto === 'number' ? pago.monto.toFixed(2) : (parseFloat(pago.monto) || 0).toFixed(2);
+      const saldoAcreedorFormatted = (parseFloat(pago.saldo_acreedor) || 0).toFixed(2);
+
+      return [
+        pago.id,
+        pago.orden_pago || 'N/A',
+        pago.fecha_orden_pago || 'N/A',
+        provNombre,
+        provRif,
+        pago.beneficiario || 'Sin beneficiario',
+        pago.diagnostico || 'N/A',
+        montoFormatted,
+        pago.nro_factura || 'Sin factura',
+        saldoAcreedorFormatted,
+        saldoDeudor.toFixed(2),
+        tipo,
+        estatus,
+        puntoCuenta,
+        pago.fecha_pago_financiero || 'N/A',
+        pago.descripcion ? pago.descripcion.replace(/(\r\n|\n|\r)/gm, " ") : 'Sin descripción'
+      ];
+    });
+
+    // 5. Construir contenido CSV
+    const csvContent = [
+      headers.map(escapeCsv).join(','),
+      ...rows.map((r: any[]) => r.map(escapeCsv).join(','))
+    ].join('\r\n');
+
+    // 6. Generar descarga con BOM UTF-8 (\uFEFF) para abrir correctamente en Excel
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const today = new Date().toISOString().split('T')[0];
+    link.setAttribute('href', url);
+    link.setAttribute('download', `gestion_pagos_${today}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    alerta("Éxito", `Se exportaron exitosamente ${items.length} pagos en formato CSV.`, "success");
+  } catch (error: any) {
+    console.error("Error al exportar CSV:", error);
+    alerta("Error", "Ocurrió un error al generar el archivo CSV.", "error");
+  } finally {
+    isExporting.value = false;
+  }
 };
 
 </script>
@@ -79,15 +251,15 @@ const formatCurrency = (value: any) => {
         <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pb-3 border-b border-gray-100">
           <!-- Input de Buscador Rápido -->
           <div class="relative flex-1 w-full min-w-0">
-            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400 pointer-events-none">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400 pointer-events-none z-10">
               <font-awesome-icon icon="magnifying-glass" class="text-sm" />
             </span>
             <input
               v-model="data.search"
               @keyup.enter="applyFilters"
               type="text"
-              placeholder="Buscar por orden de pago, factura, proveedor, paciente o punto de cuenta..."
-              class="filter-input search-input w-full min-w-0 pl-10 pr-4 py-2.5 bg-gray-50 hover:bg-gray-100/70 focus:bg-white rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition text-sm text-gray-800 placeholder-gray-400"
+              placeholder="Buscar por orden, factura, proveedor, paciente, tipo de pago, estatus..."
+              class="filter-input search-input w-full min-w-0 pl-11 pr-4 py-2.5 bg-gray-50 hover:bg-gray-100/70 focus:bg-white rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition text-sm text-gray-800 placeholder-gray-400"
             />
           </div>
 
@@ -115,6 +287,18 @@ const formatCurrency = (value: any) => {
               <span>Buscar</span>
             </button>
 
+            <!-- Botón Exportar a CSV (Estilo cuotas de compromiso con lógica de pagos) -->
+            <button
+              type="button"
+              @click="exportToCSV"
+              :disabled="isExporting"
+              title="Exportar todos los pagos filtrados a archivo CSV"
+              class="flex-1 sm:flex-none justify-center flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#ECA008] hover:bg-[#010c41] text-white text-sm font-semibold shadow-sm hover:shadow transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <font-awesome-icon :icon="isExporting ? 'spinner' : 'file-csv'" :spin="isExporting" />
+              <span>{{ isExporting ? 'Exportando...' : 'Exportar a CSV' }}</span>
+            </button>
+
             <button
               type="button"
               v-if="hasActiveFilters"
@@ -130,7 +314,7 @@ const formatCurrency = (value: any) => {
 
         <!-- Cuadrícula de Filtros Específicos -->
         <transition name="fade">
-          <div v-show="showFilters" class="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
+          <div v-show="showFilters" class="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-7 gap-3 sm:gap-4">
             <!-- 1. Filtrar por mes -->
             <div class="min-w-0 w-full">
               <label class="block text-xs font-semibold text-gray-600 mb-1 truncate" title="Mes">Mes</label>
@@ -214,6 +398,20 @@ const formatCurrency = (value: any) => {
                 class="filter-input w-full min-w-0 px-3 py-2 bg-gray-50 hover:bg-gray-100/70 focus:bg-white border border-gray-200 rounded-lg text-xs sm:text-sm text-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
               />
             </div>
+
+            <!-- 7. Filtro por estatus de pago -->
+            <div class="min-w-0 w-full">
+              <label class="block text-xs font-semibold text-gray-600 mb-1 truncate" title="Estatus de Pago">Estatus</label>
+              <select
+                v-model="filters.estatus_pago"
+                @change="applyFilters"
+                class="filter-input w-full min-w-0 px-3 py-2 bg-gray-50 hover:bg-gray-100/70 focus:bg-white border border-gray-200 rounded-lg text-xs sm:text-sm text-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
+              >
+                <option value="">Todos</option>
+                <option value="procesado">Procesado</option>
+                <option value="no_procesado">No Procesado</option>
+              </select>
+            </div>
           </div>
         </transition>
       </div>
@@ -291,17 +489,39 @@ const formatCurrency = (value: any) => {
               </td>
 
               <td class="text-center">
-                <div class="flex justify-center gap-2">
-                  <button title="Ver Recaudos"
-                    class="bg-[#2052C7] text-white p-2 rounded-lg hover:opacity-80 cursor-pointer"
-                    @click="() => casePersona_id = row.registro_id">
-                    Ver punto
+                <div class="flex gap-3 justify-center items-center">
+                  <!-- 1. Solo vista (Detalles) -->
+                  <button 
+                    class="text-blue-600 hover:text-blue-800 hover:scale-110 font-bold transition-all text-sm flex items-center gap-1 cursor-pointer" 
+                    @click="verDetallesPago(row)" 
+                    title="Solo vista / Ver detalles"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
                   </button>
-                  
-                  <button title="Eliminar"
-                    class="bg-red-700 text-white p-2 rounded-lg hover:bg-red-900 cursor-pointer"
-                    @click="deleteCaso(row.id)">
-                    <font-awesome-icon icon="trash-can" />
+
+                  <!-- 2. Editar (Ir directo al formulario) -->
+                  <button 
+                    class="text-[#eca008] hover:text-[#d68f07] hover:scale-110 font-bold transition-all text-sm flex items-center gap-1 cursor-pointer" 
+                    @click="editarPago(row)" 
+                    title="Editar pago"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </button>
+
+                  <!-- 3. Eliminar (Soft delete) -->
+                  <button 
+                    class="text-red-600 hover:text-red-800 hover:scale-110 font-bold transition-all text-sm flex items-center gap-1 cursor-pointer" 
+                    @click="deleteCaso(row.id)" 
+                    title="Eliminar (Soft delete)"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
                   </button>
                 </div>
               </td>
@@ -356,6 +576,7 @@ const formatCurrency = (value: any) => {
 
 .panel input.search-input {
   border-radius: 0.75rem !important;
+  padding-left: 2.75rem !important;
 }
 
 .ubi_ads {

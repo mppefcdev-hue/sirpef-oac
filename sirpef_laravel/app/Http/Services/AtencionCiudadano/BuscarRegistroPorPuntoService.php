@@ -17,8 +17,21 @@ class BuscarRegistroPorPuntoService
         // Limpiamos y decodificamos por si el slash viene como %2F
         $numeroPuntoLimpio = urldecode(trim($numeroPunto));
 
-        // 1. Buscar el Punto de Cuenta
-        $puntoCuenta = PuntoCuenta::where('numero_punto', $numeroPuntoLimpio)->first();
+        // 1. Buscar el Punto de Cuenta por número de punto o por ID
+        $puntoCuenta = PuntoCuenta::where('numero_punto', $numeroPuntoLimpio)
+            ->orWhere('id', $numeroPuntoLimpio)
+            ->first();
+
+        // 2. Si no se encontró y el parámetro es numérico, intentar buscar directamente por registro_id
+        $registro = null;
+        if ($puntoCuenta) {
+            $registro = Registro::where('punto_cuenta_id', $puntoCuenta->id)->first();
+        } elseif (is_numeric($numeroPuntoLimpio)) {
+            $registro = Registro::find($numeroPuntoLimpio);
+            if ($registro && $registro->punto_cuenta_id) {
+                $puntoCuenta = PuntoCuenta::find($registro->punto_cuenta_id);
+            }
+        }
 
         if (!$puntoCuenta) {
             return response()->json([
@@ -26,9 +39,6 @@ class BuscarRegistroPorPuntoService
                 'message' => "No existe el Punto de Cuenta: {$numeroPuntoLimpio}"
             ], 404);
         }
-
-        // 2. Buscar el Registro asociado
-        $registro = Registro::where('punto_cuenta_id', $puntoCuenta->id)->first();
 
         if (!$registro) {
             return response()->json([
@@ -43,7 +53,7 @@ class BuscarRegistroPorPuntoService
             'data' => [
                 'punto_cuenta_id' => $puntoCuenta->id,
                 'numero_punto'    => $puntoCuenta->numero_punto, // <--- Agregado
-                'fecha_punto'     => $puntoCuenta->fecha ? $puntoCuenta->fecha->format('d/m/Y') : null, // <--- Agregado
+                'fecha_punto'     => $puntoCuenta->fecha ? (is_object($puntoCuenta->fecha) && method_exists($puntoCuenta->fecha, 'format') ? $puntoCuenta->fecha->format('d/m/Y') : (string)$puntoCuenta->fecha) : null,
                 'registro_id'     => $registro->id,
 
             ]

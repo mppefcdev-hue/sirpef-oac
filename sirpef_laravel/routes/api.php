@@ -104,6 +104,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Ruta rápida sin pasar por el controlador
     Route::get('/tipos-pagos', function () {return response()->json(['success' => true,'data' => \App\Models\TipoPago::all(['id', 'nombre'])]);});
     Route::get('/pagos', [AtencionCiudadanoController::class, 'indexPagos']);
+    Route::get('/pagos/{id}', [AtencionCiudadanoController::class, 'showPago']);
+    Route::post('/pagos/{id}', [AtencionCiudadanoController::class, 'updatePago']);
+    Route::put('/pagos/{id}', [AtencionCiudadanoController::class, 'updatePago']);
     Route::delete('/pagos/{id}', [\App\Http\Controllers\PagoProveedorController::class, 'destroy']);
 
     // Cuotas de Compromiso

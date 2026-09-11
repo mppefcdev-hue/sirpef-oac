@@ -131,4 +131,14 @@ class AtencionCiudadanoController extends Controller
     {
         return IndexPagoService::index($request);
     }
+
+    public function showPago(int $id): JsonResponse
+    {
+        return StorePagoService::obtenerPago($id);
+    }
+
+    public function updatePago(Request $request, int $id): JsonResponse
+    {
+        return StorePagoService::actualizarPago($request, $id);
+    }
 }
