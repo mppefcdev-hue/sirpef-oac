@@ -50,6 +50,13 @@ onMounted(async () => {
   }
 });
 
+// onMounted(() => {
+//   const caseId = route.query.id || route.params.id;
+//   if (caseId) {
+//     getPunto(caseId as string);
+//   }
+// });
+
 </script>
 
 <template>
