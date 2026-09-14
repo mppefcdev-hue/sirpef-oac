@@ -275,7 +275,7 @@ const formatCurrency = (value: any) => {
               </td>
 
               <td class="text-center text-red-600">
-                {{ formatCurrency((parseFloat(row.saldo_deudor) || 0) - (parseFloat(row.saldo_acreedor) || 0)) }}
+                {{ formatCurrency(Math.max(0, (parseFloat(row.monto) || 0) - (parseFloat(row.saldo_acreedor) || 0))) }}
               </td>
 
               <td class="text-center">

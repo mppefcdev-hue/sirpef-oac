@@ -70,7 +70,8 @@ const formatCurrency = (value: any) => {
 };
 
 const handleEdit = () => {
-    if (store?.authUser?.ministerio_id == 19) {
+    const ministerioId = store?.authUser?.ministerio_id;
+    if (ministerioId == 19 || ministerioId == 28) {
         router.push({ name: 'CasesAdminForm', query: { id: props.casePersona_id || route.params.casePersona_id } });
     } else {
         router.push({ name: 'fedevidaPresencial', params: { id: props.casePersona_id || route.params.casePersona_id } });
@@ -309,7 +310,7 @@ const handleEdit = () => {
                                     <p>Saldo Deudor</p>
                                 </dt>
                                 <dd class="mt-1 text-sm text-red-600 font-bold sm:mt-0">
-                                    {{ formatCurrency((parseFloat(caseData.saldo_deudor) || 0) - (parseFloat(caseData.saldo_acreedor) || 0)) }}
+                                    {{ formatCurrency(Math.max(0, (parseFloat(caseData.monto) || 0) - (parseFloat(caseData.saldo_acreedor) || 0))) }}
                                 </dd>
                             </div>
                             <div class="py-3 sm:py-5 sm:grid sm:grid-cols-2 sm:gap-4 sm:px-6">
@@ -344,30 +345,15 @@ const handleEdit = () => {
                         </dl>
                     </div>
 
-                    <div class="px-4 py-5 text-center sm:px-6" v-if="caseData?.proveedores?.length > 0">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900">
-                            Provedores
-                        </h3>
-                    </div>
-
                     <div class="border-t border-gray-200 px-4 py-5  sm:p-0" v-if="caseData?.proveedores?.length > 0">
                         <dl class="sm:divide-y sm:divide-gray-200" v-for="prov in caseData?.proveedores">
                             <div class="py-3 sm:py-5 sm:grid sm:grid-cols-2 sm:gap-4 sm:px-6">
                                 <dt class="text-sm font-medium text-gray-800 flex items-center justify-left gap-5">
                                     <font-awesome-icon class="scale-[1.3]" icon="genderless" />
-                                    <p>Provedores</p>
+                                    <p>Provedor</p>
                                 </dt>
                                 <dd class="mt-1 text-sm text-gray-900 font-bold sm:mt-0">
                                     {{ prov.nombre || 'Sin información' }}
-                                </dd>
-                            </div>
-                            <div class="py-3 sm:py-5 sm:grid sm:grid-cols-2 sm:gap-4 sm:px-6">
-                                <dt class="text-sm font-medium text-gray-800 flex items-center justify-left gap-5">
-                                    <font-awesome-icon class="scale-[1.3]" icon="dollar-sign" />
-                                    <p>Monto</p>
-                                </dt>
-                                <dd class="mt-1 text-sm text-gray-900 font-bold sm:mt-0">
-                                    {{ prov.monto || 'Sin información' }}
                                 </dd>
                             </div>
                         </dl>
