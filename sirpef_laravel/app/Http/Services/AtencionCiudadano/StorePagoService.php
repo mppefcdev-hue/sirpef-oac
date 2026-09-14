@@ -122,4 +122,105 @@ class StorePagoService
 
         return $recaudosProcesados;
     }
+
+    /**
+     * Obtiene un pago específico con sus relaciones.
+     */
+    public static function obtenerPago(int $id): JsonResponse
+    {
+        try {
+            $pago = Pago::with([
+                'proveedores',
+                'estatus',
+                'tipoPago',
+                'recaudos',
+                'registro.puntoCuenta.memorandum',
+                'registro.eventoPersona.persona',
+            ])->findOrFail($id);
+
+            return response()->json([
+                'success' => true,
+                'data'    => $pago
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se encontró el pago solicitado.',
+                'error'   => $e->getMessage()
+            ], 404);
+        }
+    }
+
+    /**
+     * Actualiza un pago existente y sus relaciones.
+     */
+    public static function actualizarPago(Request $request, int $id): JsonResponse
+    {
+        return DB::transaction(function () use ($request, $id) {
+            try {
+                $pago = Pago::findOrFail($id);
+
+                $monto = floatval($request->monto ?? $pago->monto);
+                $saldoAcreedor = floatval($request->saldo_acreedor ?? $pago->saldo_acreedor ?? 0);
+                $saldoDeudor = $monto - $saldoAcreedor;
+
+                $descripcion = $request->descripcion ?? $pago->descripcion;
+                if (!empty($request->nro_factura) && stripos($descripcion ?? '', '[Factura:') === false) {
+                    $descripcion = trim(($descripcion ?? '') . " [Factura: " . trim($request->nro_factura) . "]");
+                }
+
+                $pago->update([
+                    'orden_pago'           => $request->orden_pago ?? $pago->orden_pago,
+                    'fecha_orden_pago'     => $request->fecha_orden_pago ?? $pago->fecha_orden_pago,
+                    'monto'                => $monto,
+                    'descripcion'          => $descripcion,
+                    'fecha_pago_financiero'=> $request->fecha_pago_financiero ?? $pago->fecha_pago_financiero,
+                    'saldo_deudor'         => $saldoDeudor,
+                    'saldo_acreedor'       => $saldoAcreedor,
+                    'cuota_compromiso_disponible' => $request->cuota_compromiso ?? $pago->cuota_compromiso_disponible,
+                    'estatus_pago_id'      => $request->estatus_pago_id ?? $pago->estatus_pago_id,
+                    'tipo_pago_id'         => $request->tipo_pago_id ?? $pago->tipo_pago_id,
+                ]);
+
+                // Actualizar proveedores si vienen en la petición
+                if ($request->has('proveedores') && is_array($request->proveedores)) {
+                    $pago->proveedores()->detach();
+                    foreach ($request->proveedores as $item) {
+                        if (empty($item['cedula_rif'])) continue;
+
+                        $proveedor = Proveedor::updateOrCreate(
+                            ['cedula_rif' => trim($item['cedula_rif'])],
+                            ['nombre'     => $item['nombre'] ?? 'Proveedor Desconocido']
+                        );
+
+                        $pago->proveedores()->attach($proveedor->id, [
+                            'monto_relacionado' => $item['monto_relacionado'] ?? $item['monto'] ?? $monto,
+                            'created_at'        => now(),
+                            'updated_at'        => now(),
+                        ]);
+                    }
+                }
+
+                // Subir nuevos recaudos si se adjuntaron
+                $recaudosSubidos = self::processRecaudos($request, $pago->registro_id, $pago->id);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Pago actualizado exitosamente.',
+                    'data'    => [
+                        'pago'      => $pago->fresh()->load('proveedores', 'estatus', 'tipoPago', 'recaudos'),
+                        'recaudos'  => $recaudosSubidos
+                    ]
+                ], 200);
+
+            } catch (\Exception $e) {
+                Log::error("Error crítico actualizando pago en StorePagoService: " . $e->getMessage());
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se pudo actualizar el pago.',
+                    'error'   => $e->getMessage()
+                ], 500);
+            }
+        });
+    }
 }

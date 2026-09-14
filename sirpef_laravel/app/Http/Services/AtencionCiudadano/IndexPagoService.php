@@ -130,7 +130,7 @@ class IndexPagoService
                 }
             }
 
-            // 9. Filtro por Estatus de Pago (procesado / regularizado o ID)
+            // 9. Filtro por Estatus de Pago (procesado / no_procesado / regularizado o ID)
             if ($request->filled('estatus_pago')) {
                 $estatusPago = trim($request->estatus_pago);
                 if (is_numeric($estatusPago)) {
@@ -142,6 +142,13 @@ class IndexPagoService
                               $ep->whereRaw('LOWER(TRIM(nombre)) = ?', ['procesado']);
                           });
                     });
+                } elseif (strtolower($estatusPago) === 'no_procesado') {
+                    $query->where(function ($q) {
+                        $q->where('estatus_pago_id', '!=', 1)
+                          ->orWhereNull('estatus_pago_id');
+                    })->whereDoesntHave('estatus', function ($ep) {
+                        $ep->whereRaw('LOWER(TRIM(nombre)) = ?', ['procesado']);
+                    });
                 } else {
                     $query->whereHas('estatus', function ($ep) use ($estatusPago) {
                         $ep->whereRaw('LOWER(nombre) LIKE ?', ['%' . strtolower($estatusPago) . '%']);
@@ -152,24 +159,44 @@ class IndexPagoService
             // 10. Búsqueda rápida general (search)
             if ($request->filled('search')) {
                 $search = trim($request->search);
-                $query->where(function ($q) use ($search) {
+                $searchLower = strtolower($search);
+                $query->where(function ($q) use ($search, $searchLower) {
                     $q->where('orden_pago', 'LIKE', "%{$search}%")
                       ->orWhere('descripcion', 'LIKE', "%{$search}%")
-                      ->orWhereHas('proveedores', function ($pq) use ($search) {
-                          $pq->whereRaw('LOWER(nombre) LIKE ?', ['%' . strtolower($search) . '%'])
-                             ->orWhereRaw('LOWER(cedula_rif) LIKE ?', ['%' . strtolower($search) . '%']);
+                      ->orWhereHas('proveedores', function ($pq) use ($searchLower) {
+                          $pq->whereRaw('LOWER(nombre) LIKE ?', ['%' . $searchLower . '%'])
+                             ->orWhereRaw('LOWER(cedula_rif) LIKE ?', ['%' . $searchLower . '%']);
                       })
-                      ->orWhereHas('registro.eventoPersona.persona', function ($peq) use ($search) {
-                          $peq->whereRaw('LOWER(nombre_completo) LIKE ?', ['%' . strtolower($search) . '%'])
+                      ->orWhereHas('registro.eventoPersona.persona', function ($peq) use ($search, $searchLower) {
+                          $peq->whereRaw('LOWER(nombre_completo) LIKE ?', ['%' . $searchLower . '%'])
                              ->orWhere('cedula', 'LIKE', "%{$search}%");
                       })
                       ->orWhereHas('registro.puntoCuenta', function ($pcq) use ($search) {
                           $pcq->where('numero_punto', 'LIKE', "%{$search}%");
                       })
-                      ->orWhereHas('recaudos', function ($rq) use ($search) {
-                          $rq->whereRaw('LOWER(nombre) LIKE ?', ['%' . strtolower($search) . '%']);
+                      ->orWhereHas('recaudos', function ($rq) use ($searchLower) {
+                          $rq->whereRaw('LOWER(nombre) LIKE ?', ['%' . $searchLower . '%']);
+                      })
+                      // Búsqueda por Tipo de Pago (ej: "Normal", "Financiero")
+                      ->orWhereHas('tipoPago', function ($tpq) use ($searchLower) {
+                          $tpq->whereRaw('LOWER(nombre) LIKE ?', ['%' . $searchLower . '%']);
+                      })
+                      // Búsqueda por Estatus de Pago (ej: "Procesado", "Pendiente")
+                      ->orWhereHas('estatus', function ($epq) use ($searchLower) {
+                          $epq->whereRaw('LOWER(nombre) LIKE ?', ['%' . $searchLower . '%']);
                       });
                 });
+            }
+
+            // 11. Soporte para exportación completa (sin paginar)
+            if ($request->boolean('all') || $request->input('per_page') === 'all' || $request->has('export')) {
+                $pagos = $query->get();
+                return response()->json([
+                    'success' => true,
+                    'data'    => $pagos,
+                    'rows'    => $pagos,
+                    'total'   => $pagos->count(),
+                ], 200);
             }
 
             /** @var \Illuminate\Pagination\LengthAwarePaginator $pagos */

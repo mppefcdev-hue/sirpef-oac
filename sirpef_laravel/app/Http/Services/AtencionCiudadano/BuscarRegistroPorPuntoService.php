@@ -17,8 +17,21 @@ class BuscarRegistroPorPuntoService
         // Limpiamos y decodificamos por si el slash viene como %2F
         $numeroPuntoLimpio = urldecode(trim($numeroPunto));
 
-        // 1. Buscar el Punto de Cuenta
-        $puntoCuenta = PuntoCuenta::where('numero_punto', $numeroPuntoLimpio)->first();
+        // 1. Buscar el Punto de Cuenta por número de punto o por ID
+        $puntoCuenta = PuntoCuenta::where('numero_punto', $numeroPuntoLimpio)
+            ->orWhere('id', $numeroPuntoLimpio)
+            ->first();
+
+        // 2. Si no se encontró y el parámetro es numérico, intentar buscar directamente por registro_id
+        $registro = null;
+        if ($puntoCuenta) {
+            $registro = Registro::where('punto_cuenta_id', $puntoCuenta->id)->first();
+        } elseif (is_numeric($numeroPuntoLimpio)) {
+            $registro = Registro::find($numeroPuntoLimpio);
+            if ($registro && $registro->punto_cuenta_id) {
+                $puntoCuenta = PuntoCuenta::find($registro->punto_cuenta_id);
+            }
+        }
 
         if (!$puntoCuenta) {
             return response()->json([

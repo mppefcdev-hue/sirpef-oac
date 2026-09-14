@@ -27,7 +27,8 @@ export default () => {
     proveedor: '',
     paciente: '',
     punto_cuenta: '',
-    orden_pago: ''
+    orden_pago: '',
+    estatus_pago: ''
   });
 
   const result = ref({});
@@ -52,6 +53,7 @@ export default () => {
     filters.paciente = (query.paciente as string) || '';
     filters.punto_cuenta = (query.punto_cuenta as string) || '';
     filters.orden_pago = (query.orden_pago as string) || '';
+    filters.estatus_pago = (query.estatus_pago as string) || '';
     selectedTypeCase.value = (query.tipo_caso_id as string) || '';
   };
 
@@ -102,6 +104,9 @@ export default () => {
     if (filters.orden_pago && filters.orden_pago.trim()) query.orden_pago = filters.orden_pago.trim();
     else delete query.orden_pago;
 
+    if (filters.estatus_pago) query.estatus_pago = filters.estatus_pago;
+    else delete query.estatus_pago;
+
     router.push({ path: '/casos/administracion', query });
   };
 
@@ -113,6 +118,7 @@ export default () => {
     filters.paciente = '';
     filters.punto_cuenta = '';
     filters.orden_pago = '';
+    filters.estatus_pago = '';
     selectedTypeCase.value = '';
     router.push({ path: '/casos/administracion' });
   };
@@ -194,6 +200,7 @@ export default () => {
   });
 
   return {
+    route,
     errors,
     data,
     filters,
