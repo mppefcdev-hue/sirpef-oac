@@ -31,6 +31,8 @@ class ShowCasosService {
                 'tipoCaso',
                 'puntoCuenta.memorandum.proveedores',
                 'recaudos',
+                'pago.estatus',
+                'pago.proveedores',
             ])->findOrFail($id);
 
             // Obtener persona relacionada
@@ -38,17 +40,35 @@ class ShowCasosService {
             $parroquia = $persona->parroquia ?? null;
             $municipio = $parroquia->municipio ?? null;
             $estado = $municipio->estado ?? null;
+            $pago = $registro->pago ?? null;
 
             // Construir la respuesta
             $response = [
                 'registro_id' => $registro->id,
                 'voto' => $registro->voto,
-                'descripcion' => $registro->descripcion,
+                'descripcion' => $pago->descripcion ?? $registro->descripcion,
                 'hora_voto' => $registro->hora_voto,
                 'observacion' => $registro->observacion,
                 'referencia' => $registro->referencia,
                 'fecha_registro' => $registro->created_at->format('d/m/Y H:i:s'),
-                'estatus_caso' => $registro->estatus_caso, // Mueve aquí para mejor organización
+                'estatus_caso' => $pago->estatus->nombre ?? $registro->estatus_caso,
+
+                // Datos del Pago de Administración
+                'pago_id' => $pago->id ?? null,
+                'nro_orden_pago' => $pago->orden_pago ?? null,
+                'orden_pago' => $pago->orden_pago ?? null,
+                'fecha_orden_pago' => $pago->fecha_orden_pago ?? null,
+                'monto' => $pago->monto ?? null,
+                'nro_factura' => $pago->nro_factura ?? null,
+                'saldo_deudor' => $pago->saldo_deudor ?? null,
+                'saldo_acreedor' => $pago->saldo_acreedor ?? null,
+                'beneficiario' => $pago->beneficiario ?? $persona->nombre_completo ?? null,
+                'diagnostico' => $pago->diagnostico ?? null,
+                'estatus_pago' => $pago->estatus ? [
+                    'id' => $pago->estatus->id,
+                    'nombre' => $pago->estatus->nombre,
+                ] : null,
+                'estatus_pago_id' => $pago->estatus_pago_id ?? null,
 
                 // Información de tipo de caso
                 'tipo_caso' => [ // Agrupa la información del tipo de caso
@@ -109,13 +129,20 @@ class ShowCasosService {
                     ] : null,
                 ] : null,
 
-                // Lista de proveedores (obtenidos a través de Punto de Cuenta -> Memorandum)
-                'proveedores' => optional($registro->puntoCuenta?->memorandum?->proveedores)->map(function($proveedor) {
+                // Lista de proveedores (si hay en pago se toman de allí o del memorandum)
+                'proveedores' => ($pago && $pago->proveedores->isNotEmpty()) ? $pago->proveedores->map(function($proveedor) {
                     return [
                         'nombre' => $proveedor->nombre,
+                        'cedula_rif' => $proveedor->cedula_rif ?? '',
                         'monto' => (float)($proveedor->pivot->monto_relacionado ?? 0)
                     ];
-                })?->toArray() ?? [],
+                })->toArray() : (optional($registro->puntoCuenta?->memorandum?->proveedores)->map(function($proveedor) {
+                    return [
+                        'nombre' => $proveedor->nombre,
+                        'cedula_rif' => $proveedor->cedula_rif ?? '',
+                        'monto' => (float)($proveedor->pivot->monto_relacionado ?? 0)
+                    ];
+                })?->toArray() ?? []),
 
                 // Lista de recaudos
                 'recaudos' => $registro->recaudos->map(function($recaudo) {

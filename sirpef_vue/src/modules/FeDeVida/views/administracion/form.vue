@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import Welcome from '../../../../components/sirpef/welcome.vue';
 import Form from '../../components/caseFormAdministracion/index.vue';
 import FormInput from "@/modules/SIRPEF/components/FormInput.vue";
 import Http from '@/utils/Http';
 import { alerta } from '@/utils/alert';
+
+const route = useRoute();
 
 const punto = ref({
   punto_cuenta_id: null,
@@ -24,6 +27,12 @@ const getPunto = async (numero: string) => {
   }
 };
 
+onMounted(() => {
+  const caseId = route.query.id || route.params.id;
+  if (caseId) {
+    getPunto(caseId as string);
+  }
+});
 </script>
 
 <template>

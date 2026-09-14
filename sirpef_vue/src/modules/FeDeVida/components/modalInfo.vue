@@ -62,6 +62,20 @@ const openRecaudo = (reca: any) => {
     window.open(reca.path, '_blank', 'noopener, noreferrer');
 }
 
+const formatCurrency = (value: any) => {
+    if (value === undefined || value === null || value === '') return '0,00';
+    const number = typeof value === 'string' ? parseFloat(value) : value;
+    if (isNaN(number)) return '0,00';
+    return number.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
+const handleEdit = () => {
+    if (store?.authUser?.ministerio_id == 19) {
+        router.push({ name: 'CasesAdminForm', query: { id: props.casePersona_id || route.params.casePersona_id } });
+    } else {
+        router.push({ name: 'fedevidaPresencial', params: { id: props.casePersona_id || route.params.casePersona_id } });
+    }
+}
 </script>
 
 <template>
@@ -136,7 +150,7 @@ const openRecaudo = (reca: any) => {
                         <div class="flex gap-4 justify-center">
                             <h3 class="text-lg leading-6 font-medium text-gray-900">Ficha del caso</h3>
                             <button
-                                @click="$router.push({ name: 'fedevidaPresencial', params: { id: props.casePersona_id } })">
+                                @click="handleEdit">
                                 <font-awesome-icon icon="pen-to-square" />
                             </button>
                             <button @click="showHistory = true">
@@ -233,19 +247,80 @@ const openRecaudo = (reca: any) => {
                             <div class="py-3 sm:py-5 sm:grid sm:grid-cols-2 sm:gap-4 sm:px-6">
                                 <dt class="text-sm font-medium text-gray-800 flex items-center justify-left gap-5">
                                     <font-awesome-icon class="scale-[1.3]" icon="file-signature" />
-                                    <p>Estado del caso</p>
+                                    <p>Orden de Pago</p>
                                 </dt>
                                 <dd class="mt-1 text-sm text-gray-900 font-bold sm:mt-0">
-                                    {{ caseData.estatus_caso || 'Sin información' }}
+                                    {{ caseData.nro_orden_pago || caseData.orden_pago || 'Sin información' }}
                                 </dd>
                             </div>
                             <div class="py-3 sm:py-5 sm:grid sm:grid-cols-2 sm:gap-4 sm:px-6">
                                 <dt class="text-sm font-medium text-gray-800 flex items-center justify-left gap-5">
-                                    <font-awesome-icon class="scale-[1.3]" icon="genderless" />
-                                    <p>Tipo de caso</p>
+                                    <font-awesome-icon class="scale-[1.3]" icon="calendar-days" />
+                                    <p>Fecha Orden de Pago</p>
                                 </dt>
                                 <dd class="mt-1 text-sm text-gray-900 font-bold sm:mt-0">
-                                    {{ caseData.tipo_caso?.tipo || 'Sin información' }}
+                                    {{ convertDateISO(caseData.fecha_orden_pago) || caseData.fecha_orden_pago || 'Sin información' }}
+                                </dd>
+                            </div>
+                            <div class="py-3 sm:py-5 sm:grid sm:grid-cols-2 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-800 flex items-center justify-left gap-5">
+                                    <font-awesome-icon class="scale-[1.3]" icon="user" />
+                                    <p>Beneficiario</p>
+                                </dt>
+                                <dd class="mt-1 text-sm text-gray-900 font-bold sm:mt-0">
+                                    {{ caseData.beneficiario || 'Sin información' }}
+                                </dd>
+                            </div>
+                            <div class="py-3 sm:py-5 sm:grid sm:grid-cols-2 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-800 flex items-center justify-left gap-5">
+                                    <font-awesome-icon class="scale-[1.3]" icon="stethoscope" />
+                                    <p>Diagnóstico</p>
+                                </dt>
+                                <dd class="mt-1 text-sm text-gray-900 font-bold sm:mt-0">
+                                    {{ caseData.diagnostico || 'Sin información' }}
+                                </dd>
+                            </div>
+                            <div class="py-3 sm:py-5 sm:grid sm:grid-cols-2 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-800 flex items-center justify-left gap-5">
+                                    <font-awesome-icon class="scale-[1.3]" icon="dollar-sign" />
+                                    <p>Monto</p>
+                                </dt>
+                                <dd class="mt-1 text-sm text-green-700 font-bold sm:mt-0">
+                                    {{ formatCurrency(caseData.monto) }}
+                                </dd>
+                            </div>
+                            <div class="py-3 sm:py-5 sm:grid sm:grid-cols-2 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-800 flex items-center justify-left gap-5">
+                                    <font-awesome-icon class="scale-[1.3]" icon="receipt" />
+                                    <p>Factura</p>
+                                </dt>
+                                <dd class="mt-1 text-sm font-bold sm:mt-0">
+                                    <span v-if="caseData.nro_factura" class="text-green-600">
+                                        Sí ({{ caseData.nro_factura }})
+                                    </span>
+                                    <span v-else class="text-red-600">
+                                        No
+                                    </span>
+                                </dd>
+                            </div>
+                            <div class="py-3 sm:py-5 sm:grid sm:grid-cols-2 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-800 flex items-center justify-left gap-5">
+                                    <font-awesome-icon class="scale-[1.3]" icon="scale-unbalanced-flip" />
+                                    <p>Saldo Deudor</p>
+                                </dt>
+                                <dd class="mt-1 text-sm text-red-600 font-bold sm:mt-0">
+                                    {{ formatCurrency((parseFloat(caseData.saldo_deudor) || 0) - (parseFloat(caseData.saldo_acreedor) || 0)) }}
+                                </dd>
+                            </div>
+                            <div class="py-3 sm:py-5 sm:grid sm:grid-cols-2 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-800 flex items-center justify-left gap-5">
+                                    <font-awesome-icon class="scale-[1.3]" icon="info-circle" />
+                                    <p>Estatus</p>
+                                </dt>
+                                <dd class="mt-1 text-sm font-bold sm:mt-0">
+                                    <span :class="(caseData.estatus_pago_id === 1 || caseData.estatus_pago?.id === 1 || caseData.estatus?.id === 1) ? 'text-green-600' : 'text-orange-500'">
+                                        {{ caseData.estatus_pago?.nombre || caseData.estatus?.nombre || caseData.estatus_caso || "Desconocido" }}
+                                    </span>
                                 </dd>
                             </div>
                             <div class="py-3 sm:py-5 sm:grid sm:grid-cols-2 sm:gap-4 sm:px-6">
@@ -257,23 +332,13 @@ const openRecaudo = (reca: any) => {
                                     {{ caseData.descripcion || 'Sin información' }}
                                 </dd>
                             </div>
-
-                            <div class="py-3 sm:py-5 sm:grid sm:grid-cols-2 sm:gap-4 sm:px-6">
-                                <dt class="text-sm font-medium text-gray-800 my-5 flex items-center justify-left gap-5">
-                                    <font-awesome-icon class="scale-[1.3]" icon="file-lines" />
-                                    <p>Ultima observación</p>
-                                </dt>
-                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0">
-                                    {{ caseData.observacion || 'Sin información' }}
-                                </dd>
-                            </div>
                             <div class="py-3 sm:py-5 sm:grid sm:grid-cols-2 sm:gap-4 sm:px-6">
                                 <dt class="text-sm font-medium text-gray-800 flex items-center justify-left gap-5">
                                     <font-awesome-icon class="scale-[1.3]" icon="book" />
                                     <p>Punto de cuenta</p>
                                 </dt>
                                 <dd class="mt-1 text-sm text-gray-900 font-bold sm:mt-0">
-                                    {{ caseData?.punto_cuenta?.numero_punto || 'Sin información' }}
+                                    {{ caseData?.punto_cuenta?.numero_punto || caseData?.nro_punto_cuenta || 'Sin información' }}
                                 </dd>
                             </div>
                         </dl>
