@@ -41,6 +41,10 @@ const hasActiveFilters = computed(() => {
     (data.search && data.search.trim()) ||
     filters.mes ||
     (filters.factura && filters.factura.trim()) ||
+    filters.tiene_factura ||
+    filters.tipo_pago ||
+    filters.saldo_deudor ||
+    filters.saldo_acreedor ||
     (filters.proveedor && filters.proveedor.trim()) ||
     (filters.paciente && filters.paciente.trim()) ||
     (filters.punto_cuenta && filters.punto_cuenta.trim()) ||
@@ -67,9 +71,11 @@ const formatCurrency = (value: any) => {
 const verDetallesPago = (row: any) => {
   const proveedorNombre = row.proveedores?.[0]?.nombre || 'Sin proveedor';
   const proveedorRif = row.proveedores?.[0]?.cedula_rif ? `(RIF: ${row.proveedores[0].cedula_rif})` : '';
-  const tipoPago = row.tipo_pago?.nombre || row.tipoPago?.nombre || 'Normal';
+  const tipoPago = row.tipo_pago?.nombre || row.tipoPago?.nombre || (row.tipo_pago_id === 1 ? 'Financiero' : 'Normal');
   const estatusNombre = row.estatus?.nombre || (row.estatus_pago_id === 1 ? 'Procesado' : 'No Procesado');
-  const saldoDeudor = (parseFloat(row.saldo_deudor) || 0) - (parseFloat(row.saldo_acreedor) || 0);
+  const saldoDeudor = typeof row.saldo_deudor !== 'undefined' && row.saldo_deudor !== null 
+    ? parseFloat(row.saldo_deudor) 
+    : (parseFloat(row.monto) || 0) - (parseFloat(row.saldo_acreedor) || 0);
 
   Swal.fire({
     title: `Detalles del Pago #${row.id}`,
@@ -82,6 +88,7 @@ const verDetallesPago = (row: any) => {
         ${row.diagnostico ? `<p><strong>Diagnóstico:</strong> ${row.diagnostico}</p>` : ''}
         <p class="border-t pt-2"><strong>Monto:</strong> <span class="text-green-700 font-bold">Bs. ${formatCurrency(row.monto)}</span></p>
         <p><strong>Factura:</strong> ${row.nro_factura ? `<span class="text-green-600 font-semibold">${row.nro_factura}</span>` : '<span class="text-red-600 font-semibold">Sin factura</span>'}</p>
+        <p><strong>Saldo Facturado (Acreedor):</strong> <span class="text-emerald-700 font-semibold">Bs. ${formatCurrency(row.saldo_acreedor)}</span></p>
         <p><strong>Saldo Deudor:</strong> <span class="${saldoDeudor > 0 ? 'text-red-600 font-bold' : 'text-gray-600'}">Bs. ${formatCurrency(saldoDeudor)}</span></p>
         <p><strong>Tipo de Pago:</strong> <span class="capitalize font-semibold">${tipoPago}</span></p>
         <p><strong>Estatus:</strong> <span class="${row.estatus_pago_id === 1 ? 'text-green-600' : 'text-orange-500'} font-bold">${estatusNombre}</span></p>
@@ -314,7 +321,7 @@ const exportToCSV = async () => {
 
         <!-- Cuadrícula de Filtros Específicos -->
         <transition name="fade">
-          <div v-show="showFilters" class="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-7 gap-3 sm:gap-4">
+          <div v-show="showFilters" class="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4">
             <!-- 1. Filtrar por mes -->
             <div class="min-w-0 w-full">
               <label class="block text-xs font-semibold text-gray-600 mb-1 truncate" title="Mes">Mes</label>
@@ -339,19 +346,75 @@ const exportToCSV = async () => {
               </select>
             </div>
 
-            <!-- 2. Filtro por factura -->
+            <!-- 2. Filtro de tenencia de factura (Tiene factura o no) -->
             <div class="min-w-0 w-full">
-              <label class="block text-xs font-semibold text-gray-600 mb-1 truncate" title="Factura">Factura</label>
+              <label class="block text-xs font-semibold text-gray-600 mb-1 truncate" title="Tiene Factura">Tiene Factura</label>
+              <select
+                v-model="filters.tiene_factura"
+                @change="applyFilters"
+                class="filter-input w-full min-w-0 px-3 py-2 bg-gray-50 hover:bg-gray-100/70 focus:bg-white border border-gray-200 rounded-lg text-xs sm:text-sm text-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
+              >
+                <option value="">Todos</option>
+                <option value="con_factura">Con factura</option>
+                <option value="sin_factura">Sin factura</option>
+              </select>
+            </div>
+
+            <!-- 3. Filtro por número de factura específico -->
+            <div class="min-w-0 w-full">
+              <label class="block text-xs font-semibold text-gray-600 mb-1 truncate" title="Nro. Factura">Nro. Factura</label>
               <input
                 v-model="filters.factura"
                 @keyup.enter="applyFilters"
                 type="text"
-                placeholder="Nro. o con/sin factura"
+                placeholder="Ej: FAC-123"
                 class="filter-input w-full min-w-0 px-3 py-2 bg-gray-50 hover:bg-gray-100/70 focus:bg-white border border-gray-200 rounded-lg text-xs sm:text-sm text-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
               />
             </div>
 
-            <!-- 3. Filtro por proveedor -->
+            <!-- 4. Filtro por Tipo de Pago (Financiero o Normal) -->
+            <div class="min-w-0 w-full">
+              <label class="block text-xs font-semibold text-gray-600 mb-1 truncate" title="Tipo de Pago">Tipo de Pago</label>
+              <select
+                v-model="filters.tipo_pago"
+                @change="applyFilters"
+                class="filter-input w-full min-w-0 px-3 py-2 bg-gray-50 hover:bg-gray-100/70 focus:bg-white border border-gray-200 rounded-lg text-xs sm:text-sm text-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
+              >
+                <option value="">Todos</option>
+                <option value="normal">Normal</option>
+                <option value="financiero">Financiero</option>
+              </select>
+            </div>
+
+            <!-- 5. Filtro por Saldo Deudor -->
+            <div class="min-w-0 w-full">
+              <label class="block text-xs font-semibold text-gray-600 mb-1 truncate" title="Saldo Deudor">Saldo Deudor</label>
+              <select
+                v-model="filters.saldo_deudor"
+                @change="applyFilters"
+                class="filter-input w-full min-w-0 px-3 py-2 bg-gray-50 hover:bg-gray-100/70 focus:bg-white border border-gray-200 rounded-lg text-xs sm:text-sm text-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
+              >
+                <option value="">Todos</option>
+                <option value="con_saldo">Con saldo deudor</option>
+                <option value="sin_saldo">Sin saldo deudor</option>
+              </select>
+            </div>
+
+            <!-- 6. Filtro por Saldo Acreedor -->
+            <div class="min-w-0 w-full">
+              <label class="block text-xs font-semibold text-gray-600 mb-1 truncate" title="Saldo Acreedor">Saldo Acreedor</label>
+              <select
+                v-model="filters.saldo_acreedor"
+                @change="applyFilters"
+                class="filter-input w-full min-w-0 px-3 py-2 bg-gray-50 hover:bg-gray-100/70 focus:bg-white border border-gray-200 rounded-lg text-xs sm:text-sm text-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
+              >
+                <option value="">Todos</option>
+                <option value="con_saldo">Con saldo acreedor</option>
+                <option value="sin_saldo">Sin saldo acreedor</option>
+              </select>
+            </div>
+
+            <!-- 7. Filtro por proveedor -->
             <div class="min-w-0 w-full">
               <label class="block text-xs font-semibold text-gray-600 mb-1 truncate" title="Proveedor">Proveedor</label>
               <input
@@ -363,7 +426,7 @@ const exportToCSV = async () => {
               />
             </div>
 
-            <!-- 4. Filtro por paciente -->
+            <!-- 8. Filtro por paciente -->
             <div class="min-w-0 w-full">
               <label class="block text-xs font-semibold text-gray-600 mb-1 truncate" title="Paciente">Paciente</label>
               <input
@@ -375,7 +438,7 @@ const exportToCSV = async () => {
               />
             </div>
 
-            <!-- 5. Filtro por punto de cuenta -->
+            <!-- 9. Filtro por punto de cuenta -->
             <div class="min-w-0 w-full">
               <label class="block text-xs font-semibold text-gray-600 mb-1 truncate" title="Punto de Cuenta">Punto de Cuenta</label>
               <input
@@ -387,7 +450,7 @@ const exportToCSV = async () => {
               />
             </div>
 
-            <!-- 6. Filtro por orden de pago -->
+            <!-- 10. Filtro por orden de pago -->
             <div class="min-w-0 w-full">
               <label class="block text-xs font-semibold text-gray-600 mb-1 truncate" title="Orden de Pago">Orden de Pago</label>
               <input
@@ -399,7 +462,7 @@ const exportToCSV = async () => {
               />
             </div>
 
-            <!-- 7. Filtro por estatus de pago -->
+            <!-- 11. Filtro por estatus de pago -->
             <div class="min-w-0 w-full">
               <label class="block text-xs font-semibold text-gray-600 mb-1 truncate" title="Estatus de Pago">Estatus</label>
               <select
@@ -436,11 +499,21 @@ const exportToCSV = async () => {
             <tr v-if="data.rows.length > 0" v-for="row in data.rows" :key="row.id" class="">
               <td class="text-center font-bold">
                 #{{ row.id }} <br>
-                <span class="text-xs text-gray-500">Ord: {{ row.orden_pago }}</span>
+                <span class="text-xs text-gray-500">Ord: {{ row.orden_pago || 'N/A' }}</span>
+                <div class="mt-1">
+                  <span 
+                    :class="(row.tipo_pago?.nombre || row.tipoPago?.nombre || '').toLowerCase().includes('financiero') || row.tipo_pago_id === 1 
+                      ? 'bg-indigo-50 text-indigo-700 border-indigo-200' 
+                      : 'bg-amber-50 text-amber-700 border-amber-200'" 
+                    class="px-2 py-0.5 text-[10px] font-semibold rounded-full border inline-block"
+                  >
+                    {{ row.tipo_pago?.nombre || row.tipoPago?.nombre || (row.tipo_pago_id === 1 ? 'Financiero' : 'Normal') }}
+                  </span>
+                </div>
               </td>
 
               <td class="text-center">
-                {{ row.fecha_orden_pago }}
+                {{ row.fecha_orden_pago || 'N/A' }}
               </td>
 
               <td class="text-left capitalize">
@@ -460,7 +533,7 @@ const exportToCSV = async () => {
               </td>
 
               <td class="text-center font-bold text-green-700">
-                {{ formatCurrency(row.monto) }}
+                Bs. {{ formatCurrency(row.monto) }}
               </td>
 
               <td class="text-center font-bold">
@@ -470,10 +543,18 @@ const exportToCSV = async () => {
                 <span v-else class="text-red-600 flex items-center justify-center gap-1">
                   <font-awesome-icon icon="times-circle" /> No
                 </span>
+                <span v-if="row.nro_factura" class="text-[11px] text-gray-500 font-normal block truncate max-w-[120px] mx-auto" :title="row.nro_factura">
+                  {{ row.nro_factura }}
+                </span>
               </td>
 
-              <td class="text-center text-red-600">
-                {{ formatCurrency(Math.max(0, (parseFloat(row.monto) || 0) - (parseFloat(row.saldo_acreedor) || 0))) }}
+              <td class="text-center">
+                <span class="font-bold text-red-600">
+                  Bs. {{ formatCurrency(typeof row.saldo_deudor !== 'undefined' && row.saldo_deudor !== null ? parseFloat(row.saldo_deudor) : Math.max(0, (parseFloat(row.monto) || 0) - (parseFloat(row.saldo_acreedor) || 0))) }}
+                </span>
+                <span v-if="parseFloat(row.saldo_acreedor) > 0" class="text-[11px] text-emerald-700 font-medium block" title="Saldo Facturado / Acreedor">
+                  Facturado: Bs. {{ formatCurrency(row.saldo_acreedor) }}
+                </span>
               </td>
 
               <td class="text-center">

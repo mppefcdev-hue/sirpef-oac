@@ -56,7 +56,11 @@ export default (punto: any) => {
         formData.append('estatus_pago_id', UserInfo.value.estatus);
         formData.append('descripcion', UserInfo.value.descripcion);
         formData.append('beneficiario', UserInfo.value.beneficiario);
-        formData.append('diagnostico', UserInfo.value.diagnostico);
+        formData.append('saldo_deudor', UserInfo.value.saldo_deudor ? UserInfo.value.saldo_deudor.toString() : '0');
+        formData.append('saldo_acreedor', UserInfo.value.saldo_acreedor ? UserInfo.value.saldo_acreedor.toString() : '0');
+        if (UserInfo.value.fecha_pago_financiero) {
+            formData.append('fecha_pago_financiero', UserInfo.value.fecha_pago_financiero);
+        }
 
         const proveedoresEnvio = [
             {
@@ -208,6 +212,10 @@ export default (punto: any) => {
 
     onMounted(() => {
         if (pagoId) getInfo(pagoId)
+        // Precargar beneficiario desde el punto de cuenta si existe
+        if (punto?.beneficiario && !UserInfo.value.beneficiario) {
+            UserInfo.value.beneficiario = punto.beneficiario
+        }
     })
 
     return {

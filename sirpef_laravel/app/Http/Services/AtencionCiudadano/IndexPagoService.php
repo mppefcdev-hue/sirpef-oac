@@ -84,6 +84,27 @@ class IndexPagoService
                 }
             }
 
+            // 3.1. Filtro específico de tenencia de factura (Tiene factura: sí / no)
+            if ($request->filled('tiene_factura')) {
+                $tieneFactura = trim(strtolower($request->tiene_factura));
+                if (in_array($tieneFactura, ['con_factura', 'si', '1', 'true'])) {
+                    $query->where(function ($q) {
+                        $q->whereHas('recaudos')
+                          ->orWhere('descripcion', 'LIKE', '%[Factura:%')
+                          ->orWhere('descripcion', 'LIKE', '%factura%');
+                    });
+                } elseif (in_array($tieneFactura, ['sin_factura', 'no', '0', 'false'])) {
+                    $query->whereDoesntHave('recaudos')
+                          ->where(function ($q) {
+                              $q->whereNull('descripcion')
+                                ->orWhere(function ($q2) {
+                                    $q2->where('descripcion', 'NOT LIKE', '%[Factura:%')
+                                       ->where('descripcion', 'NOT LIKE', '%factura%');
+                                });
+                          });
+                }
+            }
+
             // 4. Filtro por Proveedor (Nombre o Cédula/RIF)
             if ($request->filled('proveedor')) {
                 $proveedor = trim($request->proveedor);
@@ -122,10 +143,51 @@ class IndexPagoService
                 if (is_numeric($tipoPago)) {
                     $query->where('tipo_pago_id', $tipoPago);
                 } else {
-                    $query->where(function ($q) use ($tipoPago) {
-                        $q->whereHas('tipoPago', function ($tp) use ($tipoPago) {
+                    $tipoLower = strtolower($tipoPago);
+                    if ($tipoLower === 'financiero' || $tipoLower === '1') {
+                        $query->where(function ($q) {
+                            $q->where('tipo_pago_id', 1)
+                              ->orWhereHas('tipoPago', function ($tp) {
+                                  $tp->whereRaw('LOWER(nombre) LIKE ?', ['%financier%']);
+                              });
+                        });
+                    } elseif ($tipoLower === 'normal' || $tipoLower === '2') {
+                        $query->where(function ($q) {
+                            $q->where('tipo_pago_id', 2)
+                              ->orWhereHas('tipoPago', function ($tp) {
+                                  $tp->whereRaw('LOWER(nombre) LIKE ?', ['%normal%']);
+                              });
+                        });
+                    } else {
+                        $query->whereHas('tipoPago', function ($tp) use ($tipoPago) {
                             $tp->whereRaw('LOWER(nombre) LIKE ?', ['%' . strtolower($tipoPago) . '%']);
                         });
+                    }
+                }
+            }
+
+            // 8.1. Filtro por Saldo Deudor (con_saldo / sin_saldo)
+            if ($request->filled('saldo_deudor')) {
+                $saldoDeudor = trim(strtolower($request->saldo_deudor));
+                if (in_array($saldoDeudor, ['con_saldo', 'con_deuda', 'si', 'pendiente'])) {
+                    $query->where('saldo_deudor', '>', 0);
+                } elseif (in_array($saldoDeudor, ['sin_saldo', 'sin_deuda', 'no', 'saldado'])) {
+                    $query->where(function ($q) {
+                        $q->where('saldo_deudor', '<=', 0)
+                          ->orWhereNull('saldo_deudor');
+                    });
+                }
+            }
+
+            // 8.2. Filtro por Saldo Acreedor (con_saldo / sin_saldo)
+            if ($request->filled('saldo_acreedor')) {
+                $saldoAcreedor = trim(strtolower($request->saldo_acreedor));
+                if (in_array($saldoAcreedor, ['con_saldo', 'con_acreedor', 'si'])) {
+                    $query->where('saldo_acreedor', '>', 0);
+                } elseif (in_array($saldoAcreedor, ['sin_saldo', 'sin_acreedor', 'no'])) {
+                    $query->where(function ($q) {
+                        $q->where('saldo_acreedor', '<=', 0)
+                          ->orWhereNull('saldo_acreedor');
                     });
                 }
             }

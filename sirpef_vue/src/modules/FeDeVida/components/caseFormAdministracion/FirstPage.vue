@@ -97,8 +97,13 @@ onMounted(() => {
 
       <div>
         <label class="block font-medium text-gray-700 ml-1">Beneficiario (Paciente)</label>
-        <input name="beneficiario" class="w-full bg-gray-100 text-gray-900 mt-1 p-3 rounded-lg" type="text"
-          placeholder="Nombre del beneficiario" v-model="values.beneficiario" required />
+        <input name="beneficiario" 
+          class="w-full bg-gray-200 text-gray-700 font-semibold mt-1 p-3 rounded-lg cursor-not-allowed" 
+          type="text"
+          :value="values.beneficiario || 'Sin beneficiario asignado'" 
+          readonly 
+          disabled
+        />
       </div>
 
       <div>

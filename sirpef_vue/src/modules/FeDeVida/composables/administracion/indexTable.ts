@@ -24,6 +24,10 @@ export default () => {
   const filters = reactive({
     mes: '',
     factura: '',
+    tiene_factura: '',
+    tipo_pago: '',
+    saldo_deudor: '',
+    saldo_acreedor: '',
     proveedor: '',
     paciente: '',
     punto_cuenta: '',
@@ -49,6 +53,10 @@ export default () => {
     data.search = (query.search as string) || '';
     filters.mes = (query.mes as string) || '';
     filters.factura = (query.factura as string) || '';
+    filters.tiene_factura = (query.tiene_factura as string) || '';
+    filters.tipo_pago = (query.tipo_pago as string) || '';
+    filters.saldo_deudor = (query.saldo_deudor as string) || '';
+    filters.saldo_acreedor = (query.saldo_acreedor as string) || '';
     filters.proveedor = (query.proveedor as string) || '';
     filters.paciente = (query.paciente as string) || '';
     filters.punto_cuenta = (query.punto_cuenta as string) || '';
@@ -92,6 +100,18 @@ export default () => {
     if (filters.factura && filters.factura.trim()) query.factura = filters.factura.trim();
     else delete query.factura;
 
+    if (filters.tiene_factura) query.tiene_factura = filters.tiene_factura;
+    else delete query.tiene_factura;
+
+    if (filters.tipo_pago) query.tipo_pago = filters.tipo_pago;
+    else delete query.tipo_pago;
+
+    if (filters.saldo_deudor) query.saldo_deudor = filters.saldo_deudor;
+    else delete query.saldo_deudor;
+
+    if (filters.saldo_acreedor) query.saldo_acreedor = filters.saldo_acreedor;
+    else delete query.saldo_acreedor;
+
     if (filters.proveedor && filters.proveedor.trim()) query.proveedor = filters.proveedor.trim();
     else delete query.proveedor;
 
@@ -114,6 +134,10 @@ export default () => {
     data.search = '';
     filters.mes = '';
     filters.factura = '';
+    filters.tiene_factura = '';
+    filters.tipo_pago = '';
+    filters.saldo_deudor = '';
+    filters.saldo_acreedor = '';
     filters.proveedor = '';
     filters.paciente = '';
     filters.punto_cuenta = '';
