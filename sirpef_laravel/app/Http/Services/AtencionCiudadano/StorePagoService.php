@@ -25,7 +25,9 @@ class StorePagoService
 
                 $monto = floatval($request->monto);
                 $saldoAcreedor = floatval($request->saldo_acreedor ?? 0);
-                $saldoDeudor = $monto - $saldoAcreedor;
+                $saldoDeudor = $request->has('saldo_deudor') && $request->saldo_deudor !== null
+                    ? floatval($request->saldo_deudor)
+                    : max(0, $monto - $saldoAcreedor);
 
                 $descripcion = $request->descripcion;
                 if (!empty($request->nro_factura) && stripos($descripcion ?? '', '[Factura:') === false) {

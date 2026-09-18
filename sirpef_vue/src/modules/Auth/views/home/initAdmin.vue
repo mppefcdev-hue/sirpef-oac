@@ -184,7 +184,7 @@ onMounted(loadCort)
       "/>
 
 
-<div class="md:w-[80%] md:h-auto xl:h-[30vh] mx-auto my-8" v-if="graphToSee.find(e => e == 1) && Info.length > 0">
+<div class="md:w-[80%] h-auto mx-auto my-8" v-if="graphToSee.find(e => e == 1) && Info.length > 0">
   <CardsFedeVida :items="Info"/> 
 </div>
 

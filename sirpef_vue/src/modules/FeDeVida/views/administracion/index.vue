@@ -69,7 +69,7 @@ const verDetallesPago = (row: any) => {
   const proveedorRif = row.proveedores?.[0]?.cedula_rif ? `(RIF: ${row.proveedores[0].cedula_rif})` : '';
   const tipoPago = row.tipo_pago?.nombre || row.tipoPago?.nombre || 'Normal';
   const estatusNombre = row.estatus?.nombre || (row.estatus_pago_id === 1 ? 'Procesado' : 'No Procesado');
-  const saldoDeudor = (parseFloat(row.saldo_deudor) || 0) - (parseFloat(row.saldo_acreedor) || 0);
+  const saldoDeudor = row.saldo_deudor;
 
   Swal.fire({
     title: `Detalles del Pago #${row.id}`,
@@ -473,7 +473,8 @@ const exportToCSV = async () => {
               </td>
 
               <td class="text-center text-red-600">
-                {{ formatCurrency(Math.max(0, (parseFloat(row.monto) || 0) - (parseFloat(row.saldo_acreedor) || 0))) }}
+                {{ formatCurrency(row.saldo_deudor) }}
+                <!-- {{ formatCurrency(Math.max(0, (parseFloat(row.monto) || 0) - (parseFloat(row.saldo_acreedor) || 0))) }} -->
               </td>
 
               <td class="text-center">
