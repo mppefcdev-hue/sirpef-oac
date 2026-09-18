@@ -64,7 +64,7 @@ class ShowCasosService {
                 'saldo_acreedor' => $pago->saldo_acreedor ?? null,
                 'beneficiario' => $pago->beneficiario ?? $persona->nombre_completo ?? null,
                 'diagnostico' => $pago->diagnostico ?? null,
-                'estatus_pago' => $pago->estatus ? [
+                'estatus_pago' => $pago ? [
                     'id' => $pago->estatus->id,
                     'nombre' => $pago->estatus->nombre,
                 ] : null,

@@ -49,6 +49,9 @@ export default (punto: any) => {
 
         formData.append('tipo_pago_id', UserInfo.value.tipo_pago);
         formData.append('nro_referencia_pago', UserInfo.value.nro_referencia_pago);
+        formData.append('proveedor', UserInfo.value.proveedor);
+        formData.append('rif_proveedor', UserInfo.value.rif_proveedor);
+        formData.append('contacto', UserInfo.value.contacto.toString());
         formData.append('monto', UserInfo.value.monto.toString());
         formData.append('orden_pago', UserInfo.value.nro_orden_pago);
         formData.append('fecha_orden_pago', UserInfo.value.fecha_orden_pago);
@@ -56,11 +59,9 @@ export default (punto: any) => {
         formData.append('estatus_pago_id', UserInfo.value.estatus);
         formData.append('descripcion', UserInfo.value.descripcion);
         formData.append('beneficiario', UserInfo.value.beneficiario);
-        formData.append('saldo_deudor', UserInfo.value.saldo_deudor ? UserInfo.value.saldo_deudor.toString() : '0');
-        formData.append('saldo_acreedor', UserInfo.value.saldo_acreedor ? UserInfo.value.saldo_acreedor.toString() : '0');
-        if (UserInfo.value.fecha_pago_financiero) {
-            formData.append('fecha_pago_financiero', UserInfo.value.fecha_pago_financiero);
-        }
+        formData.append('diagnostico', UserInfo.value.diagnostico);
+        formData.append('saldo_deudor', UserInfo.value.saldo_deudor.toString());
+        formData.append('saldo_acreedor', UserInfo.value.saldo_acreedor.toString());
 
         const proveedoresEnvio = [
             {

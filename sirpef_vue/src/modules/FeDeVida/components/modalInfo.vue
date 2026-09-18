@@ -310,7 +310,7 @@ const handleEdit = () => {
                                     <p>Saldo Deudor</p>
                                 </dt>
                                 <dd class="mt-1 text-sm text-red-600 font-bold sm:mt-0">
-                                    {{ formatCurrency(Math.max(0, (parseFloat(caseData.monto) || 0) - (parseFloat(caseData.saldo_acreedor) || 0))) }}
+                                    {{ formatCurrency( caseData.saldo_deudor ) }}
                                 </dd>
                             </div>
                             <div class="py-3 sm:py-5 sm:grid sm:grid-cols-2 sm:gap-4 sm:px-6">

@@ -73,9 +73,7 @@ const verDetallesPago = (row: any) => {
   const proveedorRif = row.proveedores?.[0]?.cedula_rif ? `(RIF: ${row.proveedores[0].cedula_rif})` : '';
   const tipoPago = row.tipo_pago?.nombre || row.tipoPago?.nombre || (row.tipo_pago_id === 1 ? 'Financiero' : 'Normal');
   const estatusNombre = row.estatus?.nombre || (row.estatus_pago_id === 1 ? 'Procesado' : 'No Procesado');
-  const saldoDeudor = typeof row.saldo_deudor !== 'undefined' && row.saldo_deudor !== null 
-    ? parseFloat(row.saldo_deudor) 
-    : (parseFloat(row.monto) || 0) - (parseFloat(row.saldo_acreedor) || 0);
+  const saldoDeudor = row.saldo_deudor;
 
   Swal.fire({
     title: `Detalles del Pago #${row.id}`,
@@ -548,13 +546,9 @@ const exportToCSV = async () => {
                 </span>
               </td>
 
-              <td class="text-center">
-                <span class="font-bold text-red-600">
-                  Bs. {{ formatCurrency(typeof row.saldo_deudor !== 'undefined' && row.saldo_deudor !== null ? parseFloat(row.saldo_deudor) : Math.max(0, (parseFloat(row.monto) || 0) - (parseFloat(row.saldo_acreedor) || 0))) }}
-                </span>
-                <span v-if="parseFloat(row.saldo_acreedor) > 0" class="text-[11px] text-emerald-700 font-medium block" title="Saldo Facturado / Acreedor">
-                  Facturado: Bs. {{ formatCurrency(row.saldo_acreedor) }}
-                </span>
+              <td class="text-center text-red-600">
+                {{ formatCurrency(row.saldo_deudor) }}
+                <!-- {{ formatCurrency(Math.max(0, (parseFloat(row.monto) || 0) - (parseFloat(row.saldo_acreedor) || 0))) }} -->
               </td>
 
               <td class="text-center">
