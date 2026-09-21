@@ -36,7 +36,12 @@ class EstadisticaParticipacionService
         if ($ministerio_id == 19) {
             // OGA: Solo estadísticas de pagos/administración
             $data = self::DataOGA($fechaDesde, $fechaHasta, $tipo_caso_id, $user, true);
-        } else {
+        } 
+        else if($ministerio_id == 25) {
+            // OAC: Solo estadísticas de casos
+            $data = self::DataOAC($fechaDesde, $fechaHasta, $tipo_caso_id, $user);
+        }
+        else {
             // OAC, OTIC y demás usuarios con acceso: combinación de casos OAC y estadísticas de pagos
             $dataOAC = self::DataOAC($fechaDesde, $fechaHasta, $tipo_caso_id, $user);
             $dataOGA = self::DataOGA($fechaDesde, $fechaHasta, $tipo_caso_id, $user, false);
