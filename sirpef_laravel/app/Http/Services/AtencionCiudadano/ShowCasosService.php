@@ -120,6 +120,7 @@ class ShowCasosService {
                         'proveedores' => optional($registro->puntoCuenta->memorandum->proveedores)->map(function($p) {
                             return [
                                 'nombre' => $p->nombre,
+                                'rif' => $p->cedula_rif,
                                 'monto' => (float)($p->pivot->monto_relacionado ?? 0)
                             ];
                         }) ?? [],
@@ -139,7 +140,7 @@ class ShowCasosService {
                 })->toArray() : (optional($registro->puntoCuenta?->memorandum?->proveedores)->map(function($proveedor) {
                     return [
                         'nombre' => $proveedor->nombre,
-                        'cedula_rif' => $proveedor->cedula_rif ?? '',
+                        'cedula_rif' => $proveedor->cedula_rif,
                         'monto' => (float)($proveedor->pivot->monto_relacionado ?? 0)
                     ];
                 })?->toArray() ?? []),
