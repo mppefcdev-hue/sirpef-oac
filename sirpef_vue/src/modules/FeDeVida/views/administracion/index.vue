@@ -101,6 +101,7 @@ const verDetallesPago = (row: any) => {
     reverseButtons: true
   }).then((res) => {
     if (res.dismiss === Swal.DismissReason.cancel && row.registro_id) {
+      console.log(row)
       casePersona_id.value = row.registro_id;
     }
   });

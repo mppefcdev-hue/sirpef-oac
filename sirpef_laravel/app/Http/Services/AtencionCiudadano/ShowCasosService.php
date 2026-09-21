@@ -7,10 +7,6 @@ use Illuminate\Http\{
     JsonResponse
 };
 use App\Models\Registro;
-use App\Models\Persona; // Ya está aquí, pero es bueno recordarlo
-use App\Models\Recaudo; // Ya está aquí
-use Illuminate\Support\Facades\DB; // Se mantiene si se usa en otros métodos o si se permite aquí por contexto
-use Illuminate\Validation\ValidationException; // Se mantiene
 
 class ShowCasosService {
 
@@ -24,8 +20,7 @@ class ShowCasosService {
     public static function show(int $id): JsonResponse
     {
         try {
-            // Obtener el registro con todas las relaciones necesarias,
-            // ¡Incluyendo la cadena de relaciones para parroquia, municipio y estado!
+            // Obtener el registro con todas las relaciones necesarias
             $registro = Registro::with([
                 'eventoPersona.persona.parroquia.municipio.estado',
                 'tipoCaso',
@@ -50,8 +45,8 @@ class ShowCasosService {
                 'hora_voto' => $registro->hora_voto,
                 'observacion' => $registro->observacion,
                 'referencia' => $registro->referencia,
-                'fecha_registro' => $registro->created_at->format('d/m/Y H:i:s'),
-                'estatus_caso' => $pago->estatus->nombre ?? $registro->estatus_caso,
+                'fecha_registro' => optional($registro->created_at)->format('d/m/Y H:i:s'),
+                'estatus_caso' => $pago?->estatus?->nombre ?? $registro->estatus_caso,
 
                 // Datos del Pago de Administración
                 'pago_id' => $pago->id ?? null,
@@ -64,15 +59,15 @@ class ShowCasosService {
                 'saldo_acreedor' => $pago->saldo_acreedor ?? null,
                 'beneficiario' => $pago->beneficiario ?? $persona->nombre_completo ?? null,
                 'diagnostico' => $pago->diagnostico ?? null,
-                'estatus_pago' => $pago ? [
+                'estatus_pago' => $pago?->estatus ? [
                     'id' => $pago->estatus->id,
                     'nombre' => $pago->estatus->nombre,
                 ] : null,
                 'estatus_pago_id' => $pago->estatus_pago_id ?? null,
 
                 // Información de tipo de caso
-                'tipo_caso' => [ // Agrupa la información del tipo de caso
-                    'id' => $registro->tipoCaso->id ?? null, // Usar null en lugar de 'Sin tipo' si es un ID
+                'tipo_caso' => [
+                    'id' => $registro->tipoCaso->id ?? null,
                     'tipo' => $registro->tipoCaso->tipo ?? 'Sin tipo',
                 ],
 
@@ -114,7 +109,7 @@ class ShowCasosService {
                         'de' => $registro->puntoCuenta->memorandum->de,
                         'para' => $registro->puntoCuenta->memorandum->para,
                         'asunto' => $registro->puntoCuenta->memorandum->asunto,
-                        'fecha' => $registro->puntoCuenta->memorandum->fecha->format('Y-m-d'),
+                        'fecha' => optional($registro->puntoCuenta->memorandum->fecha)->format('Y-m-d'),
                         'cuerpo' => $registro->puntoCuenta->memorandum->cuerpo,
                         'monto' => $registro->puntoCuenta->memorandum->monto,
                         'proveedores' => optional($registro->puntoCuenta->memorandum->proveedores)->map(function($p) {
