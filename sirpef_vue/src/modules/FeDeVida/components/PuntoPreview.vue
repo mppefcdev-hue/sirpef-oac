@@ -3,7 +3,6 @@
     <!-- Header -->
     <div class="flex justify-between items-start mb-2">
       <img src="/logo-ministerio.png" class="h-16 w-auto" />
-      <img src="/logo-200.png" class="h-16 w-auto" />
     </div>
 
     <div class="bg-[#c00000] text-white text-center py-1 font-bold text-sm mb-4 uppercase">

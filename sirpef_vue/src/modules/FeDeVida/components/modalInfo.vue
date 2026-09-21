@@ -87,6 +87,14 @@ const viewMemo = async () => {
     }
 };
 
+
+const formatCurrency = (value: any) => {
+    if (value === undefined || value === null || value === '') return '0,00';
+    const number = typeof value === 'string' ? parseFloat(value) : value;
+    if (isNaN(number)) return '0,00';
+    return number.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
 const createMemoFromPDC = async () => {
     const memo = caseData.value?.punto_cuenta?.memorandum;
     if (memo?.id) {
@@ -126,6 +134,16 @@ const createMemoFromPDC = async () => {
         });
     }
 };
+
+
+const handleEdit = () => {
+    const ministerioId = store?.authUser?.ministerio_id;
+    if (ministerioId == 19 || ministerioId == 28) {
+        router.push({ name: 'CasesAdminForm', query: { id: props.casePersona_id || route.params.casePersona_id } });
+    } else {
+        router.push({ name: 'fedevidaPresencial', params: { id: props.casePersona_id || route.params.casePersona_id } });
+    }
+}
 
 </script>
 
