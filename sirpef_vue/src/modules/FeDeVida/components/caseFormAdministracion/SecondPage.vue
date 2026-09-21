@@ -36,21 +36,27 @@ onMounted(() => {
       </div>
 
       <div>
-        <label class="block font-medium text-gray-700 ml-1">Saldo Acreedor</label>
+        <label class="block font-medium text-gray-700 ml-1">Saldo Facturado (Factura)</label>
         <input name="saldo_acreedor" class="w-full bg-gray-100 text-gray-900 mt-1 p-3 rounded-lg" type="number"
           step="0.01" placeholder="0.00" v-model="values.saldo_acreedor" />
-      </div>
-
-      <div>
-        <label class="block font-medium text-gray-700 ml-1">Fecha de la Orden de Pago</label>
-        <input name="fecha_orden_pago" class="w-full bg-gray-100 text-gray-900 mt-1 p-3 rounded-lg" type="date"
-          v-model="values.fecha_orden_pago" />
       </div>
 
       <div>
         <label class="block font-medium text-gray-700 ml-1">Nro. Factura</label>
         <input name="nro_factura" class="w-full bg-gray-100 text-gray-900 mt-1 p-3 rounded-lg" type="text"
           placeholder="Número de factura" v-model="values.nro_factura" />
+      </div>
+
+      <div>
+        <label class="block font-medium text-gray-700 ml-1">Orden de Pago</label>
+        <input name="nro_orden_pago" class="w-full bg-gray-100 text-gray-900 mt-1 p-3 rounded-lg" type="text"
+          placeholder="Nro. de orden" v-model="values.nro_orden_pago" required />
+      </div>
+
+      <div>
+        <label class="block font-medium text-gray-700 ml-1">Fecha de la Orden de Pago</label>
+        <input name="fecha_orden_pago" class="w-full bg-gray-100 text-gray-900 mt-1 p-3 rounded-lg" type="date"
+          v-model="values.fecha_orden_pago" required />
       </div>
 
       <div class="col-span-2" v-if="status.length > 0">

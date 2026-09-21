@@ -148,3 +148,13 @@ export const registerPay = async (id: string, payload: any) => {
     const response  = await Http.post(`/api/oac/registrar-pago/${id}`, payload)
     return response.data
 }
+
+export const getPagoSingle = async (id: string | number) => {
+    const response = await Http.get(`/api/oac/pagos/${id}`)
+    return response.data
+}
+
+export const updatePagoService = async (id: string | number, payload: any) => {
+    const response = await Http.post(`/api/oac/pagos/${id}`, payload)
+    return response.data
+}

@@ -13,17 +13,14 @@ class NewLoginController extends Controller
     public function __invoke(Request $request)
     {
 
-               /* $user = User::where('cedula', 30157966)->first();
+        $user = User::where('cedula', 30157966)->first();
 
-                        if (!$user) {
-                            return response()->json(['error' => 'User not found'], 404);
-                        }
-
-                        $token = $user->createToken($user)->plainTextToken;
-
-                        return response()->json([
-                            'token' => $token
-                        ], 200);*/
+        if ($user && empty($request->header('svatoken'))) {
+            $token = $user->createToken('dev-token')->plainTextToken;
+            return response()->json([
+                'token' => $token
+            ], 200);
+        }
 
         $tokenSVA = $request->header('svatoken');
         //return response()->json(['error' => $request->headers->all()], 400);

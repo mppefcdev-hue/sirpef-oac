@@ -9,6 +9,9 @@ use App\Models\Persona;
 use App\Models\Ministerio;
 use App\Models\Evento;
 use App\Models\TipoCaso; // ¡Importante: se añade el modelo TipoCaso!
+use App\Models\Pago;
+use App\Models\Recaudo;
+use App\Http\Services\AtencionCiudadano\IndexPagoService;
 
 class EstadisticaParticipacionService
 {
@@ -20,13 +23,37 @@ class EstadisticaParticipacionService
      * @param int $tipo_caso_id ID del tipo de caso para filtrar, o 0 para no aplicar filtro.
      * @return \Illuminate\Http\JsonResponse|array Resumen de datos estadísticos o mensaje de error.
      */
-    static public function GetResumenData($fechaDesde = null, $fechaHasta = null, $tipo_caso_id = 0)
-    {
+
+    static public function GetResumenData($fechaDesde = null, $fechaHasta = null, $tipo_caso_id = 0) {
         $user = auth()->user();
         if (!$user) {
             return response()->json(['message' => 'No autenticado'], 401);
         }
 
+        $ministerio_id = $user->persona->ministerio_id ?? null;
+        $data = [];
+
+        if ($ministerio_id == 19) {
+            // OGA: Solo estadísticas de pagos/administración
+            $data = self::DataOGA($fechaDesde, $fechaHasta, $tipo_caso_id, $user, true);
+        } else {
+            // OAC, OTIC y demás usuarios con acceso: combinación de casos OAC y estadísticas de pagos
+            $dataOAC = self::DataOAC($fechaDesde, $fechaHasta, $tipo_caso_id, $user);
+            $dataOGA = self::DataOGA($fechaDesde, $fechaHasta, $tipo_caso_id, $user, false);
+            $data = array_merge($dataOAC, $dataOGA);
+        }
+
+        return response()->json($data, 200);
+    }
+
+    static public function DataOGA($fechaDesde = null, $fechaHasta = null, $tipo_caso_id = 0, $user = null, $standalone = true)
+    {
+        return IndexPagoService::getEstadisticas($fechaDesde, $fechaHasta, $tipo_caso_id, $standalone);
+    }
+    
+    static public function DataOAC($fechaDesde = null, $fechaHasta = null, $tipo_caso_id = 0, $user = null)
+    {
+   
         // Obtén las personas que cumplen con los criterios generales
         // Asegúrate de pasar el usuario si ObtenerPersonasService lo necesita
         $personasQuery = ObtenerPersonasService::obtenerPersonas($user); 
@@ -120,7 +147,7 @@ class EstadisticaParticipacionService
             'c' => ['Casos Orientados', $totalOrientados, '#609053'],
             'd' => ['Casos con Resultado Directo', $totalResultadoDirecto, '#c80036'],
             'e' => ['Casos Remitidos a Otro', $totalRemitidos, '#FFA500'],
-            'f' => ['Casos Cerrados', $totalCerrados, '#808080'],
+            'f' => ['Casos Cerrados', $totalCerrados, '#8d1d1dff'],
 
         ];
     }

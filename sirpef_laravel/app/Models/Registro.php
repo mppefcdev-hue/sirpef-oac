@@ -49,4 +49,9 @@ class Registro extends Model
     {
         return $this->hasMany(Seguimiento::class, 'registro_id');
     }
+
+    public function pago()
+    {
+        return $this->hasOne(Pago::class, 'registro_id')->latest();
+    }
 }

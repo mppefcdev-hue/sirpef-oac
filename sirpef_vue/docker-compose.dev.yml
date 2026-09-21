@@ -3,7 +3,7 @@ services:
  oac_vue_mppef_dev:    
     image: node:22
     ports:
-      - "5174:81"
+      - "5174:5173"
     volumes:
       - ".:/app"
     environment:

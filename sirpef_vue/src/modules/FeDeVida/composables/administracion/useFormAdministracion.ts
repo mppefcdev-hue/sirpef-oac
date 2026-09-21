@@ -1,13 +1,14 @@
 import { alerta } from "@/utils/alert";
 import { onMounted, ref, watch } from "vue"
-import { editCase, getCaseSingle, registerPay } from "../../services";
+import { editCase, getCaseSingle, registerPay, getPagoSingle, updatePagoService } from "../../services";
 import { useRoute, useRouter } from "vue-router";
 import Swal from "sweetalert2";
+import Http from "@/utils/Http";
 
 export default (punto: any) => {
     const router = useRouter()
     const route = useRoute()
-    const id = route.params.id as string
+    const pagoId = (route.query.pago_id || route.params.id) as string
 
     const step = ref(1 as any);
     const estado = ref([] as number[])
@@ -16,6 +17,7 @@ export default (punto: any) => {
         tipo_pago: "",
         nro_referencia_pago: "",
         proveedor: "",
+        contacto: "",
         rif_proveedor: "",
         monto: 0,
         nro_orden_pago: "",
@@ -23,6 +25,8 @@ export default (punto: any) => {
         nro_factura: "",
         estatus: "",
         descripcion: "",
+        beneficiario: "",
+        diagnostico: "",
         fecha_pago_financiero: '',
         saldo_deudor: '',
         saldo_acreedor: '',
@@ -40,10 +44,89 @@ export default (punto: any) => {
       }
     );
 
+    const submitFormData = async () => {
+        const formData = new FormData();
+
+        formData.append('tipo_pago_id', UserInfo.value.tipo_pago);
+        formData.append('nro_referencia_pago', UserInfo.value.nro_referencia_pago);
+        formData.append('proveedor', UserInfo.value.proveedor);
+        formData.append('rif_proveedor', UserInfo.value.rif_proveedor);
+        formData.append('contacto', UserInfo.value.contacto.toString());
+        formData.append('monto', UserInfo.value.monto.toString());
+        formData.append('orden_pago', UserInfo.value.nro_orden_pago);
+        formData.append('fecha_orden_pago', UserInfo.value.fecha_orden_pago);
+        formData.append('nro_factura', UserInfo.value.nro_factura);
+        formData.append('estatus_pago_id', UserInfo.value.estatus);
+        formData.append('descripcion', UserInfo.value.descripcion);
+        formData.append('beneficiario', UserInfo.value.beneficiario);
+        formData.append('diagnostico', UserInfo.value.diagnostico);
+        formData.append('saldo_deudor', UserInfo.value.saldo_deudor.toString());
+        formData.append('saldo_acreedor', UserInfo.value.saldo_acreedor.toString());
+
+        const proveedoresEnvio = [
+            {
+                monto_relacionado: UserInfo.value.monto,
+                cedula_rif: UserInfo.value.rif_proveedor,
+                nombre: UserInfo.value.proveedor,
+                contacto: UserInfo.value.contacto
+            }
+        ];
+
+        proveedoresEnvio.forEach((p, index) => {
+            formData.append(`proveedores[${index}][monto_relacionado]`, p.monto_relacionado.toString());
+            formData.append(`proveedores[${index}][cedula_rif]`, p.cedula_rif);
+            formData.append(`proveedores[${index}][nombre]`, p.nombre);
+            formData.append(`proveedores[${index}][contacto]`, p.contacto);
+        });
+
+        UserInfo.value.recaudos.forEach((recaudo, index) => {
+            formData.append(`recaudos[${index}][nombre]`, recaudo.nombre);
+            if (recaudo.archivo) {
+                formData.append(`recaudos[${index}][archivo]`, recaudo.archivo);
+            }
+        });
+
+        try {
+            if (mode.value == 'POST') {
+                await registerPay(punto.registro_id, formData)
+            } else if (mode.value == 'PUT') {
+                await updatePagoService(pagoId, formData)
+            }
+
+            estado.value.push(4)
+            step.value = 4
+            
+            alerta("Éxito", `El registro se ha procesado correctamente`, "success")
+            router.push('/casos/administracion')
+        } catch (error: any) {
+            const { response } = error
+            if (response?.data) return alerta("error", `
+                ${response.data.message || 'Ocurrió un error'}
+                <br><p>${response.data.errors ? response.data.errors[Object.keys(response.data.errors)[0]] : 'Error en el servidor'}</p>
+                `, "info")
+            alerta("error", 'Ocurrió un error inesperado', "info")
+        }
+    }
+
     const emitForm = async (e: Event) => {
         if (step.value == 1) {
-            step.value = 2
+            const tieneFactura = await Swal.fire({
+                title: '¿Posee factura?',
+                html: '¿Tiene la factura para registrarla en este momento?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, la tengo',
+                cancelButtonText: 'No',
+                reverseButtons: true
+            });
+
             estado.value.push(1)
+
+            if (tieneFactura.isConfirmed) {
+                step.value = 2
+            } else {
+                await submitFormData()
+            }
         } else if (step.value == 2) {
             if (!UserInfo.value.nro_factura) {
                 const confirmarFactura = await Swal.fire({
@@ -74,74 +157,35 @@ export default (punto: any) => {
             step.value = 3
         } else if (step.value == 3) {
             estado.value.push(3)
-
-            const formData = new FormData();
-
-            formData.append('tipo_pago_id', UserInfo.value.tipo_pago);
-            formData.append('nro_referencia_pago', UserInfo.value.nro_referencia_pago);
-            //formData.append('proveedor', UserInfo.value.proveedor);
-            //formData.append('rif_proveedor', UserInfo.value.rif_proveedor);
-            formData.append('monto', UserInfo.value.monto.toString());
-            formData.append('orden_pago', UserInfo.value.nro_orden_pago);
-            formData.append('fecha_orden_pago', UserInfo.value.fecha_orden_pago);
-            formData.append('nro_factura', UserInfo.value.nro_factura);
-            formData.append('estatus_pago_id', UserInfo.value.estatus);
-            formData.append('descripcion', UserInfo.value.descripcion);
-
-            const proveedoresEnvio = [
-                {
-                    monto_relacionado: UserInfo.value.monto,
-                    cedula_rif: UserInfo.value.rif_proveedor,
-                    nombre: UserInfo.value.proveedor
-                }
-            ];
-
-            proveedoresEnvio.forEach((p, index) => {
-                formData.append(`proveedores[${index}][monto_relacionado]`, p.monto_relacionado.toString());
-                formData.append(`proveedores[${index}][cedula_rif]`, p.cedula_rif);
-                formData.append(`proveedores[${index}][nombre]`, p.nombre);
-            });
-
-            UserInfo.value.recaudos.forEach((recaudo, index) => {
-                formData.append(`recaudos[${index}][nombre]`, recaudo.nombre);
-                if (recaudo.archivo) {
-                    formData.append(`recaudos[${index}][archivo]`, recaudo.archivo);
-                }
-            });
-
-            try {
-                if (mode.value == 'POST') await registerPay(punto.registro_id, formData)
-                else if (mode.value == 'PUT') await editCase(id, formData)
-
-                alerta("Éxito", `El registro se ha procesado correctamente`, "success")
-                router.push('/casos/administracion')
-            } catch (error: any) {
-                const { response } = error
-                if (response?.data) return alerta("error", `
-                    ${response.data.message || 'Ocurrió un error'}
-                    <br><p>${response.data.errors ? response.data.errors[Object.keys(response.data.errors)[0]] : 'Error en el servidor'}</p>
-                    `, "info")
-                alerta("error", 'Ocurrió un error inesperado', "info")
-            }
+            await submitFormData()
         }
     }
 
-    const getInfo = async (id: string) => {
+    const getInfo = async (pId: string) => {
         try {
-            const response = await getCaseSingle(id)
+            const response = await getPagoSingle(pId)
             const data = response.data
 
+            let nroFactura = data.nro_factura || '';
+            if (!nroFactura && data.descripcion) {
+                const match = data.descripcion.match(/\[Factura:\s*([^\]]+)\]/i);
+                if (match) nroFactura = match[1].trim();
+            }
+
             UserInfo.value = {
-                tipo_pago: data.tipo_pago || '',
+                tipo_pago: data.tipo_pago_id || '',
                 nro_referencia_pago: data.nro_referencia_pago || '',
-                proveedor: data.proveedor || '',
-                rif_proveedor: data.rif_proveedor || '',
+                proveedor: data.proveedores?.[0]?.nombre || '',
+                contacto: data.proveedores?.[0]?.contacto || '',
+                rif_proveedor: data.proveedores?.[0]?.cedula_rif || '',
                 monto: data.monto || 0.0,
-                nro_orden_pago: data.nro_orden_pago || '',
+                nro_orden_pago: data.orden_pago || '',
                 fecha_orden_pago: data.fecha_orden_pago || '',
-                nro_factura: data.nro_factura || '',
-                estatus: data.estatus || '',
+                nro_factura: nroFactura,
+                estatus: data.estatus_pago_id || '',
                 descripcion: data.descripcion || '',
+                beneficiario: data.beneficiario || '',
+                diagnostico: data.diagnostico || '',
                 recaudos: data.recaudos?.map((e: any) => ({ ...e, type: e.mime_type })) || [],
                 fecha_pago_financiero: data.fecha_pago_financiero || '',
                 saldo_deudor: data.saldo_deudor || '',
@@ -151,12 +195,28 @@ export default (punto: any) => {
             mode.value = 'PUT'
         } catch (error) {
             console.error(error)
-            alerta("error", `Error al obtener los datos del caso`, "error")
+            alerta("error", `Error al obtener los datos del pago`, "error")
         }
     }
 
+    const DataOGA = async (fechaDesde: string | null = null, fechaHasta: string | null = null, tipoCasoId: number = 0) => {
+        try {
+            const desde = fechaDesde || 'null';
+            const hasta = fechaHasta || 'null';
+            const res = await Http.get(`/api/registro/count/${desde}/${hasta}/${tipoCasoId}`);
+            return res.data;
+        } catch (error) {
+            console.error("Error al obtener DataOGA:", error);
+            return null;
+        }
+    };
+
     onMounted(() => {
-        if (id) getInfo(id)
+        if (pagoId) getInfo(pagoId)
+        // Precargar beneficiario desde el punto de cuenta si existe
+        if (punto?.beneficiario && !UserInfo.value.beneficiario) {
+            UserInfo.value.beneficiario = punto.beneficiario
+        }
     })
 
     return {
@@ -164,5 +224,6 @@ export default (punto: any) => {
         estado,
         emitForm,
         UserInfo,
+        DataOGA,
     }
 }

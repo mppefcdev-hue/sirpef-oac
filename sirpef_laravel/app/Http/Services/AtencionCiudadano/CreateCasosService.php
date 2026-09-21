@@ -13,7 +13,7 @@ use App\Models\Registro;
 use App\Models\Recaudo;
 use App\Models\TipoCaso;
 use App\Models\Auditoria; // Importa el modelo Auditoria
-use App\Models\UnidadAdscrita; // Importa el modelo UnidadAdscrita
+use App\Models\Ministerio; // Importa el modelo UnidadAdscrita
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -148,7 +148,7 @@ class CreateCasosService {
                 if ($user->configUser && !empty($user->configUser->unid_activa)) {
                     $unidActivaIds = json_decode($user->configUser->unid_activa, true);
                     if (is_array($unidActivaIds) && !in_array(0, $unidActivaIds) && !empty($unidActivaIds[0])) {
-                        $unidadAdscrita = UnidadAdscrita::find($unidActivaIds[0]);
+                        $unidadAdscrita = Ministerio::find($unidActivaIds[0]);
                         if ($unidadAdscrita) {
                             $unidadActivaNombre = $unidadAdscrita->nombre;
                         }
