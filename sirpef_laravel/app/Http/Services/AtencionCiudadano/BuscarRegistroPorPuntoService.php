@@ -15,11 +15,12 @@ class BuscarRegistroPorPuntoService
     static public function obtenerDataParaPago(string $numeroPunto): JsonResponse
     {
         // Limpiamos y decodificamos por si el slash viene como %2F
-        $numeroPuntoLimpio = urldecode(trim($numeroPunto));
+//        $numeroPuntoLimpio = urldecode(trim($numeroPunto));
+   $numeroPuntoLimpio = $numeroPunto;
 
         // 1. Buscar el Punto de Cuenta por número de punto o por ID
         $puntoCuenta = PuntoCuenta::where('numero_punto', $numeroPuntoLimpio)
-            ->orWhere('id', $numeroPuntoLimpio)
+//            ->orWhere('id', $numeroPuntoLimpio)
             ->first();
 
         // 2. Si no se encontró y el parámetro es numérico, intentar buscar directamente por registro_id

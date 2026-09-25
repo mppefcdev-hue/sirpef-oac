@@ -1,13 +1,15 @@
 .aider*
+.env
 # Dependencias de PHP (Composer)
 sirpef_laravel/vendor/
-
+sirpef_laravel/.env
 *.tar.gz
 *.log
 sirpef_laravel/storage/logs/
 
 # Dependencias de JavaScript (Node)
 sirpef_vue/node_modules/
+sirpef_vue/.env
 npm-debug.log
 yarn-error.log
 

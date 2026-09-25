@@ -12,16 +12,20 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('tbl_pago_proveedor', function (Blueprint $table) {
-            // Eliminar la llave foránea y la columna pago_id
-            $table->dropForeign(['pago_id']);
-            $table->dropColumn('pago_id');
+            // Eliminar pago_id solo si existe
+            if (Schema::hasColumn('tbl_pago_proveedor', 'pago_id')) {
+                $table->dropForeign(['pago_id']);
+                $table->dropColumn('pago_id');
+            }
 
-            // Agregar la columna memorandum_id y su llave foránea
-            $table->unsignedBigInteger('memorandum_id')->after('id');
-            $table->foreign('memorandum_id')
-                  ->references('id')
-                  ->on('tbl_memorandums')
-                  ->onDelete('cascade');
+            // Agregar memorandum_id solo si NO existe
+            if (!Schema::hasColumn('tbl_pago_proveedor', 'memorandum_id')) {
+                $table->unsignedBigInteger('memorandum_id')->after('id');
+                $table->foreign('memorandum_id')
+                      ->references('id')
+                      ->on('tbl_memorandums')
+                      ->onDelete('cascade');
+            }
         });
     }
 
@@ -31,14 +35,18 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('tbl_pago_proveedor', function (Blueprint $table) {
-            $table->dropForeign(['memorandum_id']);
-            $table->dropColumn('memorandum_id');
+            if (Schema::hasColumn('tbl_pago_proveedor', 'memorandum_id')) {
+                $table->dropForeign(['memorandum_id']);
+                $table->dropColumn('memorandum_id');
+            }
 
-            $table->unsignedBigInteger('pago_id')->after('id');
-            $table->foreign('pago_id')
-                  ->references('id')
-                  ->on('tbl_pagos')
-                  ->onDelete('cascade');
+            if (!Schema::hasColumn('tbl_pago_proveedor', 'pago_id')) {
+                $table->unsignedBigInteger('pago_id')->after('id');
+                $table->foreign('pago_id')
+                      ->references('id')
+                      ->on('tbl_pagos')
+                      ->onDelete('cascade');
+            }
         });
     }
 };
