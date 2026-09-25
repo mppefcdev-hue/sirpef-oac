@@ -13,6 +13,8 @@ yarn-error.log
 
 # Configuración y variables de entorno (CRÍTICO)
 .env
+sirpef_vue/.env
+sirpef_laravel/.env
 .env.backup
 .env.production
 php_errors.log
