@@ -85,7 +85,13 @@ const verDetallesPago = (row: any) => {
         <p><strong>Beneficiario:</strong> ${row.beneficiario || 'Sin beneficiario'}</p>
         ${row.diagnostico ? `<p><strong>Diagnóstico:</strong> ${row.diagnostico}</p>` : ''}
         <p class="border-t pt-2"><strong>Monto:</strong> <span class="text-green-700 font-bold">Bs. ${formatCurrency(row.monto)}</span></p>
-        <p><strong>Factura:</strong> ${row.nro_factura ? `<span class="text-green-600 font-semibold">${row.nro_factura}</span>` : '<span class="text-red-600 font-semibold">Sin factura</span>'}</p>
+        <p><strong>Factura:</strong> ${
+          row.nro_factura && !row.factura_pendiente 
+            ? `<span class="text-green-600 font-semibold">${row.nro_factura}</span>` 
+            : (row.factura_pendiente || (row.tiene_factura && !row.nro_factura)
+                ? '<span class="text-amber-600 font-bold">Sí (Pendiente colocar factura)</span>'
+                : '<span class="text-red-600 font-semibold">Sin factura</span>')
+        }</p>
         <p><strong>Saldo Facturado (Acreedor):</strong> <span class="text-emerald-700 font-semibold">Bs. ${formatCurrency(row.saldo_acreedor)}</span></p>
         <p><strong>Saldo Deudor:</strong> <span class="${saldoDeudor > 0 ? 'text-red-600 font-bold' : 'text-gray-600'}">Bs. ${formatCurrency(saldoDeudor)}</span></p>
         <p><strong>Tipo de Pago:</strong> <span class="capitalize font-semibold">${tipoPago}</span></p>
@@ -110,6 +116,18 @@ const editarPago = (row: any) => {
   const puntoNumero = row.registro?.punto_cuenta?.numero_punto || '';
   router.push({
     path: '/casos/administracion/form',
+    query: {
+      pago_id: row.id,
+      punto: puntoNumero || (row.registro_id ? String(row.registro_id) : ''),
+      registro_id: row.registro_id ? String(row.registro_id) : undefined
+    }
+  });
+};
+
+const completarFactura = (row: any) => {
+  const puntoNumero = row.registro?.punto_cuenta?.numero_punto || '';
+  router.push({
+    name: 'CasesAdminFormPaso2',
     query: {
       pago_id: row.id,
       punto: puntoNumero || (row.registro_id ? String(row.registro_id) : ''),
@@ -535,15 +553,38 @@ const exportToCSV = async () => {
               </td>
 
               <td class="text-center font-bold">
-                <span v-if="row.nro_factura" class="text-green-600 flex items-center justify-center gap-1">
-                  <font-awesome-icon icon="check-circle" /> Sí
-                </span>
-                <span v-else class="text-red-600 flex items-center justify-center gap-1">
-                  <font-awesome-icon icon="times-circle" /> No
-                </span>
-                <span v-if="row.nro_factura" class="text-[11px] text-gray-500 font-normal block truncate max-w-[120px] mx-auto" :title="row.nro_factura">
-                  {{ row.nro_factura }}
-                </span>
+                <!-- 1. Si tiene factura colocada -->
+                <div v-if="row.nro_factura && !row.factura_pendiente" class="flex flex-col items-center justify-center">
+                  <span class="text-green-600 flex items-center justify-center gap-1">
+                    <font-awesome-icon icon="check-circle" /> Sí
+                  </span>
+                  <span class="text-[11px] text-gray-500 font-normal block truncate max-w-[120px] mx-auto" :title="row.nro_factura">
+                    {{ row.nro_factura }}
+                  </span>
+                </div>
+
+                <!-- 2. Si el registro marca SÍ pero está pendiente colocar la factura -->
+                <div v-else-if="row.factura_pendiente || (row.tiene_factura && !row.nro_factura)" class="flex flex-col items-center justify-center gap-1.5">
+                  <span class="text-green-600 flex items-center justify-center gap-1">
+                    <font-awesome-icon icon="check-circle" /> Sí
+                  </span>
+                  <button
+                    type="button"
+                    @click="completarFactura(row)"
+                    class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold rounded bg-amber-50 text-amber-800 border border-amber-300 hover:bg-amber-100 hover:border-amber-400 transition-all shadow-sm cursor-pointer"
+                    title="Haga clic para colocar la factura pendiente"
+                  >
+                    <font-awesome-icon icon="clock" class="text-amber-600 text-[10px]" />
+                    <span>Pendiente colocar factura</span>
+                  </button>
+                </div>
+
+                <!-- 3. Si no posee factura -->
+                <div v-else>
+                  <span class="text-red-600 flex items-center justify-center gap-1">
+                    <font-awesome-icon icon="times-circle" /> No
+                  </span>
+                </div>
               </td>
 
               <td class="text-center text-red-600">

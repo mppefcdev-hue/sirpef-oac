@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import Controls from "@/components/sirpef/form/Controls.vue";
+import MoneyInput from "@/components/sirpef/form/MoneyInput.vue";
 import Http from "@/utils/Http";
 import { onMounted } from "vue";
 import { ref } from "vue";
@@ -31,14 +32,12 @@ onMounted(() => {
 
       <div>
         <label class="block font-medium text-gray-700 ml-1">Saldo Deudor</label>
-        <input name="saldo_deudor" class="w-full bg-gray-100 text-gray-900 mt-1 p-3 rounded-lg" type="number"
-          step="0.01" placeholder="0.00" v-model="values.saldo_deudor" />
+        <MoneyInput name="saldo_deudor" placeholder="0,00" v-model="values.saldo_deudor" />
       </div>
 
       <div>
         <label class="block font-medium text-gray-700 ml-1">Saldo Facturado (Factura)</label>
-        <input name="saldo_acreedor" class="w-full bg-gray-100 text-gray-900 mt-1 p-3 rounded-lg" type="number"
-          step="0.01" placeholder="0.00" v-model="values.saldo_acreedor" />
+        <MoneyInput name="saldo_acreedor" placeholder="0,00" v-model="values.saldo_acreedor" />
       </div>
 
       <div>

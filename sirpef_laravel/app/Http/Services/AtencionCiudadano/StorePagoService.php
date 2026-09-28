@@ -30,7 +30,24 @@ class StorePagoService
                     : max(0, $monto - $saldoAcreedor);
 
                 $descripcion = $request->descripcion;
-                if (!empty($request->nro_factura) && stripos($descripcion ?? '', '[Factura:') === false) {
+                $tieneFactura = $request->input('tiene_factura');
+                $facturaPendiente = $request->input('factura_pendiente');
+
+                if ($tieneFactura === '1' || $tieneFactura === true || $tieneFactura === 'si' || $facturaPendiente === '1' || $facturaPendiente === true) {
+                    if (!empty($request->nro_factura)) {
+                        if (stripos($descripcion ?? '', '[Factura:') === false) {
+                            $descripcion = trim(($descripcion ?? '') . " [Factura: " . trim($request->nro_factura) . "]");
+                        }
+                    } else {
+                        if (stripos($descripcion ?? '', '[Factura: PENDIENTE]') === false) {
+                            $descripcion = trim(($descripcion ?? '') . " [Factura: PENDIENTE]");
+                        }
+                    }
+                } elseif ($tieneFactura === '0' || $tieneFactura === false || $tieneFactura === 'no') {
+                    if (stripos($descripcion ?? '', '[Posee Factura: NO]') === false) {
+                        $descripcion = trim(($descripcion ?? '') . " [Posee Factura: NO]");
+                    }
+                } elseif (!empty($request->nro_factura) && stripos($descripcion ?? '', '[Factura:') === false) {
                     $descripcion = trim(($descripcion ?? '') . " [Factura: " . trim($request->nro_factura) . "]");
                 }
 
@@ -167,8 +184,12 @@ class StorePagoService
                 $saldoDeudor = $monto - $saldoAcreedor;
 
                 $descripcion = $request->descripcion ?? $pago->descripcion;
-                if (!empty($request->nro_factura) && stripos($descripcion ?? '', '[Factura:') === false) {
-                    $descripcion = trim(($descripcion ?? '') . " [Factura: " . trim($request->nro_factura) . "]");
+                if (!empty($request->nro_factura)) {
+                    if (stripos($descripcion ?? '', '[Factura: PENDIENTE]') !== false) {
+                        $descripcion = preg_replace('/\[Factura:\s*PENDIENTE\]/i', '[Factura: ' . trim($request->nro_factura) . ']', $descripcion);
+                    } elseif (stripos($descripcion ?? '', '[Factura:') === false) {
+                        $descripcion = trim(($descripcion ?? '') . " [Factura: " . trim($request->nro_factura) . "]");
+                    }
                 }
 
                 $pago->update([
