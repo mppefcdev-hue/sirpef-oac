@@ -1,0 +1,19 @@
+http://local.mppef.gob.ve:5174/casos/administracion/form?pago_id=18&punto=123&registro_id=70 (buena)
+
+http://local.mppef.gob.ve:5174/fedevida/presencial/70 (edicion en el expediente)
+
+http://local.mppef.gob.ve:5174/cases?estatus_caso=Normales(graficas)
+
+Los filtros que disponibles
+Mes,nro_Factura,Proveedor,Paciente/beneficiario,Punto de Cuenta, Orden de pago, Estatus
+
+Los filtros que faltan
+saldo deudor y acreedor, tiene factura (si/no), tipo de pago
+
+sirpef_laravel
+IndexPagoService.php
+
+sirpef_vue
+Index.vue
+indexTable.ts
+useFormAdministracion.ts

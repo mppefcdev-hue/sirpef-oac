@@ -1,16 +1,47 @@
 import { alerta } from "@/utils/alert";
-import { onMounted, ref, watch } from "vue"
+import { onMounted, ref, watch, computed } from "vue"
 import { editCase, getCaseSingle, registerPay, getPagoSingle, updatePagoService } from "../../services";
 import { useRoute, useRouter } from "vue-router";
 import Swal from "sweetalert2";
 import Http from "@/utils/Http";
+import { useAuthStore } from "@/modules/Auth/stores/index";
 
 export default (punto: any) => {
     const router = useRouter()
     const route = useRoute()
-    const pagoId = (route.query.pago_id || route.params.id) as string
+    const store = useAuthStore()
 
-    const step = ref(1 as any);
+    const pagoId = (route.query.pago_id || route.params.id) as string
+    const currentPagoId = ref(pagoId || '')
+
+    // Permisos de pasos según los menús asignados al rol del usuario
+    const canAccessPaso1 = computed(() => {
+        if (store.authUser?.isAdmin || store.authUser?.role_id === 1 || store.authUser?.role_id === 2) return true;
+        return store.authUser?.menus_id?.some((m: any) => 
+            m.nombre?.toLowerCase().includes('paso 1') || 
+            m.id === 35 || 
+            m.nombre?.toLowerCase() === 'formulario'
+        ) ?? true;
+    });
+
+    const canAccessPaso2y3 = computed(() => {
+        if (store.authUser?.isAdmin || store.authUser?.role_id === 1 || store.authUser?.role_id === 2) return true;
+        return store.authUser?.menus_id?.some((m: any) => 
+            m.nombre?.toLowerCase().includes('paso 2') || 
+            m.id === 39
+        ) ?? false;
+    });
+
+    // Determinar paso inicial según la ruta, query param, o permisos del usuario
+    const routeName = route.name as string;
+    const getInitialStep = (): number => {
+        if (route.query.step) return parseInt(route.query.step as string);
+        if (routeName === 'CasesAdminFormPaso2') return 2;
+        if (routeName === 'CasesAdminFormPaso1') return 1;
+        return canAccessPaso1.value ? 1 : 2;
+    };
+
+    const step = ref(getInitialStep() as any);
     const estado = ref([] as number[])
 
     const UserInfo = ref({
@@ -19,7 +50,7 @@ export default (punto: any) => {
         proveedor: "",
         contacto: "",
         rif_proveedor: "",
-        monto: 0,
+        monto: "" as any,
         nro_orden_pago: "",
         fecha_orden_pago: "",
         nro_factura: "",
@@ -30,10 +61,12 @@ export default (punto: any) => {
         fecha_pago_financiero: '',
         saldo_deudor: '',
         saldo_acreedor: '',
+        tiene_factura: false,
+        factura_pendiente: false,
         recaudos: [] as any[]
     })
 
-    const mode = ref('POST')
+    const mode = ref(pagoId ? 'PUT' : 'POST')
 
     watch(
       () => [UserInfo.value.monto, UserInfo.value.saldo_acreedor],
@@ -44,7 +77,7 @@ export default (punto: any) => {
       }
     );
 
-    const submitFormData = async () => {
+    const submitFormData = async (continuar: boolean = false) => {
         const formData = new FormData();
 
         formData.append('tipo_pago_id', UserInfo.value.tipo_pago);
@@ -52,20 +85,22 @@ export default (punto: any) => {
         formData.append('proveedor', UserInfo.value.proveedor);
         formData.append('rif_proveedor', UserInfo.value.rif_proveedor);
         formData.append('contacto', UserInfo.value.contacto.toString());
-        formData.append('monto', UserInfo.value.monto.toString());
-        formData.append('orden_pago', UserInfo.value.nro_orden_pago);
-        formData.append('fecha_orden_pago', UserInfo.value.fecha_orden_pago);
-        formData.append('nro_factura', UserInfo.value.nro_factura);
-        formData.append('estatus_pago_id', UserInfo.value.estatus);
-        formData.append('descripcion', UserInfo.value.descripcion);
-        formData.append('beneficiario', UserInfo.value.beneficiario);
-        formData.append('diagnostico', UserInfo.value.diagnostico);
+        formData.append('monto', (UserInfo.value.monto !== '' && UserInfo.value.monto !== null && UserInfo.value.monto !== undefined) ? UserInfo.value.monto.toString() : '0');
+        formData.append('orden_pago', UserInfo.value.nro_orden_pago || 'PENDIENTE');
+        formData.append('fecha_orden_pago', UserInfo.value.fecha_orden_pago || '');
+        formData.append('nro_factura', UserInfo.value.nro_factura || '');
+        formData.append('estatus_pago_id', UserInfo.value.estatus || '');
+        formData.append('descripcion', UserInfo.value.descripcion || '');
+        formData.append('beneficiario', UserInfo.value.beneficiario || '');
+        formData.append('diagnostico', UserInfo.value.diagnostico || '');
         formData.append('saldo_deudor', UserInfo.value.saldo_deudor.toString());
         formData.append('saldo_acreedor', UserInfo.value.saldo_acreedor.toString());
+        formData.append('tiene_factura', UserInfo.value.tiene_factura ? '1' : '0');
+        formData.append('factura_pendiente', UserInfo.value.factura_pendiente ? '1' : '0');
 
         const proveedoresEnvio = [
             {
-                monto_relacionado: UserInfo.value.monto,
+                monto_relacionado: UserInfo.value.monto || 0,
                 cedula_rif: UserInfo.value.rif_proveedor,
                 nombre: UserInfo.value.proveedor,
                 contacto: UserInfo.value.contacto
@@ -87,29 +122,43 @@ export default (punto: any) => {
         });
 
         try {
-            if (mode.value == 'POST') {
-                await registerPay(punto.registro_id, formData)
-            } else if (mode.value == 'PUT') {
-                await updatePagoService(pagoId, formData)
+            let res: any = null;
+            const targetId = currentPagoId.value || pagoId;
+
+            if (mode.value == 'POST' && !targetId) {
+                res = await registerPay(punto.registro_id, formData);
+                if (res?.data?.pago?.id) {
+                    currentPagoId.value = res.data.pago.id.toString();
+                }
+            } else {
+                res = await updatePagoService(targetId, formData);
             }
 
-            estado.value.push(4)
-            step.value = 4
-            
-            alerta("Éxito", `El registro se ha procesado correctamente`, "success")
-            router.push('/casos/administracion')
+            if (!continuar) {
+                estado.value.push(4)
+                step.value = 4
+                alerta("Éxito", `El registro se ha procesado correctamente`, "success")
+                router.push('/casos/administracion')
+            }
+
+            return res;
         } catch (error: any) {
             const { response } = error
-            if (response?.data) return alerta("error", `
-                ${response.data.message || 'Ocurrió un error'}
-                <br><p>${response.data.errors ? response.data.errors[Object.keys(response.data.errors)[0]] : 'Error en el servidor'}</p>
-                `, "info")
-            alerta("error", 'Ocurrió un error inesperado', "info")
+            if (response?.data) {
+                alerta("error", `
+                    ${response.data.message || 'Ocurrió un error'}
+                    <br><p>${response.data.errors ? response.data.errors[Object.keys(response.data.errors)[0]] : 'Error en el servidor'}</p>
+                    `, "info");
+            } else {
+                alerta("error", 'Ocurrió un error inesperado', "info")
+            }
+            return null;
         }
     }
 
     const emitForm = async (e: Event) => {
         if (step.value == 1) {
+            // Preguntar si posee factura
             const tieneFactura = await Swal.fire({
                 title: '¿Posee factura?',
                 html: '¿Tiene la factura para registrarla en este momento?',
@@ -120,18 +169,58 @@ export default (punto: any) => {
                 reverseButtons: true
             });
 
-            estado.value.push(1)
-
+            // Sin importar si coloca Sí o No, el caso se registra
             if (tieneFactura.isConfirmed) {
-                step.value = 2
+                // Marcó SÍ: la factura está pendiente de colocar
+                UserInfo.value.tiene_factura = true;
+                UserInfo.value.factura_pendiente = true;
+
+                const res = await submitFormData(true);
+                if (res) {
+                    estado.value.push(1);
+                    // Si estamos en la ruta de paso-1 solamente, redirigir
+                    if (routeName === 'CasesAdminFormPaso1') {
+                        if (canAccessPaso2y3.value) {
+                            // Redirigir al formulario paso 2 y 3 con el pago_id
+                            const targetPagoId = currentPagoId.value || pagoId;
+                            alerta("Caso Registrado", "El caso se guardó exitosamente con factura pendiente. Complete los datos de la factura en el formulario paso 2 y 3.", "success");
+                            router.push({
+                                name: 'CasesAdminFormPaso2',
+                                query: {
+                                    pago_id: targetPagoId,
+                                    punto: route.query.punto as string || '',
+                                    registro_id: route.query.registro_id as string || undefined
+                                }
+                            });
+                        } else {
+                            alerta("Éxito", "El registro se ha procesado correctamente. La factura ha quedado pendiente de colocar por el área correspondiente.", "success");
+                            router.push('/casos/administracion');
+                        }
+                    } else if (canAccessPaso2y3.value) {
+                        // Ruta genérica: avanzar al paso 2 en el mismo formulario
+                        mode.value = 'PUT';
+                        step.value = 2;
+                        alerta("Caso Registrado", "El caso se guardó exitosamente con factura pendiente. Ahora complete los datos de la factura.", "success");
+                    } else {
+                        alerta("Éxito", "El registro se ha procesado correctamente. La factura ha quedado pendiente de colocar por el área correspondiente.", "success");
+                        router.push('/casos/administracion');
+                    }
+                }
             } else {
-                await submitFormData()
+                // Marcó NO: sin factura
+                UserInfo.value.tiene_factura = false;
+                UserInfo.value.factura_pendiente = false;
+
+                const res = await submitFormData(false);
+                if (res) {
+                    estado.value.push(1);
+                }
             }
         } else if (step.value == 2) {
             if (!UserInfo.value.nro_factura) {
                 const confirmarFactura = await Swal.fire({
                     title: 'Factura pendiente',
-                    html: 'El proveedor no ha entregado la factura. Se registrará una alerta en el expediente. ¿Desea continuar?',
+                    html: 'El proveedor no ha entregado la factura. Se registrará como pendiente en el expediente. ¿Desea continuar?',
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonText: 'Sí, continuar',
@@ -142,9 +231,10 @@ export default (punto: any) => {
 
             const deudor = parseFloat(UserInfo.value.saldo_deudor as any) || 0;
             if (deudor !== 0) {
+                const deudorFormatted = deudor.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const confirmarDeudor = await Swal.fire({
                     title: '¿Continuar con Saldo Deudor?',
-                    html: `El saldo deudor es de <b>Bs. ${UserInfo.value.saldo_deudor}</b> (no es cero). Se gestionará un reintegro.`,
+                    html: `El saldo deudor es de <b>Bs. ${deudorFormatted}</b> (no es cero). Se gestionará un reintegro.`,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonText: 'Sí, registrar deudor',
@@ -157,7 +247,11 @@ export default (punto: any) => {
             step.value = 3
         } else if (step.value == 3) {
             estado.value.push(3)
-            await submitFormData()
+            // Si colocó número de factura o subió recaudos, la factura ya no está pendiente
+            if (UserInfo.value.nro_factura || (UserInfo.value.recaudos && UserInfo.value.recaudos.length > 0)) {
+                UserInfo.value.factura_pendiente = false;
+            }
+            await submitFormData(false)
         }
     }
 
@@ -169,8 +263,13 @@ export default (punto: any) => {
             let nroFactura = data.nro_factura || '';
             if (!nroFactura && data.descripcion) {
                 const match = data.descripcion.match(/\[Factura:\s*([^\]]+)\]/i);
-                if (match) nroFactura = match[1].trim();
+                if (match && match[1].trim().toUpperCase() !== 'PENDIENTE') {
+                    nroFactura = match[1].trim();
+                }
             }
+
+            const tieneFactura = data.tiene_factura ?? (data.nro_factura || data.factura_pendiente ? true : false);
+            const facturaPendiente = data.factura_pendiente ?? (data.descripcion ? striposPendiente(data.descripcion) : false);
 
             UserInfo.value = {
                 tipo_pago: data.tipo_pago_id || '',
@@ -178,7 +277,7 @@ export default (punto: any) => {
                 proveedor: data.proveedores?.[0]?.nombre || '',
                 contacto: data.proveedores?.[0]?.contacto || '',
                 rif_proveedor: data.proveedores?.[0]?.cedula_rif || '',
-                monto: data.monto || 0.0,
+                monto: data.monto || '',
                 nro_orden_pago: data.orden_pago || '',
                 fecha_orden_pago: data.fecha_orden_pago || '',
                 nro_factura: nroFactura,
@@ -190,13 +289,25 @@ export default (punto: any) => {
                 fecha_pago_financiero: data.fecha_pago_financiero || '',
                 saldo_deudor: data.saldo_deudor || '',
                 saldo_acreedor: data.saldo_acreedor || '',
+                tiene_factura: tieneFactura,
+                factura_pendiente: facturaPendiente,
             }
 
-            mode.value = 'PUT'
+            currentPagoId.value = pId;
+            mode.value = 'PUT';
+
+            // Si se está editando o continuando en paso 2/3, marcar paso 1 como superado
+            if (step.value >= 2) {
+                if (!estado.value.includes(1)) estado.value.push(1);
+            }
         } catch (error) {
             console.error(error)
             alerta("error", `Error al obtener los datos del pago`, "error")
         }
+    }
+
+    const striposPendiente = (desc: string): boolean => {
+        return desc.toUpperCase().includes('[FACTURA: PENDIENTE]') || desc.toUpperCase().includes('FACTURA PENDIENTE');
     }
 
     const DataOGA = async (fechaDesde: string | null = null, fechaHasta: string | null = null, tipoCasoId: number = 0) => {
@@ -212,7 +323,8 @@ export default (punto: any) => {
     };
 
     onMounted(() => {
-        if (pagoId) getInfo(pagoId)
+        const idToLoad = pagoId || currentPagoId.value;
+        if (idToLoad) getInfo(idToLoad)
         // Precargar beneficiario desde el punto de cuenta si existe
         if (punto?.beneficiario && !UserInfo.value.beneficiario) {
             UserInfo.value.beneficiario = punto.beneficiario
@@ -225,5 +337,7 @@ export default (punto: any) => {
         emitForm,
         UserInfo,
         DataOGA,
+        canAccessPaso1,
+        canAccessPaso2y3,
     }
 }

@@ -103,6 +103,20 @@ export default [
     },
 
     {
+        path: "/casos/administracion/form/paso-1",
+        name: "CasesAdminFormPaso1",
+        meta: { middleware: [auth]},
+        component: () => import("@/modules/FeDeVida/views/administracion/form.vue").then(m => m.default)
+    },
+
+    {
+        path: "/casos/administracion/form/paso-2-3",
+        name: "CasesAdminFormPaso2",
+        meta: { middleware: [auth]},
+        component: () => import("@/modules/FeDeVida/views/administracion/form.vue").then(m => m.default)
+    },
+
+    {
         path: "/casos/administracion/cuotas",
         name: "casesAdminCuotas",
         meta: { middleware: [auth] },

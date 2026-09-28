@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import Controls from '@/components/sirpef/form/Controls.vue';
+import MoneyInput from '@/components/sirpef/form/MoneyInput.vue';
 import Http from '@/utils/Http';
 import { ref } from 'vue';
 import { onMounted } from 'vue';
@@ -99,7 +100,7 @@ onMounted(() => {
         <label class="block font-medium text-gray-700 ml-1">Beneficiario (Paciente)</label>
         <input name="beneficiario" 
           class="w-full bg-gray-200 text-gray-700 font-semibold mt-1 p-3 rounded-lg cursor-not-allowed" 
-          type="text"
+          type="text" 
           :value="values.beneficiario || 'Sin beneficiario asignado'" 
           readonly 
           disabled
@@ -114,8 +115,7 @@ onMounted(() => {
 
       <div>
         <label class="block font-medium text-gray-700 ml-1">Monto</label>
-        <input name="monto" class="w-full bg-gray-100 text-gray-900 mt-1 p-3 rounded-lg" type="number" step="0.01"
-          placeholder="0.00" v-model="values.monto" required />
+        <MoneyInput name="monto" placeholder="0,00" v-model="values.monto" :required="true" />
       </div>
 
       <div>
@@ -123,7 +123,7 @@ onMounted(() => {
         <input 
           class="w-full bg-gray-200 text-gray-500 font-bold mt-1 p-3 rounded-lg cursor-not-allowed" 
           type="text" 
-          :value="Math.max(0, cuotaDisponible - (values.monto || 0)).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })" 
+          :value="Math.max(0, cuotaDisponible - (parseFloat(values.monto) || 0)).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })" 
           readonly 
           disabled
         />

@@ -2,6 +2,7 @@
 import "@/assets/css/formWizard.scss";
 import Check from "@/components/sirpef/Check.vue";
 import useFormAdministracion from "../../composables/administracion/useFormAdministracion";
+import { useRoute } from "vue-router";
 
 import FirstPage from "./FirstPage.vue";
 import SecondPage from "./SecondPage.vue";
@@ -12,14 +13,36 @@ const props = defineProps<{
   punto: any
 }>()
 
+const route = useRoute();
+
 const {
     step,
     estado,
     emitForm,
     UserInfo,
+    canAccessPaso1,
+    canAccessPaso2y3,
 } = useFormAdministracion(props.punto || null)
 
+// Determinar si estamos en modo paso-1-solo o paso-2-3-solo
+const routeName = route.name as string;
+const isPaso1Only = routeName === 'CasesAdminFormPaso1';
+const isPaso2y3Only = routeName === 'CasesAdminFormPaso2';
+
+// Los pasos visibles según la ruta
+const visibleSteps = isPaso1Only
+  ? [1]
+  : isPaso2y3Only
+    ? [2, 3]
+    : [1, 2, 3]; // ruta genérica CasesAdminForm
+
+const canGoToStep = (s: number) => {
+  return visibleSteps.includes(s);
+};
+
 const stepperProgress = () => {
+  if (isPaso1Only) return step.value >= 1 ? '100%' : '0%';
+  if (isPaso2y3Only) return step.value >= 3 ? '100%' : step.value >= 2 ? '50%' : '0%';
   return (100 / 3) * (step.value - 1) + "%";
 };
 
@@ -32,52 +55,57 @@ const stepperProgress = () => {
       <div class="stepper-progress">
         <div
           class="stepper-progress-bar"
-          :style="'width:' + stepperProgress"
+          :style="'width:' + stepperProgress()"
         ></div>
       </div>
 
-      <div
-        class="stepper-item"
-        :class="{ current: step == item, success: step > item }"
-        v-for="item in 3"
-        :key="item"
-      >
-        <button class="stepper-item-counter" @click="() => step = item">
-          <img
-            class="icon-success"
-            src="/status/check.png"
-            alt=""
-            v-if="estado.find(e => e == item)"
-          />
+      <template v-for="item in 3" :key="item">
+        <div
+          v-if="canGoToStep(item)"
+          class="stepper-item"
+          :class="{ current: step == item, success: step > item }"
+        >
+          <button 
+            class="stepper-item-counter" 
+            @click="() => { if (canGoToStep(item)) step = item }"
+            :disabled="!canGoToStep(item)"
+          >
+            <img
+              class="icon-success"
+              src="/status/check.png"
+              alt=""
+              v-if="estado.find(e => e == item)"
+            />
 
-          <img
-            class="icon-success"
-            src="/status/mark.webp"
-            alt=""
-            v-else
-          />
-          <span class="number">
-            {{ item }}
+            <img
+              class="icon-success"
+              src="/status/mark.webp"
+              alt=""
+              v-else
+            />
+            <span class="number">
+              {{ item }}
+            </span>
+          </button>
+          <span class="stepper-item-title">
+            {{
+              item == 1
+                ? "Datos iniciales"
+                : item == 2
+                  ? "Factura y Pago"
+                  : item == 3
+                  ? "Recaudos"
+                  : "Final"
+            }}
           </span>
-        </button>
-        <span class="stepper-item-title">
-          {{
-            item == 1
-              ? "Datos iniciales"
-              : item == 2
-                ? "Factura y Pago"
-                : item == 3
-                ? "Recaudos"
-                : "Final"
-          }}
-        </span>
-      </div>
+        </div>
+      </template>
     </div>
 
     <div class="stepper-content">
-      <FirstPage :emitForm="emitForm" :values="UserInfo" :step="step" v-if="step == 1"/>
-      <SecondPage :emitForm="emitForm" :values="UserInfo" :step="step" v-else-if="step == 2"/>
-      <FormCaso :emitForm="emitForm" :values="UserInfo" :step="step" v-else-if="step == 3"/>
+      <FirstPage :emitForm="emitForm" :values="UserInfo" :step="step" v-if="step == 1 && canGoToStep(1)"/>
+      <SecondPage :emitForm="emitForm" :values="UserInfo" :step="step" v-else-if="step == 2 && canGoToStep(2)"/>
+      <FormCaso :emitForm="emitForm" :values="UserInfo" :step="step" v-else-if="step == 3 && canGoToStep(3)"/>
 
       <div class="grid gap-5 mt-10 w-full md:w-full" v-else>
 
@@ -134,3 +162,4 @@ textarea {
 
 
 </style>
+
