@@ -1,8 +1,6 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
@@ -12,18 +10,67 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // 1. Insert the new menu item under Administracion (menu_id = 33)
-        $menuId = DB::table('menus')->insertGetId([
-            'title' => 'cuota de compromiso',
-            'path' => 'casesAdminCuotas',
-            'icon' => 'icon',
-            'sort' => 0,
-            'menu_id' => 33,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        // 1. Obtener o crear el menú padre "Administración"
+        $parentMenu = DB::table('menus')->where('path', '/casos/administracion')->first();
 
-        // 2. Add the new menu ID to the config_users menu_ids array for roles 1 (Admin/Dev) and 2 (Director)
+        if (!$parentMenu) {
+            $parentId = DB::table('menus')->insertGetId([
+                'title' => 'Administración',
+                'path' => '/casos/administracion',
+                'icon' => 'icon',
+                'sort' => 0,
+                'menu_id' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        } else {
+            $parentId = $parentMenu->id;
+        }
+
+        // 2. Definir los ítems de submenú a insertar
+        $submenus = [
+            [
+                'title' => 'Casos Administración',
+                'path' => 'casesAdminIndex',
+                'icon' => 'icon',
+                'sort' => 1,
+                'menu_id' => $parentId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'title' => 'Formulario Administración',
+                'path' => 'CasesAdminForm',
+                'icon' => 'icon',
+                'sort' => 2,
+                'menu_id' => $parentId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'title' => 'Cuota de Compromiso',
+                'path' => 'casesAdminCuotas',
+                'icon' => 'icon',
+                'sort' => 3,
+                'menu_id' => $parentId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ];
+
+        $insertedMenuIds = [];
+
+        foreach ($submenus as $menu) {
+            // Verificar si la ruta ya existe para no duplicar
+            $existing = DB::table('menus')->where('path', $menu['path'])->first();
+            if (!$existing) {
+                $insertedMenuIds[] = DB::table('menus')->insertGetId($menu);
+            } else {
+                $insertedMenuIds[] = $existing->id;
+            }
+        }
+
+        // 3. Asignar los nuevos IDs de menú a config_users para roles 1 (Admin/Dev) y 2 (Director)
         $users = DB::table('users')
             ->whereIn('role_id', [1, 2])
             ->whereNotNull('config_user_id')
@@ -36,15 +83,16 @@ return new class extends Migration
 
             if ($configUser) {
                 $menuIds = json_decode($configUser->menu_ids, true) ?? [];
-                if (!in_array($menuId, $menuIds)) {
-                    $menuIds[] = $menuId;
-                    DB::table('config_users')
-                        ->where('id', $user->config_user_id)
-                        ->update([
-                            'menu_ids' => json_encode(array_values($menuIds)),
-                            'updated_at' => now()
-                        ]);
-                }
+                
+                // Unir los menús sin duplicar
+                $updatedMenuIds = array_unique(array_merge($menuIds, [$parentId], $insertedMenuIds));
+
+                DB::table('config_users')
+                    ->where('id', $user->config_user_id)
+                    ->update([
+                        'menu_ids' => json_encode(array_values($updatedMenuIds)),
+                        'updated_at' => now(),
+                    ]);
             }
         }
     }
@@ -54,29 +102,31 @@ return new class extends Migration
      */
     public function down(): void
     {
-        $menuItem = DB::table('menus')
-            ->where('path', 'casesAdminCuotas')
-            ->where('menu_id', 33)
-            ->first();
+        $paths = ['casesAdminIndex', 'CasesAdminForm', 'casesAdminCuotas'];
 
-        if ($menuItem) {
-            // Remove the menu ID from all config_users records
+        // Obtener los IDs de las rutas agregadas
+        $menuIdsToDelete = DB::table('menus')
+            ->whereIn('path', $paths)
+            ->pluck('id')
+            ->toArray();
+
+        if (!empty($menuIdsToDelete)) {
+            // Eliminar de los config_users
             $configUsers = DB::table('config_users')->get();
             foreach ($configUsers as $cu) {
                 $menuIds = json_decode($cu->menu_ids, true) ?? [];
-                if (in_array($menuItem->id, $menuIds)) {
-                    $menuIds = array_filter($menuIds, fn($id) => $id != $menuItem->id);
-                    DB::table('config_users')
-                        ->where('id', $cu->id)
-                        ->update([
-                            'menu_ids' => json_encode(array_values($menuIds)),
-                            'updated_at' => now()
-                        ]);
-                }
+                $filteredIds = array_filter($menuIds, fn($id) => !in_array($id, $menuIdsToDelete));
+
+                DB::table('config_users')
+                    ->where('id', $cu->id)
+                    ->update([
+                        'menu_ids' => json_encode(array_values($filteredIds)),
+                        'updated_at' => now(),
+                    ]);
             }
 
-            // Delete the menu record
-            DB::table('menus')->where('id', $menuItem->id)->delete();
+            // Eliminar los registros de la tabla menus
+            DB::table('menus')->whereIn('id', $menuIdsToDelete)->delete();
         }
     }
 };

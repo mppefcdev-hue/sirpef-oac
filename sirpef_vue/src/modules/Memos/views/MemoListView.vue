@@ -120,9 +120,6 @@ onMounted(() => {
                 <button title="Editar" class="bg-[#2052C7] text-white p-2 rounded-2xl w-10 h-10 hover:bg-[#010c41] transition-colors" @click="editMemo(memo)">
                   <font-awesome-icon icon="pen-to-square" />
                 </button>
-                <button title="Eliminar" class="bg-[#010c41] text-white p-2 rounded-2xl w-10 h-10 hover:bg-[#ECA008] transition-colors" @click="deleteMemo(memo.id)">
-                  <font-awesome-icon icon="trash-can" />
-                </button>
               </div>
             </td>
           </tr>

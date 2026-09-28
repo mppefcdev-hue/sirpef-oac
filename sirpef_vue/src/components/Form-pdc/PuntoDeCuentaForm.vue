@@ -564,7 +564,7 @@ const imprimirDocumento = () => {
 /* --- Hoja de Formato Fiel --- */
 .document-page {
   width: 215.9mm;
-  min-height: 279.4mm;
+  height: 279.4mm; /* Cambiado de min-height a height fijo */
   background: #ffffff;
   padding: 5mm 12mm 10mm 12mm;
   box-sizing: border-box;
@@ -572,6 +572,7 @@ const imprimirDocumento = () => {
   font-family: Arial, sans-serif;
   display: flex;
   flex-direction: column;
+  position: relative; /* <-- Asegura punto de referencia absoluto */
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
@@ -737,12 +738,14 @@ const imprimirDocumento = () => {
 
 /* Área de Firmantes Inferior */
 .signatures-wrapper {
-  margin-top: auto;
+  position: absolute;
+  bottom: 10mm;
+  left: 12mm;
+  right: 12mm;
   display: flex;
   justify-content: space-between;
-  padding-top: 16mm;
-  padding-bottom: 4mm;
 }
+
 .sig-column {
   width: 46%;
   text-align: center;
@@ -768,94 +771,70 @@ const imprimirDocumento = () => {
 
 /* --- MANEJO ESTRICTO DE IMPRESIÓN --- */
 @media print {
-  /* 1. Ocultar absolutamente todo en el viewport raíz */
+  /* Ocultar elementos de interfaz y paneles adicionales */
   html, body {
     margin: 0 !important;
     padding: 0 !important;
-    height: auto !important;
     background-color: #ffffff !important;
   }
 
-  /* Ocultar cualquier contenedor ancestro o ajeno a la vista previa */
-  body > *:not(.workspace-layout),
-  .editor-panel,
-  .no-print,
-  header,
-  nav,
-  aside,
-  footer {
-    display: none !important;
-    height: 0 !important;
-    padding: 0 !important;
-    margin: 0 !important;
+  body * {
+    visibility: hidden;
   }
 
-  /* 2. Forzar al layout a no heredar flex o márgenes que empujen el contenido */
-  .workspace-layout {
-    display: block !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    max-width: none !important;
+  /* Hacer visible únicamente la hoja de la previsualización */
+  .preview-panel,
+  .preview-panel * {
+    visibility: visible;
   }
 
-  /* 3. Forzar al contenedor a subir al origen real absoluto (0,0) de la hoja física */
   .preview-panel {
     position: absolute !important;
     left: 0 !important;
     top: 0 !important;
-    width: 215.9mm !important; /* Forzar el ancho exacto de la carta */
-    height: auto !important;
-    max-height: none !important;
+    width: 215.9mm !important;
+    height: 279.4mm !important;
     padding: 0 !important;
     margin: 0 !important;
     background: transparent !important;
     display: block !important;
-    overflow: visible !important;
+    overflow: hidden !important;
   }
 
-  /* 4. Dimensiones exactas de la hoja tamaño Carta sin márgenes del sistema */
   .document-page {
-    display: flex !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
     width: 215.9mm !important;
     height: 279.4mm !important;
-    min-height: 279.4mm !important;
-    padding: 5mm 12mm 10mm 12mm !important; /* Ajusta este padding superior si necesitas calibrar el cintillo */
+    padding: 5mm 12mm 10mm 12mm !important;
     margin: 0 !important;
     border: none !important;
     box-shadow: none !important;
     background-color: #ffffff !important;
-    page-break-inside: avoid !important;
-    page-break-after: avoid !important;
-    overflow: hidden !important;
     box-sizing: border-box !important;
+    page-break-after: avoid !important;
+    page-break-inside: avoid !important;
   }
 
-  /* Restablecer comportamiento de tablas y flexbox internos */
-  .header-table-bar,
-  .decision-grid,
+  /* Posicionamiento exacto y fijo de las firmas en la parte inferior de la página */
   .signatures-wrapper {
+    position: absolute !important;
+    bottom: 10mm !important;
+    left: 12mm !important;
+    right: 12mm !important;
     display: flex !important;
-  }
-  
-  .presentacion-table,
-  .instrucciones-anexos-table {
-    display: table !important;
-    width: 100% !important;
-  }
-  .presentacion-table tr, .instrucciones-anexos-table tr {
-    display: table-row !important;
-  }
-  .presentacion-table td, .instrucciones-anexos-table td {
-    display: table-cell !important;
+    justify-content: space-between !important;
+    padding: 0 !important;
   }
 
-  /* Forzar al navegador a ignorar sus márgenes por defecto en tamaño carta */
+  /* Configuración de la página del navegador */
   @page {
-    size: letter;
+    size: letter portrait;
     margin: 0mm !important;
   }
 
-  /* Mantener el color rojo institucional y fondos en la impresión */
+  /* Forzar la impresión de colores de fondo (rojos de los encabezados) */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;

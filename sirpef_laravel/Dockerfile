@@ -1,5 +1,4 @@
-FROM php:8.2.4-fpm
-
+FROM php:8.2-fpm
 # Copy composer.lock and composer.json into the working directory
 COPY composer.lock composer.json /var/www/html/
 
@@ -10,7 +9,7 @@ COPY composer.lock composer.json /var/www/html/
 WORKDIR /var/www/html/
 
 # Install dependencies for the operating system software
-RUN apt-get update && apt-get install -y \
+RUN apt-get update --fix-missing && apt-get install -y \
     build-essential \
     libpq-dev \
     libpng-dev \

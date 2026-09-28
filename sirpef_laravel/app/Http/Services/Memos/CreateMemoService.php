@@ -19,42 +19,39 @@ class CreateMemoService
      * @return JsonResponse
      */
     public static function buscarPuntoCuenta(string $numero): JsonResponse
-    {
-        // Buscamos el registro que contenga el punto de cuenta solicitado
-        $registro = \App\Models\Registro::whereHas('puntoCuenta', function ($query) use ($numero) {
-            $query->where('numero_punto', 'LIKE', trim($numero));
-        })
-        ->with([
-            'puntoCuenta.memorandum.proveedores' => function($query) {
-                $query->withPivot('monto_relacionado');
-            }, 
-            'puntoCuenta.proveedores' => function($query) {
-                $query->withPivot('monto_relacionado');
-            },
-            'eventoPersona.persona'
-        ])
-        ->first();
+{
+    // Buscamos el registro que contenga el punto de cuenta solicitado
+    $registro = \App\Models\Registro::whereHas('puntoCuenta', function ($query) use ($numero) {
+        $query->where('numero_punto', 'LIKE', trim($numero));
+    })
+    ->with([
+        'puntoCuenta.memorandum.proveedores' => function($query) {
+            $query->withPivot('monto_relacionado');
+        }, 
 
-        if (!$registro || !$registro->puntoCuenta) {
-            return response()->json([
-                'message' => 'Punto de Cuenta no encontrado a través de los registros',
-                'success' => false
-            ], 404);
-        }
+    ])
+    ->first();
 
-        $puntoCuenta = $registro->puntoCuenta;
-        $persona = ($registro->eventoPersona) ? $registro->eventoPersona->persona : null;
+    if (!$registro || !$registro->puntoCuenta) {
+        return response()->json([
+            'message' => 'Punto de Cuenta no encontrado a través de los registros',
+            'success' => false
+        ], 404);
+    }
 
-        // Buscamos si ya existe un memorándum para este punto de cuenta
-        $memorandum = $puntoCuenta->memorandum;
+    $puntoCuenta = $registro->puntoCuenta;
+    $persona = ($registro->eventoPersona) ? $registro->eventoPersona->persona : null;
 
-        // Si existe memo, los proveedores vienen de ahí, sino del punto de cuenta si estuvieran vinculados
-        $proveedores = ($memorandum && $memorandum->proveedores->isNotEmpty()) 
-            ? $memorandum->proveedores 
-            : ($puntoCuenta->proveedores ?? collect());
-            
-        $montoTotal = (float) $proveedores->sum('pivot.monto_relacionado');
+    $memorandum = $puntoCuenta->memorandum;
 
+    // 💡 Ajustamos la asignación: si hay memo, extrae sus proveedores; si no, inicializa una colección vacía
+    $proveedores = ($memorandum && $memorandum->proveedores->isNotEmpty()) 
+        ? $memorandum->proveedores 
+        : collect(); // Evita llamar a $puntoCuenta->proveedores
+        
+    $montoTotal = (float) $proveedores->sum('pivot.monto_relacionado');
+
+    // ... (El resto del código de retorno se mantiene idéntico)
         Log::info('Checking memorandum existence for PC:', [
             'pc_id' => $puntoCuenta->id,
             'memo_exists' => !is_null($memorandum)
