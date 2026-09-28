@@ -34,6 +34,8 @@ class Pago extends Model
         'beneficiario',
         'diagnostico',
         'nro_factura',
+        'factura_pendiente',
+        'tiene_factura',
     ];
 
     public function getBeneficiarioAttribute(): ?string
@@ -60,10 +62,48 @@ class Pago extends Model
 
         // Si la descripción contiene el tag [Factura: ...]
         if (preg_match('/\[Factura:\s*([^\]]+)\]/i', $this->descripcion ?? '', $matches)) {
-            return trim($matches[1]);
+            $val = trim($matches[1]);
+            if (strtoupper($val) === 'PENDIENTE') {
+                return null;
+            }
+            return $val;
         }
 
         return null;
+    }
+
+    public function getFacturaPendienteAttribute(): bool
+    {
+        if (stripos($this->descripcion ?? '', '[Factura: PENDIENTE]') !== false ||
+            stripos($this->descripcion ?? '', '[Factura Pendiente]') !== false) {
+            return true;
+        }
+
+        // Si tiene nro_factura válido, no está pendiente
+        if (!empty($this->nro_factura)) {
+            return false;
+        }
+
+        // Si explícitamente se indicó que tiene factura
+        if (stripos($this->descripcion ?? '', '[Posee Factura: SI]') !== false) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function getTieneFacturaAttribute(): bool
+    {
+        if ($this->factura_pendiente) {
+            return true;
+        }
+        if (!empty($this->nro_factura)) {
+            return true;
+        }
+        if (stripos($this->descripcion ?? '', '[Posee Factura: SI]') !== false) {
+            return true;
+        }
+        return false;
     }
 
     /**
