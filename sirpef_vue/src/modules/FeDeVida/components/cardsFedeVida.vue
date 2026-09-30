@@ -139,8 +139,55 @@ const resetToDefault = () => {
   errorMessage.value = '';
 };
 
-const redirect = (estatus_caso: any) => {
-  estatus_caso = estatus_caso.replace(/\s*Casos\s*/gi, '');
+const redirect = (labelRaw: any) => {
+  if (!labelRaw) return;
+
+  const label = String(labelRaw).trim();
+  const labelLower = label.toLowerCase();
+
+  // 1. Redirecciones a la sección de Pagos/Administración (/casos/administracion)
+  if (labelLower.includes('normal')) {
+    router.push({ path: '/casos/administracion', query: { tipo_pago: 'normal' } });
+    return;
+  }
+
+  if (labelLower.includes('financier')) {
+    router.push({ path: '/casos/administracion', query: { tipo_pago: 'financiero' } });
+    return;
+  }
+
+  if (labelLower.includes('regularizad') || labelLower.includes('procesad')) {
+    router.push({ path: '/casos/administracion', query: { estatus_pago: 'procesado' } });
+    return;
+  }
+
+  if (labelLower.includes('sin factura')) {
+    router.push({ path: '/casos/administracion', query: { tiene_factura: 'sin_factura' } });
+    return;
+  }
+
+  if (labelLower.includes('factura')) {
+    router.push({ path: '/casos/administracion', query: { tiene_factura: 'con_factura' } });
+    return;
+  }
+
+  if (labelLower.includes('reintegro') || labelLower.includes('deudor')) {
+    router.push({ path: '/casos/administracion', query: { saldo_deudor: 'con_saldo' } });
+    return;
+  }
+
+  if (labelLower.includes('cierre') || labelLower.includes('cerrad')) {
+    router.push({ path: '/casos/administracion', query: { tiene_factura: 'con_factura' } });
+    return;
+  }
+
+  if (labelLower.includes('total de pagos')) {
+    router.push({ path: '/casos/administracion' });
+    return;
+  }
+
+  // 2. Redirecciones a la sección general de Casos (/cases) para estatus OAC
+  let estatus_caso = label.replace(/\s*Casos\s*/gi, '').trim();
 
   switch (estatus_caso) {
     case 'En Trámite':
@@ -158,6 +205,11 @@ const redirect = (estatus_caso: any) => {
     case 'Cerrados':
       estatus_caso = 'Cerrado';
       break;
+  }
+
+  if (labelLower.includes('pago') || labelLower.includes('administra')) {
+    router.push({ path: '/casos/administracion' });
+    return;
   }
 
   router.push({

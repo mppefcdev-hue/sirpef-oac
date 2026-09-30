@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Http\Services\record\UserInfoService;
 
 class StorePagoService
 {
@@ -86,6 +87,12 @@ class StorePagoService
 
                 // 4. Procesar Recaudos
                 $recaudosSubidos = self::processRecaudos($request, $registroId, $pago->id);
+
+                try {
+                    UserInfoService::getUserInfo("Se ha completado el registro del Paso 1 del formulario. Favor revisar para continuar.");
+                } catch (\Throwable $te) {
+                    Log::warning("No se pudo emitir notificación por websocket: " . $te->getMessage());
+                }
 
                 return response()->json([
                     'success' => true,

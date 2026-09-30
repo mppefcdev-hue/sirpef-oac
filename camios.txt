@@ -1,6 +1,0 @@
-/home/paco/Documentos/proyectos_trabajo/sirpef-oac/sirpef_vue/src/components/AppPaginationB.vue
-/home/paco/Documentos/proyectos_trabajo/sirpef-oac/sirpef_vue/src/components/AppPaginationD.vue
-/home/paco/Documentos/proyectos_trabajo/sirpef-oac/sirpef_vue/src/components/sirpef/form/MoneyInput.vue
-/home/paco/Documentos/proyectos_trabajo/sirpef-oac/sirpef_vue/src/modules/FeDeVida/components/caseFormAdministracion/FirstPage.vue
-/home/paco/Documentos/proyectos_trabajo/sirpef-oac/sirpef_vue/src/modules/FeDeVida/components/caseFormAdministracion/SecondPage.vue
-/home/paco/Documentos/proyectos_trabajo/sirpef-oac/sirpef_vue/src/modules/FeDeVida/composables/administracion/useFormAdministracion.ts

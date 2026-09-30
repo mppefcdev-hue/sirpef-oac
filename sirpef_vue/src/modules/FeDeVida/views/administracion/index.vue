@@ -4,7 +4,6 @@ import Welcome from "@/components/sirpef/welcome.vue";
 import { ref, watch, computed } from "vue";
 import { useAuthStore } from '@/modules/Auth/stores';
 import AppPaginationD from "@/components/AppPaginationD.vue";
-import FormInput from "@/modules/SIRPEF/components/FormInput.vue";
 import ModalInfo from "../../components/modalInfo.vue";
 import ModalDescripcion from "../../components/ModalDescripcion.vue";
 import CardInfoUser from '@/components/Votos/CardInfoUser.vue';
@@ -259,9 +258,7 @@ const exportToCSV = async () => {
   <Welcome 
     title="Gestión de Pagos" 
     subtitle="Aquí encontrarás los pagos registrados en el sistema. Puedes buscar, filtrar y gestionar los pagos de manera eficiente."
-  >
-    <FormInput :FunGetUser="GetUser" :finger="false" />
-  </Welcome>
+  />
 
   <ModalDescripcion v-if="descripcion" :descripcion="descripcion" @close="descripcion = null" />
 

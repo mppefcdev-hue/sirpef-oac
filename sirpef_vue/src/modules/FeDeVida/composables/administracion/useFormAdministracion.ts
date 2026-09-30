@@ -16,7 +16,9 @@ export default (punto: any) => {
 
     // Permisos de pasos según los menús asignados al rol del usuario
     const canAccessPaso1 = computed(() => {
-        if (store.authUser?.isAdmin || store.authUser?.role_id === 1 || store.authUser?.role_id === 2) return true;
+        const roleId = Number(store.authUser?.role_id);
+        if (store.authUser?.isAdmin || roleId === 1 || roleId === 2 || roleId === 4) return true;
+        if (roleId === 6) return false;
         return store.authUser?.menus_id?.some((m: any) => 
             m.nombre?.toLowerCase().includes('paso 1') || 
             m.id === 35 || 
@@ -25,7 +27,9 @@ export default (punto: any) => {
     });
 
     const canAccessPaso2y3 = computed(() => {
-        if (store.authUser?.isAdmin || store.authUser?.role_id === 1 || store.authUser?.role_id === 2) return true;
+        const roleId = Number(store.authUser?.role_id);
+        if (store.authUser?.isAdmin || roleId === 1 || roleId === 2 || roleId === 6) return true;
+        if (roleId === 4) return false;
         return store.authUser?.menus_id?.some((m: any) => 
             m.nombre?.toLowerCase().includes('paso 2') || 
             m.id === 39

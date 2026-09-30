@@ -11,18 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tbl_memorandums', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('punto_cuenta_id')->constrained('tbl_punto_cuenta');
-            $table->string('codigo')->unique();
-            $table->string('de');
-            $table->string('para');
-            $table->string('asunto');
-            $table->date('fecha');
-            $table->text('cuerpo');
-            $table->timestamps();
-            $table->softDeletes();
-        });
+        if (!Schema::hasTable('tbl_memorandums')) {
+            Schema::create('tbl_memorandums', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('punto_cuenta_id')->constrained('tbl_punto_cuenta');
+                $table->string('codigo')->unique();
+                $table->string('de');
+                $table->string('para');
+                $table->string('asunto');
+                $table->date('fecha');
+                $table->text('cuerpo');
+                $table->timestamps();
+                $table->softDeletes();
+            });
+        }
     }
 
     /**

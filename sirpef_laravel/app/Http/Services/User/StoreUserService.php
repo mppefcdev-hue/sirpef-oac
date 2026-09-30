@@ -24,10 +24,21 @@ class StoreUserService
             'oficinas_ids' => 'nullable|array',
         ]);
 
+        // Expandir IDs de menús padre para asegurar su visualización
+        $menusId = $validatedData['menus_id'] ?? [];
+        if (!empty($menusId)) {
+            $parentIds = \App\Models\Menu::whereIn('id', $menusId)->pluck('menu_id')->filter()->unique()->toArray();
+            while (!empty($parentIds)) {
+                $menusId = array_unique(array_merge($menusId, $parentIds));
+                $parentIds = \App\Models\Menu::whereIn('id', $parentIds)->pluck('menu_id')->filter()->unique()->toArray();
+            }
+            $menusId = array_values($menusId);
+        }
+
         // Crear ConfigUser
         $configUser = new ConfigUser();
         $configUser->finger_id = "generated_finger_id"; // Debes manejar cómo generar este campo
-        $configUser->menu_ids = json_encode($validatedData['menus_id'] ?? []);
+        $configUser->menu_ids = json_encode($menusId);
         $configUser->evento_asignado = json_encode($validatedData['eventos_id'] ?? []);
         $configUser->oficina_asignada = json_encode($validatedData['oficinas_ids'] ?? []);
         $configUser->unid_activa = json_encode([0]);

@@ -14,6 +14,12 @@ import feDeVidaRoutes from "@/modules/FeDeVida/routes"
 const storeAuth = computed(() => useAuthStore())
 
 const routes: Array<RouteRecordRaw> = [
+  {
+    path: "/#",
+    name: "#",
+    meta: { middleware: [auth]},
+    component: () => import("@/views/map.vue").then(m => m.default)
+  },
 
   {
     path: "/map",

@@ -11,22 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('tbl_pago_proveedor', function (Blueprint $table) {
-            // Eliminar pago_id solo si existe
-            if (Schema::hasColumn('tbl_pago_proveedor', 'pago_id')) {
-                $table->dropForeign(['pago_id']);
-                $table->dropColumn('pago_id');
-            }
-
-            // Agregar memorandum_id solo si NO existe
+        try {
             if (!Schema::hasColumn('tbl_pago_proveedor', 'memorandum_id')) {
-                $table->unsignedBigInteger('memorandum_id')->after('id');
-                $table->foreign('memorandum_id')
-                      ->references('id')
-                      ->on('tbl_memorandums')
-                      ->onDelete('cascade');
+                Schema::table('tbl_pago_proveedor', function (Blueprint $table) {
+                    $table->unsignedBigInteger('memorandum_id')->nullable()->after('id');
+                });
             }
-        });
+        } catch (\Throwable $e) {
+            // Ignorar si ya existe o no se puede alterar
+        }
     }
 
     /**
