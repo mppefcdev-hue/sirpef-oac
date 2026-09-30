@@ -17,26 +17,36 @@ class getMe
     {
         $user = Auth::user();
 
-        // Verificar si el usuario tiene una persona asociada
-        if (!$user || !$user->persona) {
+        if (!$user) {
             return [
-                'error' => 'Usuario o persona no encontrados.',
+                'error' => 'Usuario no encontrado.',
             ];
         }
 
         $persona = $user->persona;
+        $unid = ($persona && $persona->ministerio) ? $persona->ministerio->nombre : 'Sin ministerio';
+        $nombre = $persona ? $persona->nombre_completo : $user->name;
+        $cedula = $persona ? $persona->cedula : $user->cedula;
 
-        // Verificar si la persona tiene un ministerio asociado
-        $unid = $persona->ministerio ? $persona->ministerio->nombre : 'Sin ministerio';
+        $menuIds = json_decode($user->configUser?->menu_ids ?? '[]', true) ?: [];
+        $menus = \App\Models\Menu::whereIn("id", $menuIds)->get()->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'nombre' => $item->title,
+                'path' => $item->path,
+            ];
+        });
 
         return [
             'id' => $user->id,
-            'name' => $persona->nombre_completo,
+            'name' => $nombre,
             'email' => $user->email,
             'unid' => $unid,
             'role_id' => $user->role_id,
-            'cedula' => $persona->cedula,
+            'role' => $user->role ? ['id' => $user->role->id, 'name' => $user->role->name] : null,
+            'cedula' => $cedula,
             'isAdmin' => $user->isAdmin(),
+            'menus_id' => $menus,
         ];
     }
 }
