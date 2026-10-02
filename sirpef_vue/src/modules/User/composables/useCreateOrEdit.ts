@@ -109,9 +109,9 @@ export default (userId?: string) => {
   const submit = async (user: User, userId?: string) => {  
     const data = {
      ...user,
-      oficinas_ids: user.oficinas_ids.map(e => e.id), 
-      menus_id:  user.menus_id.map(e => e.id),
-      eventos_id: user.eventos_id.map(e => e.id)
+      oficinas_ids: (user.oficinas_ids || []).map(e => (typeof e === 'object' && e !== null ? e.id : Number(e))), 
+      menus_id:  (user.menus_id || []).map(e => (typeof e === 'object' && e !== null ? e.id : Number(e))),
+      eventos_id: (user.eventos_id || []).map(e => (typeof e === 'object' && e !== null ? e.id : Number(e)))
  }
     const status = !userId ? await insertUser (data)  : await updateUser(data, userId)
 

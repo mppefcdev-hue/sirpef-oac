@@ -14,31 +14,53 @@ export default (punto: any) => {
     const pagoId = (route.query.pago_id || route.params.id) as string
     const currentPagoId = ref(pagoId || '')
 
-    // Permisos de pasos según los menús asignados al rol del usuario
+    // Permisos de pasos según rol o menús asignados al usuario
     const canAccessPaso1 = computed(() => {
         if (store.authUser?.isAdmin || store.authUser?.role_id === 1 || store.authUser?.role_id === 2) return true;
+        if (store.authUser?.role_id === 4) return true; // Rol User
+        if (store.authUser?.role_id === 6) return false; // Rol Analista
         return store.authUser?.menus_id?.some((m: any) => 
-            m.nombre?.toLowerCase().includes('paso 1') || 
             m.id === 35 || 
-            m.nombre?.toLowerCase() === 'formulario'
+            m.path === 'CasesAdminFormPaso1' ||
+            m.nombre?.toLowerCase().includes('paso 1')
         ) ?? true;
     });
 
     const canAccessPaso2y3 = computed(() => {
         if (store.authUser?.isAdmin || store.authUser?.role_id === 1 || store.authUser?.role_id === 2) return true;
+        if (store.authUser?.role_id === 4) return false; // Rol User
+        if (store.authUser?.role_id === 6) return true; // Rol Analista
         return store.authUser?.menus_id?.some((m: any) => 
-            m.nombre?.toLowerCase().includes('paso 2') || 
-            m.id === 39
+            m.id === 39 || 
+            m.path === 'CasesAdminFormPaso2' ||
+            m.nombre?.toLowerCase().includes('paso 2')
         ) ?? false;
     });
 
-    // Determinar paso inicial según la ruta, query param, o permisos del usuario
     const routeName = route.name as string;
+
+    // Determinar si estamos en modo paso-1-solo o paso-2-3-solo según permisos y ruta
+    const isPaso1Only = computed(() => {
+        if (routeName === 'CasesAdminFormPaso1') return true;
+        if (routeName === 'CasesAdminFormPaso2') return false;
+        return canAccessPaso1.value && !canAccessPaso2y3.value;
+    });
+
+    const isPaso2y3Only = computed(() => {
+        if (routeName === 'CasesAdminFormPaso2') return true;
+        if (routeName === 'CasesAdminFormPaso1') return false;
+        return canAccessPaso2y3.value && !canAccessPaso1.value;
+    });
+
+    const isFullForm = computed(() => {
+        return !isPaso1Only.value && !isPaso2y3Only.value;
+    });
+
+    // Determinar paso inicial según permisos y ruta
     const getInitialStep = (): number => {
         if (route.query.step) return parseInt(route.query.step as string);
-        if (routeName === 'CasesAdminFormPaso2') return 2;
-        if (routeName === 'CasesAdminFormPaso1') return 1;
-        return canAccessPaso1.value ? 1 : 2;
+        if (isPaso2y3Only.value || routeName === 'CasesAdminFormPaso2') return 2;
+        return 1;
     };
 
     const step = ref(getInitialStep() as any);
@@ -339,5 +361,8 @@ export default (punto: any) => {
         DataOGA,
         canAccessPaso1,
         canAccessPaso2y3,
+        isPaso1Only,
+        isPaso2y3Only,
+        isFullForm,
     }
 }
