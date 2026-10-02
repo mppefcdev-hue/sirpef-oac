@@ -366,7 +366,7 @@ const dtOptions = {
             <th>Monto Ejecutado</th>
             <th>Monto Disponible</th>
             <th>Última Modificación</th>
-            <th v-if="store.authUser?.role_id === 1">Acciones</th>
+            <th v-if="store.authUser?.role_id === 1 || store.authUser?.role_id === 2">Acciones</th>
           </tr>
         </thead>
       </DataTable>

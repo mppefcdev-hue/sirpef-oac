@@ -139,41 +139,8 @@ const resetToDefault = () => {
   errorMessage.value = '';
 };
 
-const redirect = (cardLabel: string) => {
-  if (!cardLabel) return;
-
-  const label = cardLabel.trim();
-
-  // Redirecciones específicas para tarjetas de administración / OGA
-  switch (label) {
-    case 'Total de Pagos Registrados':
-      router.push('/casos/administracion');
-      return;
-    case 'Casos Normales':
-      router.push({ path: '/casos/administracion', query: { tipo_pago: 'normal' } });
-      return;
-    case 'Casos Financieros':
-      router.push({ path: '/casos/administracion', query: { tipo_pago: 'financiero' } });
-      return;
-    case 'Casos Regularizados':
-      router.push({ path: '/casos/administracion', query: { estatus_pago: 'procesado' } });
-      return;
-    case 'Casos Facturas':
-      router.push({ path: '/casos/administracion', query: { tiene_factura: 'con_factura' } });
-      return;
-    case 'Casos sin Factura':
-      router.push({ path: '/casos/administracion', query: { tiene_factura: 'sin_factura' } });
-      return;
-    case 'Casos con Reintegros':
-      router.push({ path: '/casos/administracion', query: { saldo_deudor: 'con_saldo' } });
-      return;
-    case 'Casos Cierre Administrativos':
-      router.push({ path: '/casos/administracion', query: { estatus_caso: 'Cerrado' } });
-      return;
-  }
-
-  // Redirecciones estándar para tarjetas de OAC
-  let estatus_caso = label.replace(/\s*Casos\s*/gi, '');
+const redirect = (estatus_caso: any) => {
+  estatus_caso = estatus_caso.replace(/\s*Casos\s*/gi, '');
 
   switch (estatus_caso) {
     case 'En Trámite':
@@ -191,6 +158,11 @@ const redirect = (cardLabel: string) => {
     case 'Cerrados':
       estatus_caso = 'Cerrado';
       break;
+  }
+
+  if (labelLower.includes('pago') || labelLower.includes('administra')) {
+    router.push({ path: '/casos/administracion' });
+    return;
   }
 
   router.push({

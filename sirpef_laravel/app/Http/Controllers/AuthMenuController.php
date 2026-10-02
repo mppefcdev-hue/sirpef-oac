@@ -23,6 +23,7 @@ class AuthMenuController extends Controller
         }
 
         $isAdmin = $user->isAdmin();
+        $isDirector = $user->role_id == 2;
         $hasPaso1 = in_array(35, $menuIds) || in_array('35', $menuIds);
         $hasPaso2 = in_array(39, $menuIds) || in_array('39', $menuIds);
 
@@ -43,7 +44,7 @@ class AuthMenuController extends Controller
                         }
 
                         $child->title = 'Formulario';
-                        if ($isAdmin || ($hasPaso1 && $hasPaso2)) {
+                        if ($isAdmin || $isDirector || ($hasPaso1 && $hasPaso2)) {
                             $child->path = 'CasesAdminForm';
                         } elseif ($hasPaso1) {
                             $child->path = 'CasesAdminFormPaso1';

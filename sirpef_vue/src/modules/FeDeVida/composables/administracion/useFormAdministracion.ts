@@ -17,8 +17,6 @@ export default (punto: any) => {
     // Permisos de pasos según rol o menús asignados al usuario
     const canAccessPaso1 = computed(() => {
         if (store.authUser?.isAdmin || store.authUser?.role_id === 1 || store.authUser?.role_id === 2) return true;
-        if (store.authUser?.role_id === 4) return true; // Rol User
-        if (store.authUser?.role_id === 6) return false; // Rol Analista
         return store.authUser?.menus_id?.some((m: any) => 
             m.id === 35 || 
             m.path === 'CasesAdminFormPaso1' ||
@@ -28,8 +26,6 @@ export default (punto: any) => {
 
     const canAccessPaso2y3 = computed(() => {
         if (store.authUser?.isAdmin || store.authUser?.role_id === 1 || store.authUser?.role_id === 2) return true;
-        if (store.authUser?.role_id === 4) return false; // Rol User
-        if (store.authUser?.role_id === 6) return true; // Rol Analista
         return store.authUser?.menus_id?.some((m: any) => 
             m.id === 39 || 
             m.path === 'CasesAdminFormPaso2' ||

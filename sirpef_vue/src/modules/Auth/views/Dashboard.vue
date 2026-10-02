@@ -20,7 +20,8 @@ onMounted(() => loadUser())
 
 
 <template>
-  <InitAdmin v-if="userRole > 0 "/>
+  <InitAdmin v-if="userRole >= 1 || userRole <= 3"/>
+  <InitUser v-else-if="userRole == 4"/>
   <div class="grid items-center pt-10 justify-center h-[40vh]" v-else>
     <Loader/>
   </div>

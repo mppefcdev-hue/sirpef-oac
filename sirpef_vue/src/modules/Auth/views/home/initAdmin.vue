@@ -248,7 +248,7 @@ onMounted(loadCort)
     </section>
 
     <br>
-    <div class="mb-10 w-[90%] mx-auto" v-if="graphToSee.find(e => e == 3) && store.authUser.isAdmin" >
+    <div class="mb-10 w-[90%] mx-auto" v-if="graphToSee.find(e => e == 3) && store.authUser" >
 
       <section class="statsAdmi block md:grid grid-cols-2 gap-3 mx-auto text-white fadeout text-center mt-5 relative">
             <article class="bg-white rounded-b-2xl p-10 text-white text-center md:rounded-2xl content-center rounded-xl p-2 shadow-lg border grid">
@@ -263,7 +263,7 @@ onMounted(loadCort)
 
       </section>
     </div>
-    <div v-if="graphToSee.find(e => e == 4) && store.authUser.isAdmin">
+    <div v-if="graphToSee.find(e => e == 4) && store.authUser">
       
       <div id="barUnidContainer"  class="p-2 w-[100%] mx-auto">
           <BannerTitle title="Comparativa Oficinas"/>
