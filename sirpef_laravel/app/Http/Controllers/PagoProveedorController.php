@@ -16,6 +16,14 @@ class PagoProveedorController extends Controller
      */
     public function destroy(int $id): JsonResponse
     {
+        $user = auth()->user();
+        if (!$user || (!$user->isAdmin() && (int)$user->role_id !== 2)) {
+            return response()->json([
+                'success' => false,
+                'msg' => 'No tiene permisos para eliminar registros de pago.'
+            ], 403);
+        }
+
         // Buscamos la relación en la tabla pivot usando el ID de tbl_pagos
         $pagoProveedor = PagoProveedor::where('pago_id', $id)->first();
 

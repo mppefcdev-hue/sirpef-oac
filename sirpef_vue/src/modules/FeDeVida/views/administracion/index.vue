@@ -52,6 +52,20 @@ const hasActiveFilters = computed(() => {
   );
 });
 
+// Permiso para eliminar registro (solo Admin y Director)
+const canDeletePago = computed(() => {
+  const user = store.authUser;
+  if (!user) return false;
+  if (user.isAdmin || Number(user.role_id) === 1 || Number(user.role_id) === 2) {
+    return true;
+  }
+  const roleName = String(user.role?.name || '').toLowerCase();
+  if (roleName === 'admin' || roleName === 'administrator' || roleName === 'director') {
+    return true;
+  }
+  return false;
+});
+
 watch(foundCaseId, (newId) => {
   if (newId) {
     casePersona_id.value = newId;
@@ -629,6 +643,7 @@ const exportToCSV = async () => {
 
                   <!-- 3. Eliminar (Soft delete) -->
                   <button 
+                    v-if="canDeletePago"
                     class="text-red-600 hover:text-red-800 hover:scale-110 font-bold transition-all text-sm flex items-center gap-1 cursor-pointer" 
                     @click="deleteCaso(row.id)" 
                     title="Eliminar (Soft delete)"
@@ -659,6 +674,7 @@ const exportToCSV = async () => {
   <section class="results my-10 w-full md:w-3/4" v-if="Object.keys(result).length > 0">
     <CardInfoUser :UserData="result[0]" title="Datos personales" icon="fa-solid fa-user" />
     <CardInfoUser :UserData="result[1]" title="Punto de cuenta" icon="fa-solid fa-location-dot"
+      :canDelete="canDeletePago"
       @seePDC="({ registro_id }) => casePersona_id = registro_id"
       @deletePDC="(data) => deleteCaso(data.registro_id)" />
   </section>
