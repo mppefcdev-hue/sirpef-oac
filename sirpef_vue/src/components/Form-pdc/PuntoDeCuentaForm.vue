@@ -44,7 +44,7 @@ const perfilesPresentadoA = [
     etiqueta: 'Consultoría Jurídica (Anmy Pérez)',
     nombre: 'ANMY IVONETT PÉREZ GONZÁLEZ',
     cargo: 'Directora General (E) de la Consultoría Jurídica',
-    resolucion: 'Resolución N° 001-2026 de fecha 10 de febrero del 2026, published en Gaceta Oficial de la República Bolivariana de Venezuela N° 43.319 de fecha 19 de febrero del 2026'
+    resolucion: 'Resolución N° 001-2026 de fecha 10 de febrero del 2026, publicada en Gaceta Oficial de la República Bolivariana de Venezuela N° 43.319 de fecha 19 de febrero del 2026'
   },
   {
     id: 2,
