@@ -90,7 +90,7 @@ const memoData = ref({
   footer_img: null,
   firma_img: null,
   punto_cuenta_id: null,
-  codigo: 'OAC-M N°000/2026',
+  codigo: '',
   fecha: '01/01/2026',
   para_nombre: 'TAVIANA ELAINE ALQUINZONES FERNÁNDEZ',
   para_cargo: 'Directora General (E) de la Oficina de Gestión Administrativa',
@@ -130,7 +130,7 @@ const saveMemo = async () => {
   try {
     const payload = {
       punto_cuenta_id: memoData.value.punto_cuenta_id,
-      codigo: memoData.value.tabla.pto_cta,
+      codigo: memoData.value.codigo,
       de: memoData.value.de_nombre,
       para: memoData.value.para_nombre,
       asunto: memoData.value.asunto,
