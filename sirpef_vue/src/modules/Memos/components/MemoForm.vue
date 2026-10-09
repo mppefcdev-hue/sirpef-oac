@@ -45,6 +45,14 @@
     </div>
 
     <div class="space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
+      <h3 class="text-sm font-bold text-blue-800 border-b pb-1">DATOS PRINCIPALES</h3>
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="flex flex-col">
+          <label class="text-[10px] font-bold text-gray-500">N° MEMORÁNDUM</label>
+          <input v-model="form.codigo" placeholder="Dejar vacío para autogenerar" class="border p-2 rounded text-xs focus:ring-1 focus:ring-blue-400 outline-none" />
+        </div>
+      </div>
+
       <h3 class="text-sm font-bold text-blue-800 border-b pb-1">TABLA DE DATOS</h3>
       <div class="grid grid-cols-2 gap-3">
         <div class="flex flex-col">
@@ -251,10 +259,6 @@ watch(() => props.form.tabla.pto_cta, (newVal) => {
   // Limpiamos el ID si el campo se vacía
   if (!newVal) {
     props.form.punto_cuenta_id = null;
-  }
-  // Actualizamos el código del memorándum basado en el punto de cuenta
-  if (newVal) {
-    props.form.codigo = `OAC-M N°${newVal}`;
   }
 }, { immediate: true });
 
