@@ -32,6 +32,9 @@ interface PuntoDeCuentaData {
   firmaDerecha: Firma;
   exposicionDeMotivosCompleta: string;
   propuestaCompleta: string;
+  fontSizeAsunto: string;
+  fontSizeExposicion: string;
+  fontSizePropuesta: string;
 }
 
 // --- Control de Estatus para Edición e Impresión ---
@@ -44,7 +47,7 @@ const perfilesPresentadoA = [
     etiqueta: 'Consultoría Jurídica (Anmy Pérez)',
     nombre: 'ANMY IVONETT PÉREZ GONZÁLEZ',
     cargo: 'Directora General (E) de la Consultoría Jurídica',
-    resolucion: 'Resolución N° 001-2026 de fecha 10 de febrero del 2026, publicada en Gaceta Oficial de la República Bolivariana de Venezuela N° 43.319 de fecha 19 de febrero del 2026'
+    resolucion: 'Resolución N° 001-2026 de fecha 10 de febrero del 2026, published en Gaceta Oficial de la República Bolivariana de Venezuela N° 43.319 de fecha 19 de febrero del 2026'
   },
   {
     id: 2,
@@ -107,6 +110,9 @@ const createInitialState = (): PuntoDeCuentaData => ({
     resolucion1: '',
     resolucion2: '',
   },
+  fontSizeAsunto: '10pt',
+  fontSizeExposicion: '10pt',
+  fontSizePropuesta: '10pt',
 });
 
 const turndownService = new TurndownService();
@@ -236,7 +242,7 @@ const sendInfo = async () => {
 };
 
 const imprimirDocumento = () => {
-  const elementosAOcultar = document.querySelectorAll('.fixed, .sidebar, .navbar');
+  const elementosAOcultar = document.querySelectorAll('.fixed, .sidebar, .navbar, .no-print');
   
   elementosAOcultar.forEach((el) => {
     (el as HTMLElement).style.display = 'none';
@@ -313,19 +319,58 @@ const imprimirDocumento = () => {
         </div>
 
         <div class="bg-white dark:bg-slate-800 shadow-lg rounded-lg p-6">
-          <h2 class="text-xl font-semibold mb-4 text-sky-600 dark:text-sky-300 border-b pb-2 border-sky-200 dark:border-slate-700">Asunto</h2>
+          <div class="flex justify-between items-center mb-4 border-b pb-2 border-sky-200 dark:border-slate-700">
+            <h2 class="text-xl font-semibold text-sky-600 dark:text-sky-300">Asunto</h2>
+            <div class="flex items-center gap-2">
+              <label class="text-xs font-bold text-gray-500 uppercase">Tamaño letra:</label>
+              <select v-model="form.fontSizeAsunto" class="text-sm border rounded-md p-1 bg-sky-50 dark:bg-slate-700 dark:text-white border-sky-300 focus:ring-2 focus:ring-sky-500">
+                <option value="8pt">8pt</option>
+                <option value="9pt">9pt</option>
+                <option value="10pt">10pt</option>
+                <option value="11pt">11pt</option>
+                <option value="12pt">12pt</option>
+                <option value="14pt">14pt</option>
+              </select>
+            </div>
+          </div>
           <QuillEditor theme="snow" :toolbar="[['bold', 'italic'], [{ 'align': ['', 'justify'] }]]" contentType="html" v-model:content="asuntoHtml"
             @update:content="updateMarkdown(asuntoHtml, 'asunto')" />
         </div>
 
         <div class="bg-white dark:bg-slate-800 shadow-lg rounded-lg p-6">
-          <h2 class="text-xl font-semibold mb-4 text-sky-600 dark:text-sky-300 border-b pb-2 border-sky-200 dark:border-slate-700">Exposición de Motivos</h2>
+          <div class="flex justify-between items-center mb-4 border-b pb-2 border-sky-200 dark:border-slate-700">
+            <h2 class="text-xl font-semibold text-sky-600 dark:text-sky-300">Exposición de Motivos</h2>
+            <div class="flex items-center gap-2">
+              <label class="text-xs font-bold text-gray-500 uppercase">Tamaño letra:</label>
+              <select v-model="form.fontSizeExposicion" class="text-sm border rounded-md p-1 bg-sky-50 dark:bg-slate-700 dark:text-white border-sky-300 focus:ring-2 focus:ring-sky-500">
+                <option value="8pt">8pt</option>
+                <option value="9pt">9pt</option>
+                <option value="10pt">10pt</option>
+                <option value="11pt">11pt</option>
+                <option value="12pt">12pt</option>
+                <option value="14pt">14pt</option>
+              </select>
+            </div>
+          </div>
           <QuillEditor theme="snow" :toolbar="[['bold', 'italic'], [{ 'align': ['', 'justify'] }]]" contentType="html" v-model:content="exposicionHtml"
             @update:content="updateMarkdown(exposicionHtml, 'exposicionDeMotivosCompleta')" style="min-height: 250px;" />
         </div>
 
         <div class="bg-white dark:bg-slate-800 shadow-lg rounded-lg p-6">
-          <h2 class="text-xl font-semibold mb-4 text-sky-600 dark:text-sky-300 border-b pb-2 border-sky-200 dark:border-slate-700">Propuesta</h2>
+          <div class="flex justify-between items-center mb-4 border-b pb-2 border-sky-200 dark:border-slate-700">
+            <h2 class="text-xl font-semibold text-sky-600 dark:text-sky-300">Propuesta</h2>
+            <div class="flex items-center gap-2">
+              <label class="text-xs font-bold text-gray-500 uppercase">Tamaño letra:</label>
+              <select v-model="form.fontSizePropuesta" class="text-sm border rounded-md p-1 bg-sky-50 dark:bg-slate-700 dark:text-white border-sky-300 focus:ring-2 focus:ring-sky-500">
+                <option value="8pt">8pt</option>
+                <option value="9pt">9pt</option>
+                <option value="10pt">10pt</option>
+                <option value="11pt">11pt</option>
+                <option value="12pt">12pt</option>
+                <option value="14pt">14pt</option>
+              </select>
+            </div>
+          </div>
           <QuillEditor theme="snow" :toolbar="[['bold', 'italic'], [{ 'align': ['', 'justify'] }]]" contentType="html" v-model:content="propuestaHtml"
             @update:content="updateMarkdown(propuestaHtml, 'propuestaCompleta')" style="min-height: 250px;" />
         </div>
@@ -463,19 +508,19 @@ const imprimirDocumento = () => {
         <!-- Sección: Asunto -->
         <div class="section-container">
           <div class="section-hdr">ASUNTO:</div>
-          <div class="section-body text-justify font-bold text-uppercase" v-html="asuntoHtml || '<p>&nbsp;</p>'"></div>
+          <div class="section-body text-justify font-bold text-uppercase" :style="{ fontSize: form.fontSizeAsunto }" v-html="asuntoHtml || '<p>&nbsp;</p>'"></div>
         </div>
 
         <!-- Sección: Exposición de Motivos -->
         <div class="section-container">
           <div class="section-hdr">EXPOSICIÓN DE MOTIVO:</div>
-          <div class="section-body text-justify" v-html="exposicionHtml || '<p>&nbsp;</p>'"></div>
+          <div class="section-body text-justify" :style="{ fontSize: form.fontSizeExposicion }" v-html="exposicionHtml || '<p>&nbsp;</p>'"></div>
         </div>
 
         <!-- Sección: Propuesta -->
         <div class="section-container">
           <div class="section-hdr">PROPUESTA:</div>
-          <div class="section-body text-justify" v-html="propuestaHtml || '<p>&nbsp;</p>'"></div>
+          <div class="section-body text-justify" :style="{ fontSize: form.fontSizePropuesta }" v-html="propuestaHtml || '<p>&nbsp;</p>'"></div>
         </div>
 
         <!-- Sección: Decisión -->
@@ -564,7 +609,7 @@ const imprimirDocumento = () => {
 /* --- Hoja de Formato Fiel --- */
 .document-page {
   width: 215.9mm;
-  height: 279.4mm; /* Cambiado de min-height a height fijo */
+  min-height: 279.4mm;
   background: #ffffff;
   padding: 5mm 12mm 10mm 12mm;
   box-sizing: border-box;
@@ -572,7 +617,6 @@ const imprimirDocumento = () => {
   font-family: Arial, sans-serif;
   display: flex;
   flex-direction: column;
-  position: relative; /* <-- Asegura punto de referencia absoluto */
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
@@ -665,12 +709,11 @@ const imprimirDocumento = () => {
   text-align: left;
 }
 .section-body {
-  padding: 8px;
+  padding: 4px 8px;
   font-size: 10pt;
-  line-height: 1.45;
-  min-height: 20mm;
+  line-height: 1.35;
 }
-.section-body :deep(p) { margin: 0 0 6px 0; }
+.section-body :deep(p) { margin: 0; }
 
 /* Cuadrícula de Decisiones */
 .decision-grid {
@@ -738,14 +781,12 @@ const imprimirDocumento = () => {
 
 /* Área de Firmantes Inferior */
 .signatures-wrapper {
-  position: absolute;
-  bottom: 10mm;
-  left: 12mm;
-  right: 12mm;
+  margin-top: auto;
   display: flex;
   justify-content: space-between;
+  padding-top: 16mm;
+  padding-bottom: 4mm;
 }
-
 .sig-column {
   width: 46%;
   text-align: center;
@@ -771,70 +812,94 @@ const imprimirDocumento = () => {
 
 /* --- MANEJO ESTRICTO DE IMPRESIÓN --- */
 @media print {
-  /* Ocultar elementos de interfaz y paneles adicionales */
+  /* 1. Ocultar absolutamente todo en el viewport raíz */
   html, body {
     margin: 0 !important;
     padding: 0 !important;
+    height: auto !important;
     background-color: #ffffff !important;
   }
 
-  body * {
-    visibility: hidden;
+  /* Ocultar cualquier contenedor ancestro o ajeno a la vista previa */
+  body > *:not(.workspace-layout),
+  .editor-panel,
+  .no-print,
+  header,
+  nav,
+  aside,
+  footer {
+    display: none !important;
+    height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
 
-  /* Hacer visible únicamente la hoja de la previsualización */
-  .preview-panel,
-  .preview-panel * {
-    visibility: visible;
+  /* 2. Forzar al layout a no heredar flex o márgenes que empujen el contenido */
+  .workspace-layout {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: none !important;
   }
 
+  /* 3. Forzar al contenedor a subir al origen real absoluto (0,0) de la hoja física */
   .preview-panel {
     position: absolute !important;
     left: 0 !important;
     top: 0 !important;
-    width: 215.9mm !important;
-    height: 279.4mm !important;
+    width: 215.9mm !important; /* Forzar el ancho exacto de la carta */
+    height: auto !important;
+    max-height: none !important;
     padding: 0 !important;
     margin: 0 !important;
     background: transparent !important;
     display: block !important;
-    overflow: hidden !important;
+    overflow: visible !important;
   }
 
+  /* 4. Dimensiones exactas de la hoja tamaño Carta sin márgenes del sistema */
   .document-page {
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
+    display: flex !important;
     width: 215.9mm !important;
     height: 279.4mm !important;
-    padding: 5mm 12mm 10mm 12mm !important;
+    min-height: 279.4mm !important;
+    padding: 5mm 12mm 10mm 12mm !important; /* Ajusta este padding superior si necesitas calibrar el cintillo */
     margin: 0 !important;
     border: none !important;
     box-shadow: none !important;
     background-color: #ffffff !important;
-    box-sizing: border-box !important;
-    page-break-after: avoid !important;
     page-break-inside: avoid !important;
+    page-break-after: avoid !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
   }
 
-  /* Posicionamiento exacto y fijo de las firmas en la parte inferior de la página */
+  /* Restablecer comportamiento de tablas y flexbox internos */
+  .header-table-bar,
+  .decision-grid,
   .signatures-wrapper {
-    position: absolute !important;
-    bottom: 10mm !important;
-    left: 12mm !important;
-    right: 12mm !important;
     display: flex !important;
-    justify-content: space-between !important;
-    padding: 0 !important;
+  }
+  
+  .presentacion-table,
+  .instrucciones-anexos-table {
+    display: table !important;
+    width: 100% !important;
+  }
+  .presentacion-table tr, .instrucciones-anexos-table tr {
+    display: table-row !important;
+  }
+  .presentacion-table td, .instrucciones-anexos-table td {
+    display: table-cell !important;
   }
 
-  /* Configuración de la página del navegador */
+  /* Forzar al navegador a ignorar sus márgenes por defecto en tamaño carta */
   @page {
-    size: letter portrait;
+    size: letter;
     margin: 0mm !important;
   }
 
-  /* Forzar la impresión de colores de fondo (rojos de los encabezados) */
+  /* Mantener el color rojo institucional y fondos en la impresión */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
