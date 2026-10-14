@@ -54,4 +54,12 @@ class Registro extends Model
     {
         return $this->hasOne(Pago::class, 'registro_id')->latest();
     }
+
+    /**
+     * Bitácora de contactos y recorrido con el proveedor.
+     */
+    public function bitacoras(): HasMany
+    {
+        return $this->hasMany(BitacoraPago::class, 'registro_id')->orderBy('created_at', 'asc');
+    }
 }

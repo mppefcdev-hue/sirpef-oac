@@ -24,6 +24,7 @@ use App\Http\Services\AtencionCiudadano\BuscarRegistroPorPuntoService;
 use App\Http\Services\AtencionCiudadano\StorePagoService;
 use App\Http\Services\AtencionCiudadano\GetEstatusPagoService;
 use App\Http\Services\AtencionCiudadano\IndexPagoService;
+use App\Http\Services\AtencionCiudadano\BitacoraPagoService;
 
 
 class AtencionCiudadanoController extends Controller
@@ -140,5 +141,20 @@ class AtencionCiudadanoController extends Controller
     public function updatePago(Request $request, int $id): JsonResponse
     {
         return StorePagoService::actualizarPago($request, $id);
+    }
+
+    public function getBitacoraPago(int $id): JsonResponse
+    {
+        return BitacoraPagoService::listarPorPago($id);
+    }
+
+    public function storeBitacoraPago(Request $request, int $id): JsonResponse
+    {
+        return BitacoraPagoService::crearEntrada($request, $id);
+    }
+
+    public function getBitacoraRegistro(int $registroId): JsonResponse
+    {
+        return BitacoraPagoService::listarPorRegistro($registroId);
     }
 }

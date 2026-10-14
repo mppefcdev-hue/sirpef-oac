@@ -42,7 +42,13 @@ class BuscarRegistroPorPuntoService
         }
 
         // 2. Buscar el Registro asociado con sus relaciones
-        $registro = Registro::with(['pago.estatus', 'pago.proveedores', 'eventoPersona.persona'])->where('punto_cuenta_id', $puntoCuenta->id)->first();
+        $registro = Registro::with([
+            'pago.estatus', 
+            'pago.proveedores', 
+            'pago.bitacoras.user.role',
+            'bitacoras.user.role',
+            'eventoPersona.persona'
+        ])->where('punto_cuenta_id', $puntoCuenta->id)->first();
 
         if (!$registro) {
             return response()->json([
@@ -53,6 +59,7 @@ class BuscarRegistroPorPuntoService
 
         $pago = $registro->pago ?? null;
         $proveedor = ($pago && $pago->proveedores->isNotEmpty()) ? $pago->proveedores->first() : null;
+        $bitacoras = $pago?->bitacoras && $pago->bitacoras->isNotEmpty() ? $pago->bitacoras : ($registro->bitacoras ?? []);
 
         // 3. Retornar la data completa para el formulario
         return response()->json([
@@ -62,6 +69,7 @@ class BuscarRegistroPorPuntoService
                 'numero_punto'          => $puntoCuenta->numero_punto,
                 'fecha_punto'           => $puntoCuenta->fecha ? $puntoCuenta->fecha->format('d/m/Y') : null,
                 'registro_id'           => $registro->id,
+                'pago_id'               => $pago?->id ?? null,
                 'monto'                 => $pago->monto ?? null,
                 'nro_orden_pago'        => $pago->orden_pago ?? null,
                 'orden_pago'            => $pago->orden_pago ?? null,
@@ -77,6 +85,7 @@ class BuscarRegistroPorPuntoService
                 'saldo_deudor'          => $pago->saldo_deudor ?? null,
                 'saldo_acreedor'        => $pago->saldo_acreedor ?? null,
                 'fecha_pago_financiero' => $pago->fecha_pago_financiero ?? null,
+                'bitacoras'             => $bitacoras,
             ]
         ], 200);
     }

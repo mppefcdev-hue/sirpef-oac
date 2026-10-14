@@ -21,6 +21,7 @@ const {
     estado,
     emitForm,
     UserInfo,
+    currentPagoId,
     canAccessPaso1,
     canAccessPaso2y3,
     isPaso1Only,
@@ -102,8 +103,8 @@ const stepperProgress = () => {
     </div>
 
     <div class="stepper-content">
-      <FirstPage :emitForm="emitForm" :values="UserInfo" :step="step" v-if="step == 1 && canGoToStep(1)"/>
-      <SecondPage :emitForm="emitForm" :values="UserInfo" :step="step" v-else-if="step == 2 && canGoToStep(2)"/>
+      <FirstPage :emitForm="emitForm" :values="UserInfo" :step="step" :pago-id="currentPagoId" v-if="step == 1 && canGoToStep(1)"/>
+      <SecondPage :emitForm="emitForm" :values="UserInfo" :step="step" :pago-id="currentPagoId" v-else-if="step == 2 && canGoToStep(2)"/>
       <FormCaso :emitForm="emitForm" :values="UserInfo" :step="step" v-else-if="step == 3 && canGoToStep(3)"/>
 
       <div class="grid gap-5 mt-10 w-full md:w-full" v-else>

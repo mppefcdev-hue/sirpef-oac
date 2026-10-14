@@ -25,6 +25,7 @@ class IndexPagoService
                 'recaudos',
                 'registro.puntoCuenta.memorandum',
                 'registro.eventoPersona.persona',
+                'bitacoras.user.role',
             ])->orderBy('created_at', 'desc');
 
             // 2. Filtro por Mes (número 1-12 o formato YYYY-MM)

@@ -81,6 +81,10 @@ export default (punto: any) => {
         saldo_acreedor: '',
         tiene_factura: false,
         factura_pendiente: false,
+        bitacora_descripcion: '',
+        bitacora_tipo_contacto: 'Llamada telefónica',
+        bitacora_contacto_proveedor: '',
+        bitacoras: [] as any[],
         recaudos: [] as any[]
     })
 
@@ -116,6 +120,12 @@ export default (punto: any) => {
         formData.append('tiene_factura', UserInfo.value.tiene_factura ? '1' : '0');
         formData.append('factura_pendiente', UserInfo.value.factura_pendiente ? '1' : '0');
 
+        if (UserInfo.value.bitacora_descripcion && UserInfo.value.bitacora_descripcion.trim()) {
+            formData.append('bitacora_descripcion', UserInfo.value.bitacora_descripcion.trim());
+            formData.append('bitacora_tipo_contacto', UserInfo.value.bitacora_tipo_contacto || 'Llamada telefónica');
+            formData.append('bitacora_contacto_proveedor', UserInfo.value.bitacora_contacto_proveedor || UserInfo.value.contacto || '');
+        }
+
         const proveedoresEnvio = [
             {
                 monto_relacionado: UserInfo.value.monto || 0,
@@ -150,6 +160,11 @@ export default (punto: any) => {
                 }
             } else {
                 res = await updatePagoService(targetId, formData);
+            }
+
+            if (res?.data?.pago?.bitacoras) {
+                UserInfo.value.bitacoras = res.data.pago.bitacoras;
+                UserInfo.value.bitacora_descripcion = '';
             }
 
             if (!continuar) {
@@ -309,6 +324,10 @@ export default (punto: any) => {
                 saldo_acreedor: data.saldo_acreedor || '',
                 tiene_factura: tieneFactura,
                 factura_pendiente: facturaPendiente,
+                bitacora_descripcion: '',
+                bitacora_tipo_contacto: 'Llamada telefónica',
+                bitacora_contacto_proveedor: '',
+                bitacoras: data.bitacoras || [],
             }
 
             currentPagoId.value = pId;
@@ -347,6 +366,12 @@ export default (punto: any) => {
         if (punto?.beneficiario && !UserInfo.value.beneficiario) {
             UserInfo.value.beneficiario = punto.beneficiario
         }
+        if (punto?.bitacoras && UserInfo.value.bitacoras.length === 0) {
+            UserInfo.value.bitacoras = punto.bitacoras
+        }
+        if (punto?.pago_id && !currentPagoId.value) {
+            currentPagoId.value = punto.pago_id.toString()
+        }
     })
 
     return {
@@ -355,6 +380,7 @@ export default (punto: any) => {
         emitForm,
         UserInfo,
         DataOGA,
+        currentPagoId,
         canAccessPaso1,
         canAccessPaso2y3,
         isPaso1Only,

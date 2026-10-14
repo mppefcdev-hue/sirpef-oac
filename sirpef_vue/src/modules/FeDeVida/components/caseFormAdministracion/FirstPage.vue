@@ -6,6 +6,8 @@ import { ref } from 'vue';
 import { onMounted } from 'vue';
 
 
+import BitacoraTimeline from './BitacoraTimeline.vue';
+
 const pagos = ref([])
 const cuotaDisponible = ref(0)
 
@@ -13,6 +15,7 @@ const props = defineProps<{
   emitForm: (event: Event) => void,
   step: number,
   values: any,
+  pagoId?: string | number | null,
 }>()
 
 import { computed } from 'vue';
@@ -127,6 +130,70 @@ onMounted(() => {
           readonly 
           disabled
         />
+      </div>
+
+      <!-- Sección de Bitácora de Contacto con el Proveedor (Rol User / Admin / Director) -->
+      <div class="col-span-1 md:col-span-2 mt-4">
+        <!-- Si ya existen notas en la bitácora (modo edición o consulta previa) -->
+        <div v-if="values.bitacoras && values.bitacoras.length > 0" class="mb-4">
+          <BitacoraTimeline
+            :items="values.bitacoras"
+            :pago-id="pagoId"
+            :allow-add="false"
+            title="Historial de Bitácora del Proveedor"
+          />
+        </div>
+
+        <!-- Formulario de contacto inicial para el caso -->
+        <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 md:p-5 shadow-xs">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-xl">📋</span>
+            <div>
+              <h4 class="font-bold text-gray-800 text-sm md:text-base">Bitácora de Contacto con el Proveedor</h4>
+              <p class="text-xs text-gray-500">
+                (Opcional) Registre si realizó algún contacto previo con el proveedor para informar al Analista, Director y Administración.
+              </p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 ml-1">Canal de Contacto</label>
+              <select
+                v-model="values.bitacora_tipo_contacto"
+                class="w-full bg-white text-gray-900 mt-1 p-2.5 rounded-lg border border-gray-300 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="Llamada telefónica">📞 Llamada telefónica</option>
+                <option value="Correo electrónico">✉️ Correo electrónico</option>
+                <option value="WhatsApp / Mensajería">💬 WhatsApp / Mensajería</option>
+                <option value="Visita presencial">🏢 Visita presencial</option>
+                <option value="Otro">📋 Otro</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 ml-1">Persona o Teléfono Contactado (Opcional)</label>
+              <input
+                type="text"
+                v-model="values.bitacora_contacto_proveedor"
+                placeholder="Ej: Sr. Roberto / 0414-1234567"
+                class="w-full bg-white text-gray-900 mt-1 p-2.5 rounded-lg border border-gray-300 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div class="col-span-1 md:col-span-2">
+              <label class="block text-xs font-semibold text-gray-700 ml-1">
+                Detalle del Contacto / Acuerdos alcanzados
+              </label>
+              <textarea
+                v-model="values.bitacora_descripcion"
+                rows="3"
+                placeholder="Ejemplo: Se realizó una llamada y quedaron pendiente de enviar la factura..."
+                class="w-full bg-white text-gray-900 mt-1 p-3 rounded-lg border border-gray-300 text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              ></textarea>
+            </div>
+          </div>
+        </div>
       </div>
 
     </div>
