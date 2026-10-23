@@ -79,7 +79,7 @@ watch(() => props.id_user_edit, (newId, oldId) => {
               : item == 2
                 ? "Oficinas"
                 : item == 3
-                    ? "Menus"
+                    ? "Vistas permitidas"
                     : item == 4 ? "Eventos" : "Final"
           }}
         </span>
@@ -89,7 +89,7 @@ watch(() => props.id_user_edit, (newId, oldId) => {
     <div class="stepper-content">
       <Formdatabasic :emitForm="emitForm" :values="UserInfo" :step="step" :id="id_user_edit" v-if="step == 1"/>
       <OficinasForm :values="UserInfo.oficinas_ids" :FormEvent="emitForm" :step="step" v-else-if="step == 2"/>
-      <FormMenuUser :values="UserInfo.menus_id" :FormEvent="emitForm" :step="step" v-else-if="step == 3"/>
+      <FormMenuUser :values="UserInfo.menus_id" :roleId="UserInfo.role_id" :FormEvent="emitForm" :step="step" v-else-if="step == 3"/>
       <FormEvent :values="UserInfo.eventos_id" :FormEvent="emitForm" :step="step" v-else-if="step == 4"/>
 
 

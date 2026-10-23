@@ -158,3 +158,19 @@ export const updatePagoService = async (id: string | number, payload: any) => {
     const response = await Http.post(`/api/oac/pagos/${id}`, payload)
     return response.data
 }
+
+// Bitácora de contactos y recorrido
+export const getBitacoraPago = async (pagoId: string | number) => {
+    const response = await Http.get(`/api/oac/pagos/${pagoId}/bitacora`)
+    return response.data
+}
+
+export const addBitacoraPago = async (pagoId: string | number, payload: any) => {
+    const response = await Http.post(`/api/oac/pagos/${pagoId}/bitacora`, payload)
+    return response.data
+}
+
+export const getBitacoraRegistro = async (registroId: string | number) => {
+    const response = await Http.get(`/api/oac/registros/${registroId}/bitacora`)
+    return response.data
+}

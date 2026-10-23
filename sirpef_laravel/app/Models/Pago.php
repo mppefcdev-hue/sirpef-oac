@@ -147,4 +147,12 @@ class Pago extends Model
                     ->withPivot('monto_relacionado')
                     ->withTimestamps();
     }
+
+    /**
+     * Bitácora de recorrido y contactos con el proveedor.
+     */
+    public function bitacoras(): HasMany
+    {
+        return $this->hasMany(BitacoraPago::class, 'pago_id')->orderBy('created_at', 'asc');
+    }
 }

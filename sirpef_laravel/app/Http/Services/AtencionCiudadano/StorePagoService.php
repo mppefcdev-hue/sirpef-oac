@@ -6,6 +6,7 @@ use App\Models\Pago;
 use App\Models\Registro;
 use App\Models\Proveedor;
 use App\Models\Recaudo;
+use App\Models\BitacoraPago;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -105,6 +106,22 @@ class StorePagoService
                 // 4. Procesar Recaudos
                 $recaudosSubidos = self::processRecaudos($request, $registroId, $pago->id);
 
+                // 5. Procesar Bitácora de contacto inicial con el proveedor
+                if ($request->filled('bitacora_descripcion') && trim($request->bitacora_descripcion) !== '') {
+                    $user = $request->user() ?? auth()->user();
+                    $rolNombre = $user?->role?->name ?? ($user?->isAdmin() ? 'Admin' : 'User');
+                    BitacoraPago::create([
+                        'pago_id'            => $pago->id,
+                        'registro_id'        => $registroId,
+                        'user_id'            => $user?->id ?? 1,
+                        'rol_nombre'         => $rolNombre,
+                        'tipo_contacto'      => $request->input('bitacora_tipo_contacto', 'Llamada telefónica'),
+                        'contacto_proveedor' => $request->input('bitacora_contacto_proveedor', $request->contacto),
+                        'descripcion'        => trim($request->bitacora_descripcion),
+                        'fecha_contacto'     => now(),
+                    ]);
+                }
+
                 try {
                     UserInfoService::getUserInfo("Se ha completado el registro del Paso 1 del formulario. Favor revisar para continuar.");
                 } catch (\Throwable $te) {
@@ -115,7 +132,7 @@ class StorePagoService
                     'success' => true,
                     'message' => 'Pago y documentos registrados exitosamente.',
                     'data'    => [
-                        'pago'      => $pago->load('proveedores', 'estatus', 'tipoPago', 'recaudos', 'registro.eventoPersona.persona'),
+                        'pago'      => $pago->load('proveedores', 'estatus', 'tipoPago', 'recaudos'),
                         'recaudos'  => $recaudosSubidos
                     ]
                 ], 201);
@@ -179,6 +196,7 @@ class StorePagoService
                 'recaudos',
                 'registro.puntoCuenta.memorandum',
                 'registro.eventoPersona.persona',
+                'bitacoras.user.role',
             ])->findOrFail($id);
 
             return response()->json([
@@ -272,11 +290,27 @@ class StorePagoService
                 // Subir nuevos recaudos si se adjuntaron
                 $recaudosSubidos = self::processRecaudos($request, $pago->registro_id, $pago->id);
 
+                // Registrar nota de bitácora si viene en la petición
+                if ($request->filled('bitacora_descripcion') && trim($request->bitacora_descripcion) !== '') {
+                    $user = $request->user() ?? auth()->user();
+                    $rolNombre = $user?->role?->name ?? ($user?->isAdmin() ? 'Admin' : 'User');
+                    BitacoraPago::create([
+                        'pago_id'            => $pago->id,
+                        'registro_id'        => $pago->registro_id,
+                        'user_id'            => $user?->id ?? 1,
+                        'rol_nombre'         => $rolNombre,
+                        'tipo_contacto'      => $request->input('bitacora_tipo_contacto', 'Llamada telefónica'),
+                        'contacto_proveedor' => $request->input('bitacora_contacto_proveedor', $request->contacto),
+                        'descripcion'        => trim($request->bitacora_descripcion),
+                        'fecha_contacto'     => now(),
+                    ]);
+                }
+
                 return response()->json([
                     'success' => true,
                     'message' => 'Pago actualizado exitosamente.',
                     'data'    => [
-                        'pago'      => $pago->fresh()->load('proveedores', 'estatus', 'tipoPago', 'recaudos', 'registro.eventoPersona.persona'),
+                        'pago'      => $pago->fresh()->load('proveedores', 'estatus', 'tipoPago', 'recaudos', 'registro.eventoPersona.persona', 'bitacoras.user.role'),
                         'recaudos'  => $recaudosSubidos
                     ]
                 ], 200);

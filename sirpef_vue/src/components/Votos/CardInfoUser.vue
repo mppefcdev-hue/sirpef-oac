@@ -7,6 +7,7 @@ const props = defineProps<{
     title: string
     hidden?: Function,
     envioData?: Function,
+    canDelete?: boolean,
 }>()
 
 </script>
@@ -45,7 +46,7 @@ const props = defineProps<{
             <font-awesome-icon icon="eye" />
             Ver
           </button>
-          <button name="si" class="w-[80%] mx-auto hover:bg-[#ECA008] bg-[#010c41] text-white font-bold py-2 px-10 rounded-3xl my-8 " @click="$emit('deletePDC', {registro_id: UserData.registro_id})">
+          <button v-if="props.canDelete !== false" name="si" class="w-[80%] mx-auto hover:bg-[#ECA008] bg-[#010c41] text-white font-bold py-2 px-10 rounded-3xl my-8 " @click="$emit('deletePDC', {registro_id: UserData.registro_id})">
             <font-awesome-icon icon="trash-can" />
             Eliminar
           </button>

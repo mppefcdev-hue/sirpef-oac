@@ -1,5 +1,6 @@
 <template>
-  <div class="memo-paper bg-white print:shadow-none mx-auto p-[1.5cm] pt-[1cm] text-black text-[12pt] font-arial leading-snug w-[21.59cm] min-h-[27.94cm] relative flex flex-col">
+  <div
+    class="memo-paper bg-white print:shadow-none mx-auto p-[1.5cm] pt-[1cm] text-black text-[12pt] font-arial leading-snug w-[21.59cm] min-h-[27.94cm] relative flex flex-col">
     <!-- Header Image -->
     <div v-if="data.header_img || data.headerImg" class="mb-4">
       <img :src="data.header_img || data.headerImg" class="w-full h-auto" />
@@ -7,7 +8,7 @@
 
     <!-- Metadata -->
     <div class="flex justify-between mb-6">
-      <div class="font-bold uppercase">OAC-M N° {{ data.tabla?.pto_cta }}</div>
+      <div class="font-bold uppercase">{{ data.codigo || 'POR ASIGNAR' }}</div>
       <div class="text-right">Caracas, {{ formatDisplayDate(data.tabla?.fecha) }}</div>
     </div>
 
@@ -39,34 +40,48 @@
 
     <!-- Body -->
     <div class="text-justify mb-6 whitespace-pre-line">
-      Tengo a bien dirigirme a usted, en la oportunidad de remitir Punto de Cuenta N°{{ data.tabla?.pto_cta || '000/2026' }} de fecha {{ formatDisplayDate(data.tabla?.fecha) }}, {{ data.motivo }}, debidamente aprobado, el cual se especifica a continuación:
+      Tengo a bien dirigirme a usted, en la oportunidad de remitir Punto de Cuenta N°{{ data.tabla?.pto_cta ||
+        '000/2026' }} de fecha {{ formatDisplayDate(data.tabla?.fecha) }}, {{ data.motivo }}, debidamente aprobado, el
+      cual se especifica a continuación:
     </div>
 
     <!-- Table -->
     <table class="w-full border-collapse border border-gray-400 mb-6 text-[10px] table-fixed">
       <thead>
         <tr class="bg-[#e60000] text-white font-bold h-10">
-          <th class="border border-gray-400 p-1 text-center align-middle w-[12%]" style="background-color: #e60000 !important; -webkit-print-color-adjust: exact;">Pto/Cta</th>
-          <th class="border border-gray-400 p-1 text-center align-middle w-[12%]" style="background-color: #e60000 !important; -webkit-print-color-adjust: exact;">Fecha</th>
-          <th class="border border-gray-400 p-1 text-center align-middle w-[15%]" style="background-color: #e60000 !important; -webkit-print-color-adjust: exact;">Solicitante</th>
-          <th class="border border-gray-400 p-1 text-center align-middle w-[10%]" style="background-color: #e60000 !important; -webkit-print-color-adjust: exact;">C.I.</th>
-          <th class="border border-gray-400 p-1 text-center align-middle w-[12%]" style="background-color: #e60000 !important; -webkit-print-color-adjust: exact;">Monto (Bs.)</th>
-          <th class="border border-gray-400 p-1 text-center align-middle w-[24%]" style="background-color: #e60000 !important; -webkit-print-color-adjust: exact;">Proveedor</th>
-          <th class="border border-gray-400 p-1 text-center align-middle w-[15%]" style="background-color: #e60000 !important; -webkit-print-color-adjust: exact;">RIF</th>
+          <th class="border border-gray-400 p-1 text-center align-middle w-[12%]"
+            style="background-color: #e60000 !important; -webkit-print-color-adjust: exact;">Pto/Cta</th>
+          <th class="border border-gray-400 p-1 text-center align-middle w-[12%]"
+            style="background-color: #e60000 !important; -webkit-print-color-adjust: exact;">Fecha</th>
+          <th class="border border-gray-400 p-1 text-center align-middle w-[15%]"
+            style="background-color: #e60000 !important; -webkit-print-color-adjust: exact;">Solicitante</th>
+          <th class="border border-gray-400 p-1 text-center align-middle w-[10%]"
+            style="background-color: #e60000 !important; -webkit-print-color-adjust: exact;">C.I.</th>
+          <th class="border border-gray-400 p-1 text-center align-middle w-[12%]"
+            style="background-color: #e60000 !important; -webkit-print-color-adjust: exact;">Monto (Bs.)</th>
+          <th class="border border-gray-400 p-1 text-center align-middle w-[24%]"
+            style="background-color: #e60000 !important; -webkit-print-color-adjust: exact;">Proveedor</th>
+          <th class="border border-gray-400 p-1 text-center align-middle w-[15%]"
+            style="background-color: #e60000 !important; -webkit-print-color-adjust: exact;">RIF</th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="(item, index) in (data.tabla?.proveedores || [])" :key="index" class="h-12 text-center align-middle">
-          <td v-if="index === 0" :rowspan="data.tabla?.proveedores?.length" class="border border-gray-400 p-1">{{ data.tabla?.pto_cta }}</td>
-          <td v-if="index === 0" :rowspan="data.tabla?.proveedores?.length" class="border border-gray-400 p-1">{{ formatDisplayDate(data.tabla?.fecha) }}</td>
-          <td v-if="index === 0" :rowspan="data.tabla?.proveedores?.length" class="border border-gray-400 p-1">{{ data.tabla?.solicitante }}</td>
-          <td v-if="index === 0" :rowspan="data.tabla?.proveedores?.length" class="border border-gray-400 p-1">{{ data.tabla?.cedula }}</td>
+          <td v-if="index === 0" :rowspan="data.tabla?.proveedores?.length" class="border border-gray-400 p-1">{{
+            data.tabla?.pto_cta }}</td>
+          <td v-if="index === 0" :rowspan="data.tabla?.proveedores?.length" class="border border-gray-400 p-1">{{
+            formatDisplayDate(data.tabla?.fecha) }}</td>
+          <td v-if="index === 0" :rowspan="data.tabla?.proveedores?.length" class="border border-gray-400 p-1">{{
+            data.tabla?.solicitante }}</td>
+          <td v-if="index === 0" :rowspan="data.tabla?.proveedores?.length" class="border border-gray-400 p-1">{{
+            data.tabla?.cedula }}</td>
           <td class="border border-gray-400 p-1 font-bold">{{ formatCurrency(item.monto) }}</td>
           <td class="border border-gray-400 p-1 text-left">{{ item.nombre }}</td>
           <td class="border border-gray-400 p-1">{{ item.cedula_rif }}</td>
         </tr>
         <!-- Fallback if no suppliers array exists -->
-        <tr v-if="(!data.tabla?.proveedores || data.tabla?.proveedores.length === 0)" class="h-16 text-center align-middle">
+        <tr v-if="(!data.tabla?.proveedores || data.tabla?.proveedores.length === 0)"
+          class="h-16 text-center align-middle">
           <td class="border border-gray-400 p-1">{{ data.tabla?.pto_cta }}</td>
           <td class="border border-gray-400 p-1">{{ formatDisplayDate(data.tabla?.fecha) }}</td>
           <td class="border border-gray-400 p-1">{{ data.tabla?.solicitante }}</td>
@@ -79,7 +94,8 @@
           <td class="border-x border-gray-400"></td>
           <td class="border-x border-gray-400"></td>
           <td class="border-x border-gray-400"></td>
-          <td class="border border-gray-400 p-1 font-bold text-center bg-gray-50" style="-webkit-print-color-adjust: exact;">TOTAL</td>
+          <td class="border border-gray-400 p-1 font-bold text-center bg-gray-50"
+            style="-webkit-print-color-adjust: exact;">TOTAL</td>
           <td class="border border-gray-400 p-1 font-bold">{{ formatCurrency(totalCalculado) }}</td>
           <td class="border border-gray-400"></td>
           <td class="border border-gray-400"></td>
@@ -94,15 +110,17 @@
     <!-- Signature -->
     <div class="mt-auto mb-16 text-center uppercase relative">
       <div class="mb-10 lowercase">Atentamente,</div>
-      
+
       <!-- Digital Signature Image -->
-      <div v-if="data.firma_img || data.firmaImg" class="absolute left-1/2 -translate-x-1/2 -top-6 w-36 h-auto pointer-events-none z-0">
+      <div v-if="data.firma_img || data.firmaImg"
+        class="absolute left-1/2 -translate-x-1/2 -top-6 w-36 h-auto pointer-events-none z-0">
         <img :src="data.firma_img || data.firmaImg" class="w-full opacity-90" />
       </div>
 
       <div class="font-bold relative z-10">{{ data.de_nombre }}</div>
       <div class="text-[11pt] leading-tight max-w-lg mx-auto">{{ data.de_cargo }}</div>
-      <div v-if="data.resolucion" class="text-[10pt] mt-1 leading-tight max-w-sm mx-auto text-gray-600 font-arial lowercase">
+      <div v-if="data.resolucion"
+        class="text-[10pt] mt-1 leading-tight max-w-sm mx-auto text-gray-600 font-arial lowercase">
         {{ data.resolucion }}
       </div>
     </div>
@@ -168,7 +186,7 @@ const formatCurrency = (value) => {
     print-color-adjust: exact !important;
     position: relative !important;
   }
-  
+
   /* Ensure background colors in table headers appear */
   th {
     background-color: #e60000 !important;
@@ -176,7 +194,10 @@ const formatCurrency = (value) => {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
-  table, th, td {
+
+  table,
+  th,
+  td {
     border: 0.5pt solid #9ca3af !important;
     border-collapse: collapse !important;
   }
