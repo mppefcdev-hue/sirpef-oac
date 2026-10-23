@@ -71,6 +71,8 @@ class BuscarRegistroPorPuntoService
                 'tipo_pago_id'          => $pago->tipo_pago_id ?? null,
                 'descripcion'           => $pago->descripcion ?? $registro->descripcion ?? null,
                 'beneficiario'          => $pago->beneficiario ?? $registro->eventoPersona?->persona?->nombre_completo ?? null,
+                'contacto'              => $registro->eventoPersona?->persona?->telefono ?? null,
+                'telefono'              => $registro->eventoPersona?->persona?->telefono ?? null,
                 'diagnostico'           => $pago->diagnostico ?? null,
                 'proveedor'             => $proveedor?->nombre ?? null,
                 'rif_proveedor'         => $proveedor?->cedula_rif ?? null,

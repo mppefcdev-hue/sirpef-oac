@@ -1,0 +1,761 @@
+BEGIN;
+
+
+CREATE TABLE IF NOT EXISTS public.config_users
+(
+    id bigserial NOT NULL,
+    finger_id character varying(255) COLLATE pg_catalog."default",
+    evento_asignado json,
+    oficina_asignada json,
+    evento_activo json,
+    unid_activa json,
+    menu_ids json,
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone,
+    nuevo_campo json,
+    CONSTRAINT config_users_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.failed_jobs
+(
+    id bigserial NOT NULL,
+    uuid character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    connection text COLLATE pg_catalog."default" NOT NULL,
+    queue text COLLATE pg_catalog."default" NOT NULL,
+    payload text COLLATE pg_catalog."default" NOT NULL,
+    exception text COLLATE pg_catalog."default" NOT NULL,
+    failed_at timestamp(0) without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT failed_jobs_pkey PRIMARY KEY (id),
+    CONSTRAINT failed_jobs_uuid_unique UNIQUE (uuid)
+);
+
+CREATE TABLE IF NOT EXISTS public.menus
+(
+    id bigserial NOT NULL,
+    title character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    path character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    icon character varying(255) COLLATE pg_catalog."default" NOT NULL DEFAULT 'dashboard'::character varying,
+    sort integer NOT NULL,
+    menu_id bigint,
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone,
+    CONSTRAINT menus_pkey PRIMARY KEY (id),
+    CONSTRAINT menus_title_menu_id_unique UNIQUE (title, menu_id)
+);
+
+CREATE TABLE IF NOT EXISTS public.migrations
+(
+    id serial NOT NULL,
+    migration character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    batch integer NOT NULL,
+    CONSTRAINT migrations_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.password_reset_tokens
+(
+    email character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    token character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    created_at timestamp(0) without time zone,
+    CONSTRAINT password_reset_tokens_pkey PRIMARY KEY (email)
+);
+
+CREATE TABLE IF NOT EXISTS public.personal_access_tokens
+(
+    id bigserial NOT NULL,
+    tokenable_type character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    tokenable_id bigint NOT NULL,
+    name text COLLATE pg_catalog."default" NOT NULL,
+    token character varying(64) COLLATE pg_catalog."default" NOT NULL,
+    abilities text COLLATE pg_catalog."default",
+    last_used_at timestamp(0) without time zone,
+    expires_at timestamp(0) without time zone,
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone,
+    CONSTRAINT personal_access_tokens_pkey PRIMARY KEY (id),
+    CONSTRAINT personal_access_tokens_token_unique UNIQUE (token)
+);
+
+CREATE TABLE IF NOT EXISTS public.roles
+(
+    id bigserial NOT NULL,
+    name character varying(30) COLLATE pg_catalog."default" NOT NULL,
+    description character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    menu_ids json NOT NULL,
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone,
+    CONSTRAINT roles_pkey PRIMARY KEY (id),
+    CONSTRAINT roles_name_unique UNIQUE (name)
+);
+
+CREATE TABLE IF NOT EXISTS public.tb_evento
+(
+    id bigserial NOT NULL,
+    titulo character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    descripcion text COLLATE pg_catalog."default" NOT NULL,
+    fecha_inicio date NOT NULL,
+    fecha_fin date NOT NULL,
+    estatus boolean NOT NULL DEFAULT false,
+    ministerio_id json NOT NULL,
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone,
+    deleted_at timestamp(0) without time zone,
+    cortesia integer NOT NULL DEFAULT 0,
+    cortesia_entregada integer NOT NULL DEFAULT 0,
+    CONSTRAINT tb_evento_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.tb_evento_persona
+(
+    id bigserial NOT NULL,
+    evento_id bigint NOT NULL,
+    persona_id bigint NOT NULL,
+    cantidad integer,
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone,
+    deleted_at timestamp(0) without time zone,
+    imagen1 character varying(255) COLLATE pg_catalog."default",
+    imagen2 character varying(255) COLLATE pg_catalog."default",
+    imagen3 character varying(255) COLLATE pg_catalog."default",
+    estatus character varying(255) COLLATE pg_catalog."default",
+    persona_autorizada_id bigint,
+    tipo character varying(255) COLLATE pg_catalog."default",
+    CONSTRAINT tb_evento_persona_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.tb_ministerio
+(
+    id bigserial NOT NULL,
+    nombre character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    descripcion character varying(255) COLLATE pg_catalog."default",
+    ministerio_padre_id bigint,
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone,
+    deleted_at timestamp(0) without time zone,
+    CONSTRAINT tb_ministerio_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.tb_paises
+(
+    id bigserial NOT NULL,
+    pais character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    coordenadas_x numeric(8, 2),
+    coordenadas_y numeric(8, 2),
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone,
+    CONSTRAINT tb_paises_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.tb_personas_autorizadas
+(
+    id bigserial NOT NULL,
+    nombre_completo character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    cedula character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    telefono character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    estatus character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone,
+    CONSTRAINT tb_personas_autorizadas_pkey PRIMARY KEY (id),
+    CONSTRAINT tb_personas_autorizadas_cedula_unique UNIQUE (cedula)
+);
+
+CREATE TABLE IF NOT EXISTS public.tb_tipo_empleados
+(
+    id bigserial NOT NULL,
+    tipo character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    codigo character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone,
+    CONSTRAINT tb_tipo_empleados_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.tbl_auditorias
+(
+    id bigserial NOT NULL,
+    descripcion character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    evento_id bigint,
+    user_id bigint,
+    persona_id bigint,
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone,
+    CONSTRAINT tbl_auditorias_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.tbl_bitacora_pagos
+(
+    id bigserial NOT NULL,
+    registro_id bigint NOT NULL,
+    pago_id bigint,
+    user_id bigint NOT NULL,
+    rol_nombre character varying(100) COLLATE pg_catalog."default",
+    tipo_contacto character varying(100) COLLATE pg_catalog."default" DEFAULT 'Llamada telefónica'::character varying,
+    contacto_proveedor character varying(255) COLLATE pg_catalog."default",
+    descripcion text COLLATE pg_catalog."default" NOT NULL,
+    fecha_contacto timestamp(0) without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone,
+    CONSTRAINT tbl_bitacora_pagos_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.tbl_centros
+(
+    id bigserial NOT NULL,
+    nombre character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    coordenadas_x numeric(8, 2),
+    coordenadas_y numeric(8, 2),
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone,
+    CONSTRAINT tbl_centros_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.tbl_cuotas_compromiso
+(
+    id bigserial NOT NULL,
+    year integer NOT NULL,
+    mes integer NOT NULL,
+    monto numeric(15, 2) NOT NULL DEFAULT '0'::numeric,
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone,
+    monto_acumulado_anterior numeric(15, 2) NOT NULL DEFAULT '0'::numeric,
+    CONSTRAINT tbl_cuotas_compromiso_pkey PRIMARY KEY (id),
+    CONSTRAINT tbl_cuotas_compromiso_year_mes_unique UNIQUE (year, mes)
+);
+
+CREATE TABLE IF NOT EXISTS public.tbl_estados
+(
+    id bigserial NOT NULL,
+    estado character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    coordenadas_x numeric(8, 2),
+    coordenadas_y numeric(8, 2),
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone,
+    CONSTRAINT tbl_estados_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.tbl_estatus_pagos
+(
+    id bigserial NOT NULL,
+    nombre character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    color character varying(20) COLLATE pg_catalog."default",
+    descripcion text COLLATE pg_catalog."default",
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone,
+    CONSTRAINT tbl_estatus_pagos_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.tbl_estatus_tramite
+(
+    id bigserial NOT NULL,
+    nombre_estatus character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    descripcion text COLLATE pg_catalog."default",
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone,
+    CONSTRAINT tbl_estatus_tramite_pkey PRIMARY KEY (id),
+    CONSTRAINT tbl_estatus_tramite_nombre_estatus_unique UNIQUE (nombre_estatus)
+);
+
+CREATE TABLE IF NOT EXISTS public.tbl_memorandums
+(
+    id bigserial NOT NULL,
+    punto_cuenta_id bigint NOT NULL,
+    codigo character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    de character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    para character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    asunto character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    fecha date NOT NULL,
+    cuerpo text COLLATE pg_catalog."default" NOT NULL,
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone,
+    deleted_at timestamp(0) without time zone,
+    header_img text COLLATE pg_catalog."default",
+    footer_img text COLLATE pg_catalog."default",
+    firma_img text COLLATE pg_catalog."default",
+    CONSTRAINT tbl_memorandums_pkey PRIMARY KEY (id),
+    CONSTRAINT tbl_memorandums_codigo_unique UNIQUE (codigo)
+);
+
+CREATE TABLE IF NOT EXISTS public.tbl_municipio
+(
+    id bigserial NOT NULL,
+    municipio character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    coordenadas_x numeric(8, 2),
+    coordenadas_y numeric(8, 2),
+    estado_id bigint NOT NULL,
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone,
+    CONSTRAINT tbl_municipio_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.tbl_pago_proveedor
+(
+    id bigserial NOT NULL,
+    proveedor_id bigint NOT NULL,
+    monto_relacionado numeric(15, 2) NOT NULL DEFAULT '0'::numeric,
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone,
+    memorandum_id bigint,
+    pago_id bigint,
+    deleted_at timestamp(0) without time zone,
+    CONSTRAINT tbl_pago_proveedor_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.tbl_pagos
+(
+    id bigserial NOT NULL,
+    orden_pago character varying(255) COLLATE pg_catalog."default",
+    fecha_orden_pago date,
+    monto numeric(15, 2) NOT NULL DEFAULT '0'::numeric,
+    descripcion text COLLATE pg_catalog."default",
+    fecha_pago_financiero date,
+    saldo_deudor numeric(15, 2) NOT NULL DEFAULT '0'::numeric,
+    saldo_acreedor numeric(15, 2) NOT NULL DEFAULT '0'::numeric,
+    cuota_compromiso_disponible numeric(15, 2) NOT NULL DEFAULT '0'::numeric,
+    estatus_pago_id bigint,
+    tipo_pago_id bigint,
+    registro_id bigint,
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone,
+    deleted_at timestamp(0) without time zone,
+    CONSTRAINT tbl_pagos_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.tbl_parroquias
+(
+    id bigserial NOT NULL,
+    parroquias character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    coordenadas_x numeric(8, 2),
+    coordenadas_y numeric(8, 2),
+    municipio_id bigint NOT NULL,
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone,
+    CONSTRAINT tbl_parroquias_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.tbl_personas
+(
+    id bigserial NOT NULL,
+    nombre_completo character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    cedula integer NOT NULL,
+    direccion character varying(255) COLLATE pg_catalog."default",
+    cargo character varying(255) COLLATE pg_catalog."default",
+    telefono character varying(255) COLLATE pg_catalog."default",
+    fecha_nacimiento date,
+    sexo character varying(255) COLLATE pg_catalog."default",
+    correo_electronico character varying(255) COLLATE pg_catalog."default",
+    estatus character varying(255) COLLATE pg_catalog."default",
+    parroquia_id bigint,
+    centro_id bigint,
+    user_id bigint,
+    ministerio_id bigint,
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone,
+    deleted_at timestamp(0) without time zone,
+    autorizado_id bigint,
+    tipo_empleado_id bigint,
+    pais_id bigint,
+    telefono_2 character varying(255) COLLATE pg_catalog."default",
+    causa_pension character varying(255) COLLATE pg_catalog."default",
+    CONSTRAINT tbl_personas_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.tbl_proveedor
+(
+    id bigserial NOT NULL,
+    nombre character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone,
+    cedula_rif character varying(255) COLLATE pg_catalog."default",
+    CONSTRAINT tbl_proveedor_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.tbl_punto_cuenta
+(
+    id bigserial NOT NULL,
+    presentado_a character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    presentado_por character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    fecha date NOT NULL,
+    numero_punto character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    asunto text COLLATE pg_catalog."default" NOT NULL,
+    exposicion_motivos text COLLATE pg_catalog."default" NOT NULL,
+    propuesta text COLLATE pg_catalog."default" NOT NULL,
+    decision character varying(255) COLLATE pg_catalog."default" DEFAULT 'VISTO'::character varying,
+    otras_instrucciones text COLLATE pg_catalog."default",
+    anexos boolean DEFAULT false,
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone,
+    cargo_a character varying(255) COLLATE pg_catalog."default",
+    cargo_por character varying(255) COLLATE pg_catalog."default",
+    resolucion_1 text COLLATE pg_catalog."default",
+    resolucion_2 text COLLATE pg_catalog."default",
+    estatus_pc boolean NOT NULL,
+    cantidad_editada integer NOT NULL DEFAULT 0,
+    CONSTRAINT tbl_punto_cuenta_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.tbl_recaudos
+(
+    id bigserial NOT NULL,
+    nombre character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    path character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    registro_id bigint NOT NULL,
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone,
+    mime_type character varying(100) COLLATE pg_catalog."default",
+    pago_id bigint,
+    CONSTRAINT tbl_recaudos_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.tbl_registros
+(
+    id bigserial NOT NULL,
+    voto boolean,
+    descripcion text COLLATE pg_catalog."default",
+    hora_voto time(0) without time zone,
+    evento_persona_id bigint NOT NULL,
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone,
+    observacion text COLLATE pg_catalog."default",
+    referencia character varying(255) COLLATE pg_catalog."default",
+    id_tipo_caso bigint,
+    punto_cuenta_id bigint,
+    estatus_caso character varying(255) COLLATE pg_catalog."default",
+    deleted_at timestamp(0) without time zone,
+    user_id bigint,
+    CONSTRAINT tbl_registros_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.tbl_seguimiento
+(
+    id bigserial NOT NULL,
+    registro_id bigint NOT NULL,
+    estatus_tramite_id bigint NOT NULL,
+    observacion text COLLATE pg_catalog."default",
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone,
+    CONSTRAINT tbl_seguimiento_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.tbl_tipo_caso
+(
+    id bigserial NOT NULL,
+    tipo character varying(255) COLLATE pg_catalog."default",
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone,
+    color character varying(255) COLLATE pg_catalog."default",
+    tipo_caso_padre_id bigint,
+    ministerio_id bigint,
+    CONSTRAINT tbl_tipo_caso_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.tbl_tipo_pagos
+(
+    id bigserial NOT NULL,
+    nombre character varying(255) COLLATE pg_catalog."default",
+    descripcion text COLLATE pg_catalog."default",
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone,
+    CONSTRAINT tbl_tipo_pagos_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.users
+(
+    id bigserial NOT NULL,
+    name character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    email character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    cedula integer,
+    email_verified_at timestamp(0) without time zone,
+    password character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    config_user_id bigint,
+    remember_token character varying(100) COLLATE pg_catalog."default",
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone,
+    estatus boolean NOT NULL DEFAULT true,
+    deleted_at timestamp(0) without time zone,
+    two_factor_secret text COLLATE pg_catalog."default",
+    two_factor_recovery_codes text COLLATE pg_catalog."default",
+    two_factor_confirmed_at timestamp(0) without time zone,
+    role_id bigint NOT NULL DEFAULT '2'::bigint,
+    is_admin boolean NOT NULL DEFAULT false,
+    avatar character varying(255) COLLATE pg_catalog."default",
+    CONSTRAINT users_pkey PRIMARY KEY (id),
+    CONSTRAINT users_email_unique UNIQUE (email)
+);
+
+ALTER TABLE IF EXISTS public.menus
+    ADD CONSTRAINT menus_menu_id_foreign FOREIGN KEY (menu_id)
+    REFERENCES public.menus (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+
+
+ALTER TABLE IF EXISTS public.tb_evento_persona
+    ADD CONSTRAINT tb_evento_persona_evento_id_foreign FOREIGN KEY (evento_id)
+    REFERENCES public.tb_evento (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE SET NULL;
+
+
+ALTER TABLE IF EXISTS public.tb_evento_persona
+    ADD CONSTRAINT tb_evento_persona_persona_autorizada_id_foreign FOREIGN KEY (persona_autorizada_id)
+    REFERENCES public.tb_personas_autorizadas (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE;
+
+
+ALTER TABLE IF EXISTS public.tb_evento_persona
+    ADD CONSTRAINT tb_evento_persona_persona_id_foreign FOREIGN KEY (persona_id)
+    REFERENCES public.tbl_personas (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE SET NULL;
+
+
+ALTER TABLE IF EXISTS public.tb_ministerio
+    ADD CONSTRAINT tb_ministerio_ministerio_padre_id_foreign FOREIGN KEY (ministerio_padre_id)
+    REFERENCES public.tb_ministerio (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE SET NULL;
+
+
+ALTER TABLE IF EXISTS public.tbl_auditorias
+    ADD CONSTRAINT tbl_auditorias_evento_id_foreign FOREIGN KEY (evento_id)
+    REFERENCES public.tb_evento (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE SET NULL;
+
+
+ALTER TABLE IF EXISTS public.tbl_auditorias
+    ADD CONSTRAINT tbl_auditorias_persona_id_foreign FOREIGN KEY (persona_id)
+    REFERENCES public.tbl_personas (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE SET NULL;
+
+
+ALTER TABLE IF EXISTS public.tbl_auditorias
+    ADD CONSTRAINT tbl_auditorias_user_id_foreign FOREIGN KEY (user_id)
+    REFERENCES public.users (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE SET NULL;
+
+
+ALTER TABLE IF EXISTS public.tbl_bitacora_pagos
+    ADD CONSTRAINT tbl_bitacora_pagos_pago_id_foreign FOREIGN KEY (pago_id)
+    REFERENCES public.tbl_pagos (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE;
+CREATE INDEX IF NOT EXISTS tbl_bitacora_pagos_pago_id_index
+    ON public.tbl_bitacora_pagos(pago_id);
+
+
+ALTER TABLE IF EXISTS public.tbl_bitacora_pagos
+    ADD CONSTRAINT tbl_bitacora_pagos_registro_id_foreign FOREIGN KEY (registro_id)
+    REFERENCES public.tbl_registros (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE;
+CREATE INDEX IF NOT EXISTS tbl_bitacora_pagos_registro_id_index
+    ON public.tbl_bitacora_pagos(registro_id);
+
+
+ALTER TABLE IF EXISTS public.tbl_bitacora_pagos
+    ADD CONSTRAINT tbl_bitacora_pagos_user_id_foreign FOREIGN KEY (user_id)
+    REFERENCES public.users (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE;
+CREATE INDEX IF NOT EXISTS tbl_bitacora_pagos_user_id_index
+    ON public.tbl_bitacora_pagos(user_id);
+
+
+ALTER TABLE IF EXISTS public.tbl_memorandums
+    ADD CONSTRAINT tbl_memorandums_punto_cuenta_id_foreign FOREIGN KEY (punto_cuenta_id)
+    REFERENCES public.tbl_punto_cuenta (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+
+
+ALTER TABLE IF EXISTS public.tbl_municipio
+    ADD CONSTRAINT tbl_municipio_estado_id_foreign FOREIGN KEY (estado_id)
+    REFERENCES public.tbl_estados (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE SET NULL;
+
+
+ALTER TABLE IF EXISTS public.tbl_pago_proveedor
+    ADD CONSTRAINT tbl_pago_proveedor_memorandum_id_foreign FOREIGN KEY (memorandum_id)
+    REFERENCES public.tbl_memorandums (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE;
+
+
+ALTER TABLE IF EXISTS public.tbl_pago_proveedor
+    ADD CONSTRAINT tbl_pago_proveedor_pago_id_foreign FOREIGN KEY (pago_id)
+    REFERENCES public.tbl_pagos (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE;
+
+
+ALTER TABLE IF EXISTS public.tbl_pago_proveedor
+    ADD CONSTRAINT tbl_pago_proveedor_proveedor_id_foreign FOREIGN KEY (proveedor_id)
+    REFERENCES public.tbl_proveedor (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE;
+
+
+ALTER TABLE IF EXISTS public.tbl_pagos
+    ADD CONSTRAINT tbl_pagos_estatus_pago_id_foreign FOREIGN KEY (estatus_pago_id)
+    REFERENCES public.tbl_estatus_pagos (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE SET NULL;
+
+
+ALTER TABLE IF EXISTS public.tbl_pagos
+    ADD CONSTRAINT tbl_pagos_registro_id_foreign FOREIGN KEY (registro_id)
+    REFERENCES public.tbl_registros (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE SET NULL;
+
+
+ALTER TABLE IF EXISTS public.tbl_pagos
+    ADD CONSTRAINT tbl_pagos_tipo_pago_id_foreign FOREIGN KEY (tipo_pago_id)
+    REFERENCES public.tbl_tipo_pagos (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE SET NULL;
+
+
+ALTER TABLE IF EXISTS public.tbl_parroquias
+    ADD CONSTRAINT tbl_parroquias_municipio_id_foreign FOREIGN KEY (municipio_id)
+    REFERENCES public.tbl_municipio (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE SET NULL;
+
+
+ALTER TABLE IF EXISTS public.tbl_personas
+    ADD CONSTRAINT tbl_personas_autorizado_id_foreign FOREIGN KEY (autorizado_id)
+    REFERENCES public.tbl_personas (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE;
+
+
+ALTER TABLE IF EXISTS public.tbl_personas
+    ADD CONSTRAINT tbl_personas_centro_id_foreign FOREIGN KEY (centro_id)
+    REFERENCES public.tbl_centros (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE SET NULL;
+
+
+ALTER TABLE IF EXISTS public.tbl_personas
+    ADD CONSTRAINT tbl_personas_ministerio_id_foreign FOREIGN KEY (ministerio_id)
+    REFERENCES public.tb_ministerio (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE SET NULL;
+
+
+ALTER TABLE IF EXISTS public.tbl_personas
+    ADD CONSTRAINT tbl_personas_pais_id_foreign FOREIGN KEY (pais_id)
+    REFERENCES public.tb_paises (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE SET NULL;
+
+
+ALTER TABLE IF EXISTS public.tbl_personas
+    ADD CONSTRAINT tbl_personas_parroquia_id_foreign FOREIGN KEY (parroquia_id)
+    REFERENCES public.tbl_parroquias (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE SET NULL;
+
+
+ALTER TABLE IF EXISTS public.tbl_personas
+    ADD CONSTRAINT tbl_personas_tipo_empleado_id_foreign FOREIGN KEY (tipo_empleado_id)
+    REFERENCES public.tb_tipo_empleados (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE SET NULL;
+
+
+ALTER TABLE IF EXISTS public.tbl_personas
+    ADD CONSTRAINT tbl_personas_user_id_foreign FOREIGN KEY (user_id)
+    REFERENCES public.users (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE SET NULL;
+
+
+ALTER TABLE IF EXISTS public.tbl_recaudos
+    ADD CONSTRAINT tbl_recaudos_pago_id_foreign FOREIGN KEY (pago_id)
+    REFERENCES public.tbl_pagos (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE;
+
+
+ALTER TABLE IF EXISTS public.tbl_recaudos
+    ADD CONSTRAINT tbl_recaudos_registro_id_foreign FOREIGN KEY (registro_id)
+    REFERENCES public.tbl_registros (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE;
+
+
+ALTER TABLE IF EXISTS public.tbl_registros
+    ADD CONSTRAINT tbl_registros_evento_persona_id_foreign FOREIGN KEY (evento_persona_id)
+    REFERENCES public.tb_evento_persona (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE;
+
+
+ALTER TABLE IF EXISTS public.tbl_registros
+    ADD CONSTRAINT tbl_registros_id_tipo_caso_foreign FOREIGN KEY (id_tipo_caso)
+    REFERENCES public.tbl_tipo_caso (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE SET NULL;
+
+
+ALTER TABLE IF EXISTS public.tbl_registros
+    ADD CONSTRAINT tbl_registros_punto_cuenta_id_foreign FOREIGN KEY (punto_cuenta_id)
+    REFERENCES public.tbl_punto_cuenta (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE SET NULL;
+
+
+ALTER TABLE IF EXISTS public.tbl_registros
+    ADD CONSTRAINT tbl_registros_user_id_foreign FOREIGN KEY (user_id)
+    REFERENCES public.users (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE;
+
+
+ALTER TABLE IF EXISTS public.tbl_seguimiento
+    ADD CONSTRAINT tbl_seguimiento_estatus_tramite_id_foreign FOREIGN KEY (estatus_tramite_id)
+    REFERENCES public.tbl_estatus_tramite (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE RESTRICT;
+
+
+ALTER TABLE IF EXISTS public.tbl_seguimiento
+    ADD CONSTRAINT tbl_seguimiento_registro_id_foreign FOREIGN KEY (registro_id)
+    REFERENCES public.tbl_registros (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE;
+
+
+ALTER TABLE IF EXISTS public.tbl_tipo_caso
+    ADD CONSTRAINT tbl_tipo_caso_ministerio_id_foreign FOREIGN KEY (ministerio_id)
+    REFERENCES public.tb_ministerio (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE;
+
+
+ALTER TABLE IF EXISTS public.tbl_tipo_caso
+    ADD CONSTRAINT tbl_tipo_caso_tipo_caso_padre_id_foreign FOREIGN KEY (tipo_caso_padre_id)
+    REFERENCES public.tbl_tipo_caso (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE SET NULL;
+
+
+ALTER TABLE IF EXISTS public.users
+    ADD CONSTRAINT users_config_user_id_foreign FOREIGN KEY (config_user_id)
+    REFERENCES public.config_users (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE SET NULL;
+
+
+ALTER TABLE IF EXISTS public.users
+    ADD CONSTRAINT users_role_id_foreign FOREIGN KEY (role_id)
+    REFERENCES public.roles (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+
+END;

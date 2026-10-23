@@ -91,9 +91,9 @@ onMounted(() => {
       </div>
 
       <div>
-        <label class="block font-medium text-gray-700 ml-1">Contacto</label>
-        <input name="contacto" class="w-full bg-gray-100 text-gray-900 mt-1 p-3 rounded-lg" type="number"
-          placeholder="Ej: 04121234567" v-model="values.contacto" required />
+        <label class="block font-medium text-gray-700 ml-1">Teléfono / Contacto</label>
+        <input name="contacto" class="w-full bg-gray-100 text-gray-900 mt-1 p-3 rounded-lg" type="text"
+          maxlength="20" placeholder="Ej: 04121234567" v-model="values.contacto" required />
       </div>
 
       <div>

@@ -74,6 +74,12 @@ const verDetallesPago = (row: any) => {
   const estatusNombre = row.estatus?.nombre || (row.estatus_pago_id === 1 ? 'Procesado' : 'No Procesado');
   const saldoDeudor = row.saldo_deudor;
 
+  const telefonoPersona = row.registro?.evento_persona?.persona?.telefono 
+    || row.registro?.eventoPersona?.persona?.telefono 
+    || row.contacto 
+    || row.telefono 
+    || 'Sin teléfono';
+
   Swal.fire({
     title: `Detalles del Pago #${row.id}`,
     html: `
@@ -82,6 +88,7 @@ const verDetallesPago = (row: any) => {
         <p><strong>Fecha Orden:</strong> ${row.fecha_orden_pago || 'N/A'}</p>
         <p><strong>Proveedor:</strong> ${proveedorNombre} ${proveedorRif}</p>
         <p><strong>Beneficiario:</strong> ${row.beneficiario || 'Sin beneficiario'}</p>
+        <p><strong>Teléfono:</strong> ${telefonoPersona}</p>
         ${row.diagnostico ? `<p><strong>Diagnóstico:</strong> ${row.diagnostico}</p>` : ''}
         <p class="border-t pt-2"><strong>Monto:</strong> <span class="text-green-700 font-bold">Bs. ${formatCurrency(row.monto)}</span></p>
         <p><strong>Factura:</strong> ${

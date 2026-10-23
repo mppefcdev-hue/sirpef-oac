@@ -88,7 +88,8 @@ export default (punto: any) => {
         formData.append('nro_referencia_pago', UserInfo.value.nro_referencia_pago);
         formData.append('proveedor', UserInfo.value.proveedor);
         formData.append('rif_proveedor', UserInfo.value.rif_proveedor);
-        formData.append('contacto', UserInfo.value.contacto.toString());
+        formData.append('contacto', UserInfo.value.contacto ? UserInfo.value.contacto.toString().trim() : '');
+        formData.append('telefono', UserInfo.value.contacto ? UserInfo.value.contacto.toString().trim() : '');
         formData.append('monto', (UserInfo.value.monto !== '' && UserInfo.value.monto !== null && UserInfo.value.monto !== undefined) ? UserInfo.value.monto.toString() : '0');
         formData.append('orden_pago', UserInfo.value.nro_orden_pago || 'PENDIENTE');
         formData.append('fecha_orden_pago', UserInfo.value.fecha_orden_pago || '');
@@ -279,7 +280,7 @@ export default (punto: any) => {
                 tipo_pago: data.tipo_pago_id || '',
                 nro_referencia_pago: data.nro_referencia_pago || '',
                 proveedor: data.proveedores?.[0]?.nombre || '',
-                contacto: data.proveedores?.[0]?.contacto || '',
+                contacto: data.registro?.eventoPersona?.persona?.telefono || data.contacto || data.telefono || data.proveedores?.[0]?.contacto || '',
                 rif_proveedor: data.proveedores?.[0]?.cedula_rif || '',
                 monto: data.monto || '',
                 nro_orden_pago: data.orden_pago || '',
@@ -287,7 +288,7 @@ export default (punto: any) => {
                 nro_factura: nroFactura,
                 estatus: data.estatus_pago_id || '',
                 descripcion: data.descripcion || '',
-                beneficiario: data.beneficiario || '',
+                beneficiario: data.beneficiario || data.registro?.eventoPersona?.persona?.nombre_completo || '',
                 diagnostico: data.diagnostico || '',
                 recaudos: data.recaudos?.map((e: any) => ({ ...e, type: e.mime_type })) || [],
                 fecha_pago_financiero: data.fecha_pago_financiero || '',
@@ -326,12 +327,28 @@ export default (punto: any) => {
         }
     };
 
+    watch(
+      () => punto,
+      (newPunto) => {
+        if (newPunto?.beneficiario && !UserInfo.value.beneficiario) {
+          UserInfo.value.beneficiario = newPunto.beneficiario;
+        }
+        if ((newPunto?.contacto || newPunto?.telefono) && !UserInfo.value.contacto) {
+          UserInfo.value.contacto = newPunto.contacto || newPunto.telefono;
+        }
+      },
+      { immediate: true, deep: true }
+    );
+
     onMounted(() => {
         const idToLoad = pagoId || currentPagoId.value;
         if (idToLoad) getInfo(idToLoad)
-        // Precargar beneficiario desde el punto de cuenta si existe
+        // Precargar beneficiario y contacto desde el punto de cuenta si existe
         if (punto?.beneficiario && !UserInfo.value.beneficiario) {
             UserInfo.value.beneficiario = punto.beneficiario
+        }
+        if ((punto?.contacto || punto?.telefono) && !UserInfo.value.contacto) {
+            UserInfo.value.contacto = punto.contacto || punto.telefono
         }
     })
 

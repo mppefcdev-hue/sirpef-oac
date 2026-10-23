@@ -22,7 +22,24 @@ class StorePagoService
         return DB::transaction(function () use ($request, $registroId) {
             try {
                 // 1. Verificar que el Registro (Caso) exista
-                $registro = Registro::findOrFail($registroId);
+                $registro = Registro::with('eventoPersona.persona')->findOrFail($registroId);
+
+                // Actualizar teléfono de la persona asociada si viene en la petición
+                if ($request->has('contacto') || $request->has('telefono')) {
+                    $telefono = $request->input('contacto', $request->input('telefono'));
+                    $persona = $registro->eventoPersona?->persona;
+                    if ($persona) {
+                        $persona->update([
+                            'telefono' => $telefono !== null && trim((string)$telefono) !== '' ? trim((string)$telefono) : null
+                        ]);
+                    } else {
+                        DB::table('tbl_personas')
+                            ->join('tb_evento_persona', 'tbl_personas.id', '=', 'tb_evento_persona.persona_id')
+                            ->join('tbl_registros', 'tb_evento_persona.id', '=', 'tbl_registros.evento_persona_id')
+                            ->where('tbl_registros.id', $registroId)
+                            ->update(['tbl_personas.telefono' => $telefono !== null && trim((string)$telefono) !== '' ? trim((string)$telefono) : null]);
+                    }
+                }
 
                 $monto = floatval($request->monto);
                 $saldoAcreedor = floatval($request->saldo_acreedor ?? 0);
@@ -98,7 +115,7 @@ class StorePagoService
                     'success' => true,
                     'message' => 'Pago y documentos registrados exitosamente.',
                     'data'    => [
-                        'pago'      => $pago->load('proveedores', 'estatus', 'tipoPago', 'recaudos'),
+                        'pago'      => $pago->load('proveedores', 'estatus', 'tipoPago', 'recaudos', 'registro.eventoPersona.persona'),
                         'recaudos'  => $recaudosSubidos
                     ]
                 ], 201);
@@ -184,7 +201,28 @@ class StorePagoService
     {
         return DB::transaction(function () use ($request, $id) {
             try {
-                $pago = Pago::findOrFail($id);
+                $pago = Pago::with('registro.eventoPersona.persona')->findOrFail($id);
+
+                // Actualizar teléfono de la persona asociada si viene en la petición
+                if ($request->has('contacto') || $request->has('telefono')) {
+                    $telefono = $request->input('contacto', $request->input('telefono'));
+                    $persona = $pago->registro?->eventoPersona?->persona;
+                    if (!$persona && $pago->registro_id) {
+                        $reg = Registro::with('eventoPersona.persona')->find($pago->registro_id);
+                        $persona = $reg?->eventoPersona?->persona;
+                    }
+                    if ($persona) {
+                        $persona->update([
+                            'telefono' => $telefono !== null && trim((string)$telefono) !== '' ? trim((string)$telefono) : null
+                        ]);
+                    } else if ($pago->registro_id) {
+                        DB::table('tbl_personas')
+                            ->join('tb_evento_persona', 'tbl_personas.id', '=', 'tb_evento_persona.persona_id')
+                            ->join('tbl_registros', 'tb_evento_persona.id', '=', 'tbl_registros.evento_persona_id')
+                            ->where('tbl_registros.id', $pago->registro_id)
+                            ->update(['tbl_personas.telefono' => $telefono !== null && trim((string)$telefono) !== '' ? trim((string)$telefono) : null]);
+                    }
+                }
 
                 $monto = floatval($request->monto ?? $pago->monto);
                 $saldoAcreedor = floatval($request->saldo_acreedor ?? $pago->saldo_acreedor ?? 0);
@@ -238,7 +276,7 @@ class StorePagoService
                     'success' => true,
                     'message' => 'Pago actualizado exitosamente.',
                     'data'    => [
-                        'pago'      => $pago->fresh()->load('proveedores', 'estatus', 'tipoPago', 'recaudos'),
+                        'pago'      => $pago->fresh()->load('proveedores', 'estatus', 'tipoPago', 'recaudos', 'registro.eventoPersona.persona'),
                         'recaudos'  => $recaudosSubidos
                     ]
                 ], 200);
