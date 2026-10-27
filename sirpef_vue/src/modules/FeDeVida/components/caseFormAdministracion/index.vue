@@ -3,6 +3,7 @@ import "@/assets/css/formWizard.scss";
 import Check from "@/components/sirpef/Check.vue";
 import useFormAdministracion from "../../composables/administracion/useFormAdministracion";
 import { useRoute } from "vue-router";
+import { computed } from "vue";
 
 import FirstPage from "./FirstPage.vue";
 import SecondPage from "./SecondPage.vue";
@@ -20,29 +21,28 @@ const {
     estado,
     emitForm,
     UserInfo,
+    currentPagoId,
     canAccessPaso1,
     canAccessPaso2y3,
+    isPaso1Only,
+    isPaso2y3Only,
+    isFullForm,
 } = useFormAdministracion(props.punto || null)
 
-// Determinar si estamos en modo paso-1-solo o paso-2-3-solo
-const routeName = route.name as string;
-const isPaso1Only = routeName === 'CasesAdminFormPaso1';
-const isPaso2y3Only = routeName === 'CasesAdminFormPaso2';
-
-// Los pasos visibles según la ruta
-const visibleSteps = isPaso1Only
-  ? [1]
-  : isPaso2y3Only
-    ? [2, 3]
-    : [1, 2, 3]; // ruta genérica CasesAdminForm
+// Los pasos visibles según permisos y ruta
+const visibleSteps = computed(() => {
+  if (isPaso1Only.value) return [1];
+  if (isPaso2y3Only.value) return [2, 3];
+  return [1, 2, 3]; // ruta genérica o Administrador
+});
 
 const canGoToStep = (s: number) => {
-  return visibleSteps.includes(s);
+  return visibleSteps.value.includes(s);
 };
 
 const stepperProgress = () => {
-  if (isPaso1Only) return step.value >= 1 ? '100%' : '0%';
-  if (isPaso2y3Only) return step.value >= 3 ? '100%' : step.value >= 2 ? '50%' : '0%';
+  if (isPaso1Only.value) return step.value >= 1 ? '100%' : '0%';
+  if (isPaso2y3Only.value) return step.value >= 3 ? '100%' : step.value >= 2 ? '50%' : '0%';
   return (100 / 3) * (step.value - 1) + "%";
 };
 
@@ -103,8 +103,8 @@ const stepperProgress = () => {
     </div>
 
     <div class="stepper-content">
-      <FirstPage :emitForm="emitForm" :values="UserInfo" :step="step" v-if="step == 1 && canGoToStep(1)"/>
-      <SecondPage :emitForm="emitForm" :values="UserInfo" :step="step" v-else-if="step == 2 && canGoToStep(2)"/>
+      <FirstPage :emitForm="emitForm" :values="UserInfo" :step="step" :pago-id="currentPagoId" v-if="step == 1 && canGoToStep(1)"/>
+      <SecondPage :emitForm="emitForm" :values="UserInfo" :step="step" :pago-id="currentPagoId" v-else-if="step == 2 && canGoToStep(2)"/>
       <FormCaso :emitForm="emitForm" :values="UserInfo" :step="step" v-else-if="step == 3 && canGoToStep(3)"/>
 
       <div class="grid gap-5 mt-10 w-full md:w-full" v-else>

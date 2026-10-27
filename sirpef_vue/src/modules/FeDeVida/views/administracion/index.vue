@@ -6,6 +6,7 @@ import { useAuthStore } from '@/modules/Auth/stores';
 import AppPaginationD from "@/components/AppPaginationD.vue";
 import ModalInfo from "../../components/modalInfo.vue";
 import ModalDescripcion from "../../components/ModalDescripcion.vue";
+import ModalBitacora from "../../components/ModalBitacora.vue";
 import CardInfoUser from '@/components/Votos/CardInfoUser.vue';
 import AdministracionTable from "@/modules/FeDeVida/composables/administracion/indexTable";
 
@@ -17,6 +18,23 @@ const casePersona_id = ref(null)
 const descripcion = ref(null)
 const showFilters = ref(true)
 const isExporting = ref(false)
+
+// Estado para el modal de bitácora
+const showBitacoraModal = ref(false)
+const bitacoraPagoId = ref<number | string | null>(null)
+const bitacoraPagoData = ref<any>(null)
+
+const abrirBitacora = (row: any) => {
+  bitacoraPagoId.value = row.id;
+  bitacoraPagoData.value = row;
+  showBitacoraModal.value = true;
+};
+
+const cerrarBitacora = () => {
+  showBitacoraModal.value = false;
+  bitacoraPagoId.value = null;
+  bitacoraPagoData.value = null;
+};
 
 const {
   route,
@@ -52,6 +70,20 @@ const hasActiveFilters = computed(() => {
   );
 });
 
+// Permiso para eliminar registro (solo Admin y Director)
+const canDeletePago = computed(() => {
+  const user = store.authUser;
+  if (!user) return false;
+  if (user.isAdmin || Number(user.role_id) === 1 || Number(user.role_id) === 2) {
+    return true;
+  }
+  const roleName = String(user.role?.name || '').toLowerCase();
+  if (roleName === 'admin' || roleName === 'administrator' || roleName === 'director') {
+    return true;
+  }
+  return false;
+});
+
 watch(foundCaseId, (newId) => {
   if (newId) {
     casePersona_id.value = newId;
@@ -74,6 +106,12 @@ const verDetallesPago = (row: any) => {
   const estatusNombre = row.estatus?.nombre || (row.estatus_pago_id === 1 ? 'Procesado' : 'No Procesado');
   const saldoDeudor = row.saldo_deudor;
 
+  const telefonoPersona = row.registro?.evento_persona?.persona?.telefono 
+    || row.registro?.eventoPersona?.persona?.telefono 
+    || row.contacto 
+    || row.telefono 
+    || 'Sin teléfono';
+
   Swal.fire({
     title: `Detalles del Pago #${row.id}`,
     html: `
@@ -82,6 +120,7 @@ const verDetallesPago = (row: any) => {
         <p><strong>Fecha Orden:</strong> ${row.fecha_orden_pago || 'N/A'}</p>
         <p><strong>Proveedor:</strong> ${proveedorNombre} ${proveedorRif}</p>
         <p><strong>Beneficiario:</strong> ${row.beneficiario || 'Sin beneficiario'}</p>
+        <p><strong>Teléfono:</strong> ${telefonoPersona}</p>
         ${row.diagnostico ? `<p><strong>Diagnóstico:</strong> ${row.diagnostico}</p>` : ''}
         <p class="border-t pt-2"><strong>Monto:</strong> <span class="text-green-700 font-bold">Bs. ${formatCurrency(row.monto)}</span></p>
         <p><strong>Factura:</strong> ${
@@ -95,6 +134,11 @@ const verDetallesPago = (row: any) => {
         <p><strong>Saldo Deudor:</strong> <span class="${saldoDeudor > 0 ? 'text-red-600 font-bold' : 'text-gray-600'}">Bs. ${formatCurrency(saldoDeudor)}</span></p>
         <p><strong>Tipo de Pago:</strong> <span class="capitalize font-semibold">${tipoPago}</span></p>
         <p><strong>Estatus:</strong> <span class="${row.estatus_pago_id === 1 ? 'text-green-600' : 'text-orange-500'} font-bold">${estatusNombre}</span></p>
+        <p class="border-t pt-2"><strong>Bitácora de Contactos:</strong> ${
+          row.bitacoras && row.bitacoras.length > 0 
+            ? `<span class="text-blue-600 font-semibold">${row.bitacoras.length} contacto(s) registrado(s)</span>`
+            : '<span class="text-gray-400">Sin contactos registrados</span>'
+        }</p>
         <p class="border-t pt-2"><strong>Descripción:</strong> ${row.descripcion || 'Sin descripción'}</p>
       </div>
     `,
@@ -616,7 +660,24 @@ const exportToCSV = async () => {
                     </svg>
                   </button>
 
-                  <!-- 2. Editar (Ir directo al formulario) -->
+                  <!-- 2. Bitácora de recorrido / contactos -->
+                  <button 
+                    class="relative text-indigo-600 hover:text-indigo-800 hover:scale-110 font-bold transition-all text-sm flex items-center gap-1 cursor-pointer" 
+                    @click="abrirBitacora(row)" 
+                    title="Bitácora de contactos con el proveedor"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                    </svg>
+                    <span
+                      v-if="row.bitacoras && row.bitacoras.length > 0"
+                      class="absolute -top-1.5 -right-2 px-1 py-0.2 text-[9px] font-bold rounded-full bg-blue-600 text-white leading-none shadow-xs"
+                    >
+                      {{ row.bitacoras.length }}
+                    </span>
+                  </button>
+
+                  <!-- 3. Editar (Ir directo al formulario) -->
                   <button 
                     class="text-[#eca008] hover:text-[#d68f07] hover:scale-110 font-bold transition-all text-sm flex items-center gap-1 cursor-pointer" 
                     @click="editarPago(row)" 
@@ -629,6 +690,7 @@ const exportToCSV = async () => {
 
                   <!-- 3. Eliminar (Soft delete) -->
                   <button 
+                    v-if="canDeletePago"
                     class="text-red-600 hover:text-red-800 hover:scale-110 font-bold transition-all text-sm flex items-center gap-1 cursor-pointer" 
                     @click="deleteCaso(row.id)" 
                     title="Eliminar (Soft delete)"
@@ -659,9 +721,19 @@ const exportToCSV = async () => {
   <section class="results my-10 w-full md:w-3/4" v-if="Object.keys(result).length > 0">
     <CardInfoUser :UserData="result[0]" title="Datos personales" icon="fa-solid fa-user" />
     <CardInfoUser :UserData="result[1]" title="Punto de cuenta" icon="fa-solid fa-location-dot"
+      :canDelete="canDeletePago"
       @seePDC="({ registro_id }) => casePersona_id = registro_id"
       @deletePDC="(data) => deleteCaso(data.registro_id)" />
   </section>
+
+  <!-- Modal de Bitácora de Recorrido / Contactos -->
+  <ModalBitacora
+    v-if="showBitacoraModal && bitacoraPagoId"
+    :pago-id="bitacoraPagoId"
+    :pago-data="bitacoraPagoData"
+    @close="cerrarBitacora"
+    @updated="() => GetUser(data.search)"
+  />
 
 </template>
 

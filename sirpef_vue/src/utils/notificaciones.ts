@@ -10,7 +10,7 @@ export const LoadNotificacion = (alerta: string) => {
     const store = useAuthStore()
 
 
-if(!store.authUser.isAdmin) return 
+    if (!store.authUser.isAdmin && store.authUser.role_id !== 6) return 
     UseNoti.addItem(alerta)
     //if(store.authUser.cedula != 0) return
     const $toast = useToast();

@@ -32,6 +32,8 @@ class Pago extends Model
 
     protected $appends = [
         'beneficiario',
+        'contacto',
+        'telefono',
         'diagnostico',
         'nro_factura',
         'factura_pendiente',
@@ -41,6 +43,16 @@ class Pago extends Model
     public function getBeneficiarioAttribute(): ?string
     {
         return $this->registro?->eventoPersona?->persona?->nombre_completo ?? null;
+    }
+
+    public function getContactoAttribute(): ?string
+    {
+        return $this->registro?->eventoPersona?->persona?->telefono ?? null;
+    }
+
+    public function getTelefonoAttribute(): ?string
+    {
+        return $this->registro?->eventoPersona?->persona?->telefono ?? null;
     }
 
     public function getDiagnosticoAttribute(): ?string
@@ -134,5 +146,13 @@ class Pago extends Model
         return $this->belongsToMany(Proveedor::class, 'tbl_pago_proveedor', 'pago_id', 'proveedor_id')
                     ->withPivot('monto_relacionado')
                     ->withTimestamps();
+    }
+
+    /**
+     * Bitácora de recorrido y contactos con el proveedor.
+     */
+    public function bitacoras(): HasMany
+    {
+        return $this->hasMany(BitacoraPago::class, 'pago_id')->orderBy('created_at', 'asc');
     }
 }

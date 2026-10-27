@@ -6,6 +6,7 @@ use App\Models\Pago;
 use App\Models\Registro;
 use App\Models\Proveedor;
 use App\Models\Recaudo;
+use App\Models\BitacoraPago;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -22,7 +23,24 @@ class StorePagoService
         return DB::transaction(function () use ($request, $registroId) {
             try {
                 // 1. Verificar que el Registro (Caso) exista
-                $registro = Registro::findOrFail($registroId);
+                $registro = Registro::with('eventoPersona.persona')->findOrFail($registroId);
+
+                // Actualizar teléfono de la persona asociada si viene en la petición
+                if ($request->has('contacto') || $request->has('telefono')) {
+                    $telefono = $request->input('contacto', $request->input('telefono'));
+                    $persona = $registro->eventoPersona?->persona;
+                    if ($persona) {
+                        $persona->update([
+                            'telefono' => $telefono !== null && trim((string)$telefono) !== '' ? trim((string)$telefono) : null
+                        ]);
+                    } else {
+                        DB::table('tbl_personas')
+                            ->join('tb_evento_persona', 'tbl_personas.id', '=', 'tb_evento_persona.persona_id')
+                            ->join('tbl_registros', 'tb_evento_persona.id', '=', 'tbl_registros.evento_persona_id')
+                            ->where('tbl_registros.id', $registroId)
+                            ->update(['tbl_personas.telefono' => $telefono !== null && trim((string)$telefono) !== '' ? trim((string)$telefono) : null]);
+                    }
+                }
 
                 $monto = floatval($request->monto);
                 $saldoAcreedor = floatval($request->saldo_acreedor ?? 0);
@@ -87,6 +105,22 @@ class StorePagoService
 
                 // 4. Procesar Recaudos
                 $recaudosSubidos = self::processRecaudos($request, $registroId, $pago->id);
+
+                // 5. Procesar Bitácora de contacto inicial con el proveedor
+                if ($request->filled('bitacora_descripcion') && trim($request->bitacora_descripcion) !== '') {
+                    $user = $request->user() ?? auth()->user();
+                    $rolNombre = $user?->role?->name ?? ($user?->isAdmin() ? 'Admin' : 'User');
+                    BitacoraPago::create([
+                        'pago_id'            => $pago->id,
+                        'registro_id'        => $registroId,
+                        'user_id'            => $user?->id ?? 1,
+                        'rol_nombre'         => $rolNombre,
+                        'tipo_contacto'      => $request->input('bitacora_tipo_contacto', 'Llamada telefónica'),
+                        'contacto_proveedor' => $request->input('bitacora_contacto_proveedor', $request->contacto),
+                        'descripcion'        => trim($request->bitacora_descripcion),
+                        'fecha_contacto'     => now(),
+                    ]);
+                }
 
                 try {
                     UserInfoService::getUserInfo("Se ha completado el registro del Paso 1 del formulario. Favor revisar para continuar.");
@@ -162,6 +196,7 @@ class StorePagoService
                 'recaudos',
                 'registro.puntoCuenta.memorandum',
                 'registro.eventoPersona.persona',
+                'bitacoras.user.role',
             ])->findOrFail($id);
 
             return response()->json([
@@ -184,7 +219,28 @@ class StorePagoService
     {
         return DB::transaction(function () use ($request, $id) {
             try {
-                $pago = Pago::findOrFail($id);
+                $pago = Pago::with('registro.eventoPersona.persona')->findOrFail($id);
+
+                // Actualizar teléfono de la persona asociada si viene en la petición
+                if ($request->has('contacto') || $request->has('telefono')) {
+                    $telefono = $request->input('contacto', $request->input('telefono'));
+                    $persona = $pago->registro?->eventoPersona?->persona;
+                    if (!$persona && $pago->registro_id) {
+                        $reg = Registro::with('eventoPersona.persona')->find($pago->registro_id);
+                        $persona = $reg?->eventoPersona?->persona;
+                    }
+                    if ($persona) {
+                        $persona->update([
+                            'telefono' => $telefono !== null && trim((string)$telefono) !== '' ? trim((string)$telefono) : null
+                        ]);
+                    } else if ($pago->registro_id) {
+                        DB::table('tbl_personas')
+                            ->join('tb_evento_persona', 'tbl_personas.id', '=', 'tb_evento_persona.persona_id')
+                            ->join('tbl_registros', 'tb_evento_persona.id', '=', 'tbl_registros.evento_persona_id')
+                            ->where('tbl_registros.id', $pago->registro_id)
+                            ->update(['tbl_personas.telefono' => $telefono !== null && trim((string)$telefono) !== '' ? trim((string)$telefono) : null]);
+                    }
+                }
 
                 $monto = floatval($request->monto ?? $pago->monto);
                 $saldoAcreedor = floatval($request->saldo_acreedor ?? $pago->saldo_acreedor ?? 0);
@@ -234,11 +290,27 @@ class StorePagoService
                 // Subir nuevos recaudos si se adjuntaron
                 $recaudosSubidos = self::processRecaudos($request, $pago->registro_id, $pago->id);
 
+                // Registrar nota de bitácora si viene en la petición
+                if ($request->filled('bitacora_descripcion') && trim($request->bitacora_descripcion) !== '') {
+                    $user = $request->user() ?? auth()->user();
+                    $rolNombre = $user?->role?->name ?? ($user?->isAdmin() ? 'Admin' : 'User');
+                    BitacoraPago::create([
+                        'pago_id'            => $pago->id,
+                        'registro_id'        => $pago->registro_id,
+                        'user_id'            => $user?->id ?? 1,
+                        'rol_nombre'         => $rolNombre,
+                        'tipo_contacto'      => $request->input('bitacora_tipo_contacto', 'Llamada telefónica'),
+                        'contacto_proveedor' => $request->input('bitacora_contacto_proveedor', $request->contacto),
+                        'descripcion'        => trim($request->bitacora_descripcion),
+                        'fecha_contacto'     => now(),
+                    ]);
+                }
+
                 return response()->json([
                     'success' => true,
                     'message' => 'Pago actualizado exitosamente.',
                     'data'    => [
-                        'pago'      => $pago->fresh()->load('proveedores', 'estatus', 'tipoPago', 'recaudos'),
+                        'pago'      => $pago->fresh()->load('proveedores', 'estatus', 'tipoPago', 'recaudos', 'registro.eventoPersona.persona', 'bitacoras.user.role'),
                         'recaudos'  => $recaudosSubidos
                     ]
                 ], 200);

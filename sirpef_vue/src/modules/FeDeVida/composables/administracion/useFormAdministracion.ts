@@ -14,35 +14,49 @@ export default (punto: any) => {
     const pagoId = (route.query.pago_id || route.params.id) as string
     const currentPagoId = ref(pagoId || '')
 
-    // Permisos de pasos según los menús asignados al rol del usuario
+    // Permisos de pasos según rol o menús asignados al usuario
     const canAccessPaso1 = computed(() => {
-        const roleId = Number(store.authUser?.role_id);
-        if (store.authUser?.isAdmin || roleId === 1 || roleId === 2 || roleId === 4) return true;
-        if (roleId === 6) return false;
+        if (store.authUser?.isAdmin || store.authUser?.role_id === 1 || store.authUser?.role_id === 2) return true;
         return store.authUser?.menus_id?.some((m: any) => 
-            m.nombre?.toLowerCase().includes('paso 1') || 
             m.id === 35 || 
-            m.nombre?.toLowerCase() === 'formulario'
+            m.path === 'CasesAdminFormPaso1' ||
+            m.nombre?.toLowerCase().includes('paso 1')
         ) ?? true;
     });
 
     const canAccessPaso2y3 = computed(() => {
-        const roleId = Number(store.authUser?.role_id);
-        if (store.authUser?.isAdmin || roleId === 1 || roleId === 2 || roleId === 6) return true;
-        if (roleId === 4) return false;
+        if (store.authUser?.isAdmin || store.authUser?.role_id === 1 || store.authUser?.role_id === 2) return true;
         return store.authUser?.menus_id?.some((m: any) => 
-            m.nombre?.toLowerCase().includes('paso 2') || 
-            m.id === 39
+            m.id === 39 || 
+            m.path === 'CasesAdminFormPaso2' ||
+            m.nombre?.toLowerCase().includes('paso 2')
         ) ?? false;
     });
 
-    // Determinar paso inicial según la ruta, query param, o permisos del usuario
     const routeName = route.name as string;
+
+    // Determinar si estamos en modo paso-1-solo o paso-2-3-solo según permisos y ruta
+    const isPaso1Only = computed(() => {
+        if (routeName === 'CasesAdminFormPaso1') return true;
+        if (routeName === 'CasesAdminFormPaso2') return false;
+        return canAccessPaso1.value && !canAccessPaso2y3.value;
+    });
+
+    const isPaso2y3Only = computed(() => {
+        if (routeName === 'CasesAdminFormPaso2') return true;
+        if (routeName === 'CasesAdminFormPaso1') return false;
+        return canAccessPaso2y3.value && !canAccessPaso1.value;
+    });
+
+    const isFullForm = computed(() => {
+        return !isPaso1Only.value && !isPaso2y3Only.value;
+    });
+
+    // Determinar paso inicial según permisos y ruta
     const getInitialStep = (): number => {
         if (route.query.step) return parseInt(route.query.step as string);
-        if (routeName === 'CasesAdminFormPaso2') return 2;
-        if (routeName === 'CasesAdminFormPaso1') return 1;
-        return canAccessPaso1.value ? 1 : 2;
+        if (isPaso2y3Only.value || routeName === 'CasesAdminFormPaso2') return 2;
+        return 1;
     };
 
     const step = ref(getInitialStep() as any);
@@ -67,6 +81,10 @@ export default (punto: any) => {
         saldo_acreedor: '',
         tiene_factura: false,
         factura_pendiente: false,
+        bitacora_descripcion: '',
+        bitacora_tipo_contacto: 'Llamada telefónica',
+        bitacora_contacto_proveedor: '',
+        bitacoras: [] as any[],
         recaudos: [] as any[]
     })
 
@@ -88,7 +106,8 @@ export default (punto: any) => {
         formData.append('nro_referencia_pago', UserInfo.value.nro_referencia_pago);
         formData.append('proveedor', UserInfo.value.proveedor);
         formData.append('rif_proveedor', UserInfo.value.rif_proveedor);
-        formData.append('contacto', UserInfo.value.contacto.toString());
+        formData.append('contacto', UserInfo.value.contacto ? UserInfo.value.contacto.toString().trim() : '');
+        formData.append('telefono', UserInfo.value.contacto ? UserInfo.value.contacto.toString().trim() : '');
         formData.append('monto', (UserInfo.value.monto !== '' && UserInfo.value.monto !== null && UserInfo.value.monto !== undefined) ? UserInfo.value.monto.toString() : '0');
         formData.append('orden_pago', UserInfo.value.nro_orden_pago || 'PENDIENTE');
         formData.append('fecha_orden_pago', UserInfo.value.fecha_orden_pago || '');
@@ -101,6 +120,12 @@ export default (punto: any) => {
         formData.append('saldo_acreedor', UserInfo.value.saldo_acreedor.toString());
         formData.append('tiene_factura', UserInfo.value.tiene_factura ? '1' : '0');
         formData.append('factura_pendiente', UserInfo.value.factura_pendiente ? '1' : '0');
+
+        if (UserInfo.value.bitacora_descripcion && UserInfo.value.bitacora_descripcion.trim()) {
+            formData.append('bitacora_descripcion', UserInfo.value.bitacora_descripcion.trim());
+            formData.append('bitacora_tipo_contacto', UserInfo.value.bitacora_tipo_contacto || 'Llamada telefónica');
+            formData.append('bitacora_contacto_proveedor', UserInfo.value.bitacora_contacto_proveedor || UserInfo.value.contacto || '');
+        }
 
         const proveedoresEnvio = [
             {
@@ -136,6 +161,11 @@ export default (punto: any) => {
                 }
             } else {
                 res = await updatePagoService(targetId, formData);
+            }
+
+            if (res?.data?.pago?.bitacoras) {
+                UserInfo.value.bitacoras = res.data.pago.bitacoras;
+                UserInfo.value.bitacora_descripcion = '';
             }
 
             if (!continuar) {
@@ -279,7 +309,7 @@ export default (punto: any) => {
                 tipo_pago: data.tipo_pago_id || '',
                 nro_referencia_pago: data.nro_referencia_pago || '',
                 proveedor: data.proveedores?.[0]?.nombre || '',
-                contacto: data.proveedores?.[0]?.contacto || '',
+                contacto: data.registro?.eventoPersona?.persona?.telefono || data.contacto || data.telefono || data.proveedores?.[0]?.contacto || '',
                 rif_proveedor: data.proveedores?.[0]?.cedula_rif || '',
                 monto: data.monto || '',
                 nro_orden_pago: data.orden_pago || '',
@@ -287,7 +317,7 @@ export default (punto: any) => {
                 nro_factura: nroFactura,
                 estatus: data.estatus_pago_id || '',
                 descripcion: data.descripcion || '',
-                beneficiario: data.beneficiario || '',
+                beneficiario: data.beneficiario || data.registro?.eventoPersona?.persona?.nombre_completo || '',
                 diagnostico: data.diagnostico || '',
                 recaudos: data.recaudos?.map((e: any) => ({ ...e, type: e.mime_type })) || [],
                 fecha_pago_financiero: data.fecha_pago_financiero || '',
@@ -295,6 +325,10 @@ export default (punto: any) => {
                 saldo_acreedor: data.saldo_acreedor || '',
                 tiene_factura: tieneFactura,
                 factura_pendiente: facturaPendiente,
+                bitacora_descripcion: '',
+                bitacora_tipo_contacto: 'Llamada telefónica',
+                bitacora_contacto_proveedor: '',
+                bitacoras: data.bitacoras || [],
             }
 
             currentPagoId.value = pId;
@@ -326,12 +360,34 @@ export default (punto: any) => {
         }
     };
 
+    watch(
+      () => punto,
+      (newPunto) => {
+        if (newPunto?.beneficiario && !UserInfo.value.beneficiario) {
+          UserInfo.value.beneficiario = newPunto.beneficiario;
+        }
+        if ((newPunto?.contacto || newPunto?.telefono) && !UserInfo.value.contacto) {
+          UserInfo.value.contacto = newPunto.contacto || newPunto.telefono;
+        }
+      },
+      { immediate: true, deep: true }
+    );
+
     onMounted(() => {
         const idToLoad = pagoId || currentPagoId.value;
         if (idToLoad) getInfo(idToLoad)
-        // Precargar beneficiario desde el punto de cuenta si existe
+        // Precargar beneficiario y contacto desde el punto de cuenta si existe
         if (punto?.beneficiario && !UserInfo.value.beneficiario) {
             UserInfo.value.beneficiario = punto.beneficiario
+        }
+        if ((punto?.contacto || punto?.telefono) && !UserInfo.value.contacto) {
+            UserInfo.value.contacto = punto.contacto || punto.telefono
+        }
+        if (punto?.bitacoras && UserInfo.value.bitacoras.length === 0) {
+            UserInfo.value.bitacoras = punto.bitacoras
+        }
+        if (punto?.pago_id && !currentPagoId.value) {
+            currentPagoId.value = punto.pago_id.toString()
         }
     })
 
@@ -341,7 +397,11 @@ export default (punto: any) => {
         emitForm,
         UserInfo,
         DataOGA,
+        currentPagoId,
         canAccessPaso1,
         canAccessPaso2y3,
+        isPaso1Only,
+        isPaso2y3Only,
+        isFullForm,
     }
 }

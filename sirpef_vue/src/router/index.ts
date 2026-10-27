@@ -21,6 +21,13 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import("@/views/map.vue").then(m => m.default)
   },
 
+  // {
+  //   path: "/#",
+  //   name: "#",
+  //   meta: { middleware: [auth]},
+  //   component: () => import("@/views/map.vue").then(m => m.default)
+  // },
+
   {
     path: "/map",
     name: "map",

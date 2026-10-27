@@ -109,6 +109,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::put('/pagos/{id}', [AtencionCiudadanoController::class, 'updatePago']);
     Route::delete('/pagos/{id}', [\App\Http\Controllers\PagoProveedorController::class, 'destroy']);
 
+    // Bitácora de recorrido / contactos
+    Route::get('/pagos/{id}/bitacora', [AtencionCiudadanoController::class, 'getBitacoraPago']);
+    Route::post('/pagos/{id}/bitacora', [AtencionCiudadanoController::class, 'storeBitacoraPago']);
+    Route::get('/registros/{registroId}/bitacora', [AtencionCiudadanoController::class, 'getBitacoraRegistro']);
+
     // Cuotas de Compromiso
     Route::get('/cuotas', [CuotaCompromisoController::class, 'index']);
     Route::post('/cuotas', [CuotaCompromisoController::class, 'store']);

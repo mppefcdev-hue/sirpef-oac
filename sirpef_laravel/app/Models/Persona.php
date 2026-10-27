@@ -30,6 +30,7 @@ class Persona extends Model
         'tipo_empleado_id',
         'causa_pension',
         'telefono2',
+        'telefono_2',
         'pais_id'
     ];
 

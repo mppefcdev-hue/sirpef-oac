@@ -5,12 +5,15 @@ import Http from "@/utils/Http";
 import { onMounted } from "vue";
 import { ref } from "vue";
 
+import BitacoraTimeline from "./BitacoraTimeline.vue";
+
 const status = ref([])
 
 const props = defineProps<{
   emitForm: (event: Event) => void,
   step: number,
   values: any,
+  pagoId?: string | number | null,
 }>()
 
 const getStatus = async () => {
@@ -70,6 +73,17 @@ onMounted(() => {
         <label class="block font-medium text-gray-700 ml-1 mt-2">Descripción / Observaciones</label>
         <textarea class="resize-none w-full bg-gray-100 p-3 rounded-lg mt-1" name="description"
           v-model="values.descripcion" rows="4" placeholder="Detalles adicionales..."></textarea>
+      </div>
+
+      <!-- Bitácora de contactos y recorrido con el proveedor -->
+      <div class="col-span-2 mt-4">
+        <BitacoraTimeline
+          :items="values.bitacoras"
+          :pago-id="pagoId"
+          :allow-add="true"
+          title="Bitácora de Contactos con el Proveedor"
+          @entry-added="(newEntry) => { if (!values.bitacoras) values.bitacoras = []; values.bitacoras.push(newEntry) }"
+        />
       </div>
 
     </div>

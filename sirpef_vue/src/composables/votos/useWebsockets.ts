@@ -28,7 +28,7 @@ export default () => {
 
         
         socket.on("notificacion", (msg) => {
-            response.value.isAdmin && LoadNotificacion(msg)
+            (response.value.isAdmin || response.value.role_id === 6) && LoadNotificacion(msg)
         })
     }
 

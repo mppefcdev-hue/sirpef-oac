@@ -19,6 +19,17 @@ const {
 
 
 
+const onRoleChange = () => {
+  const selected = roles.value.find((r: any) => r.id == props.values.role_id);
+  if (selected && selected.menu_ids) {
+    props.values.menus_id = selected.menu_ids.map((id: number) => ({ id }));
+  }
+};
+
+const getRoleDescription = () => {
+  const role = roles.value.find((r: any) => r.id == props.values.role_id);
+  return role ? role.description : '';
+};
 </script>
 
 
@@ -52,12 +63,15 @@ const {
 
             <div>
                 <label class="block my-2">Rol</label>
-                <select name="role_id" v-model="values.role_id" required>
+                <select name="role_id" v-model="values.role_id" @change="onRoleChange" required>
                     <option value="0">Seleccionar</option>
                     <option v-for="role in roles" :key="role.id" :value="role.id">
                         {{ role.name }}
                     </option>
                 </select>
+                <p v-if="getRoleDescription()" class="text-xs text-gray-500 mt-1 italic">
+                    {{ getRoleDescription() }}
+                </p>
             </div>
         </div>
 
