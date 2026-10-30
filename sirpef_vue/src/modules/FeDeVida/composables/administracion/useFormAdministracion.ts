@@ -132,7 +132,8 @@ export default (punto: any) => {
                 monto_relacionado: UserInfo.value.monto || 0,
                 cedula_rif: UserInfo.value.rif_proveedor,
                 nombre: UserInfo.value.proveedor,
-                contacto: UserInfo.value.contacto
+                contacto: UserInfo.value.contacto,
+                telefono: UserInfo.value.contacto
             }
         ];
 
@@ -141,6 +142,7 @@ export default (punto: any) => {
             formData.append(`proveedores[${index}][cedula_rif]`, p.cedula_rif);
             formData.append(`proveedores[${index}][nombre]`, p.nombre);
             formData.append(`proveedores[${index}][contacto]`, p.contacto);
+            formData.append(`proveedores[${index}][telefono]`, p.telefono);
         });
 
         UserInfo.value.recaudos.forEach((recaudo, index) => {
@@ -309,7 +311,7 @@ export default (punto: any) => {
                 tipo_pago: data.tipo_pago_id || '',
                 nro_referencia_pago: data.nro_referencia_pago || '',
                 proveedor: data.proveedores?.[0]?.nombre || '',
-                contacto: data.registro?.eventoPersona?.persona?.telefono || data.contacto || data.telefono || data.proveedores?.[0]?.contacto || '',
+                contacto: data.proveedores?.[0]?.telefono || data.contacto || data.telefono || '',
                 rif_proveedor: data.proveedores?.[0]?.cedula_rif || '',
                 monto: data.monto || '',
                 nro_orden_pago: data.orden_pago || '',

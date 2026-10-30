@@ -352,7 +352,6 @@ CREATE TABLE IF NOT EXISTS public.tbl_personas
     autorizado_id bigint,
     tipo_empleado_id bigint,
     pais_id bigint,
-    telefono_2 character varying(255) COLLATE pg_catalog."default",
     causa_pension character varying(255) COLLATE pg_catalog."default",
     CONSTRAINT tbl_personas_pkey PRIMARY KEY (id)
 );
@@ -364,6 +363,7 @@ CREATE TABLE IF NOT EXISTS public.tbl_proveedor
     created_at timestamp(0) without time zone,
     updated_at timestamp(0) without time zone,
     cedula_rif character varying(255) COLLATE pg_catalog."default",
+    telefono character varying(255) COLLATE pg_catalog."default",
     CONSTRAINT tbl_proveedor_pkey PRIMARY KEY (id)
 );
 
