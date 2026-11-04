@@ -14,6 +14,7 @@ class Proveedor extends Model
     protected $fillable = [
         'cedula_rif',
         'nombre',
+        'telefono',
     ];
 
     public function pagosRelacionados()

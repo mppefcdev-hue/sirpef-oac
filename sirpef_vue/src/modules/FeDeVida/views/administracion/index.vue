@@ -106,8 +106,7 @@ const verDetallesPago = (row: any) => {
   const estatusNombre = row.estatus?.nombre || (row.estatus_pago_id === 1 ? 'Procesado' : 'No Procesado');
   const saldoDeudor = row.saldo_deudor;
 
-  const telefonoPersona = row.registro?.evento_persona?.persona?.telefono 
-    || row.registro?.eventoPersona?.persona?.telefono 
+  const telefonoPersona = row.proveedores?.[0]?.telefono 
     || row.contacto 
     || row.telefono 
     || 'Sin teléfono';
@@ -578,6 +577,9 @@ const exportToCSV = async () => {
                 <div v-if="row.proveedores && row.proveedores.length > 0">
                   <p class="font-semibold">{{ row.proveedores[0].nombre }}</p>
                   <p class="text-xs text-gray-400">RIF: {{ row.proveedores[0].cedula_rif }}</p>
+                  <p v-if="row.proveedores[0].telefono" class="text-xs text-blue-600 flex items-center gap-1 font-medium">
+                    <font-awesome-icon icon="phone" class="text-[10px]" /> {{ row.proveedores[0].telefono }}
+                  </p>
                 </div>
                 <span v-else>Sin proveedor</span>
               </td>
