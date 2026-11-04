@@ -514,13 +514,13 @@ const imprimirDocumento = () => {
         <!-- Sección: Exposición de Motivos -->
         <div class="section-container">
           <div class="section-hdr">EXPOSICIÓN DE MOTIVO:</div>
-          <div class="section-body h-[250px] text-justify" :style="{ fontSize: form.fontSizeExposicion }" v-html="exposicionHtml || '<p>&nbsp;</p>'"></div>
+          <div class="section-body h-[250px] overflow-hidden text-justify" :style="{ fontSize: form.fontSizeExposicion }" v-html="exposicionHtml || '<p>&nbsp;</p>'"></div>
         </div>
 
         <!-- Sección: Propuesta -->
         <div class="section-container">
           <div class="section-hdr">PROPUESTA:</div>
-          <div class="section-body h-[150px] text-justify" :style="{ fontSize: form.fontSizePropuesta }" v-html="propuestaHtml || '<p>&nbsp;</p>'"></div>
+          <div class="section-body h-[150px] overflow-hidden text-justify" :style="{ fontSize: form.fontSizePropuesta }" v-html="propuestaHtml || '<p>&nbsp;</p>'"></div>
         </div>
 
         <!-- Sección: Decisión -->
