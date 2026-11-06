@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { reactive, ref, onMounted, computed } from 'vue';
 import { createPDC, getPDC, updatePDC } from '@/modules/FeDeVida/services';
+import { useAuthStore } from '@/modules/Auth/stores';
 import { alerta } from '@/utils/alert';
 import { useRoute, useRouter } from 'vue-router';
 import { QuillEditor } from '@vueup/vue-quill';
@@ -39,6 +40,11 @@ interface PuntoDeCuentaData {
 
 // --- Control de Estatus para Edición e Impresión ---
 const estatusPDC = ref(true);
+
+const authStore = useAuthStore();
+const isMinistryRestricted = computed(() => {
+  return authStore?.authUser?.ministerio_id == 19;
+});
 
 // --- Perfiles predefinidos ---
 const perfilesPresentadoA = [
@@ -193,6 +199,11 @@ onMounted(() => {
 });
 
 const sendInfo = async () => {
+  if (isMinistryRestricted.value) {
+    alerta('Acción Bloqueada', 'Los usuarios de este ministerio no tienen autorización para editar puntos de cuenta.', 'warning');
+    return;
+  }
+
   // Si está aprobado/completado (true), no permitimos re-enviar para edición
   if (estatusPDC.value) {
     alerta('Acción Bloqueada', 'No se puede modificar un punto de cuenta que ya ha sido aprobado.', 'warning');
@@ -259,11 +270,11 @@ const imprimirDocumento = () => {
 </script>
 
 <template>
-  <div class="workspace-layout" :class="{ 'justify-center': estatusPDC }">
+  <div class="workspace-layout" :class="{ 'justify-center': estatusPDC || isMinistryRestricted }">
     
     <!-- LADO IZQUIERDO: FORMULARIO DE EDICIÓN -->
-    <!-- Se oculta por completo si estatusPDC es true -->
-    <div v-if="!estatusPDC" class="editor-panel no-print">
+    <!-- Se oculta por completo si estatusPDC es true o si el usuario pertenece al ministerio 19 -->
+    <div v-if="!estatusPDC && !isMinistryRestricted" class="editor-panel no-print">
       <h1 class="text-3xl font-bold mb-8 text-center text-sky-700 dark:text-sky-400">
         Formulario Punto de Cuenta
       </h1>
@@ -455,8 +466,8 @@ const imprimirDocumento = () => {
 
     <!-- LADO DERECHO: VISTA PREVIA -->
     <div class="preview-panel">
-      <!-- Si el estatus es true, agregamos un botón de impresión flotante o superior sobre la vista previa -->
-      <div v-if="estatusPDC" class="no-print absolute top-4 right-4 z-50">
+      <!-- Si el estatus es true o está restringido por ministerio, agregamos un botón de impresión flotante o superior sobre la vista previa -->
+      <div v-if="estatusPDC || isMinistryRestricted" class="no-print absolute top-4 right-4 z-50">
         <button type="button" @click="imprimirDocumento" class="px-6 py-3 bg-emerald-600 text-white rounded-md font-semibold hover:bg-emerald-700 shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2">
           🖨️ Imprimir Documento Autorizado
         </button>

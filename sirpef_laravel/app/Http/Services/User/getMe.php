@@ -42,6 +42,7 @@ class getMe
             'name' => $nombre,
             'email' => $user->email,
             'unid' => $unid,
+            'ministerio_id' => $persona?->ministerio_id,
             'role_id' => $user->role_id,
             'role' => $user->role ? ['id' => $user->role->id, 'name' => $user->role->name] : null,
             'cedula' => $cedula,

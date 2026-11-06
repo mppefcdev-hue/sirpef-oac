@@ -21,7 +21,8 @@ const {
     createPunto,
     sendToCheck,
     changeStatus,
-    editPunto
+    editPunto,
+    canEditPuntoCuenta
 } = useModalInfo()
 
 
@@ -470,7 +471,7 @@ const handleEdit = () => {
                         <font-awesome-icon icon="gavel" class="ml-1" />
                     </button>
 
-                    <button v-if="store?.authUser?.isAdmin && caseData?.punto_cuenta?.estatus == true"
+                    <button v-if="canEditPuntoCuenta && caseData?.punto_cuenta?.estatus == true"
                         @click="editPunto"
                         class="w-[60%] py-5 mx-auto bg-[#010c41] block rounded-md font-bold hover:bg-[#1F52C7] text-white cursor-pointer transition-all">
                         Punto de Cuenta
