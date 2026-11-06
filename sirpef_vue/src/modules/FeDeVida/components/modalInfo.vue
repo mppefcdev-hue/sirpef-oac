@@ -345,7 +345,7 @@ const handleEdit = () => {
                                     <font-awesome-icon class="scale-[1.3]" icon="stethoscope" />
                                     <p>Diagnóstico</p>
                                 </dt>
-                                <dd class="mt-1 text-sm text-gray-900 font-bold sm:mt-0">
+                                <dd class="mt-1 text-sm text-gray-900 font-bold sm:mt-0 break-words">
                                     {{ caseData.diagnostico || 'Sin información' }}
                                 </dd>
                             </div>
