@@ -1,4 +1,4 @@
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { changeStatusService, enableEditPDC, getCaseSingle, getPDC, getTramiteStatus, sendToCheckService } from "../services";
 import { useRouter } from "vue-router";
 import generatePuntoDeCuentaPDF from "../utils/pdf-punto";
@@ -75,7 +75,15 @@ console.log(response.data)
         }
     };
      
+    const canEditPuntoCuenta = computed(() => {
+        return Boolean(store?.authUser?.isAdmin && store?.authUser?.ministerio_id != 19);
+    });
+
     const editPunto = async () => {
+        if (store?.authUser?.ministerio_id == 19) {
+            alerta('Acceso Denegado', 'Los usuarios de este ministerio no tienen autorización para habilitar la edición del punto de cuenta.', 'warning');
+            return;
+        }
         try {
             const result = await alertQuestion('Info', '¿Estás seguro de habilitar la edición del punto de cuenta?', 'info');
             if (!result) return;
@@ -138,5 +146,6 @@ console.log(response.data)
         sendToCheck,
         changeStatus,
         editPunto,
+        canEditPuntoCuenta,
     };
 };

@@ -8,6 +8,7 @@ use Illuminate\Http\{
 };
 use App\Models\PuntoCuenta;
 use App\Models\Registro;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -24,6 +25,14 @@ class UpdatePuntoCuentaService {
      */
     public static function updatePuntoCuenta(Request $request, int $puntoCuentaId): JsonResponse
     {
+        $user = Auth::user();
+        if ($user && $user->persona && (int) $user->persona->ministerio_id === 19) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Los usuarios de este ministerio no tienen autorización para editar puntos de cuenta.'
+            ], 403);
+        }
+
         return DB::transaction(function () use ($request, $puntoCuentaId) {
             try {
                 $puntoCuenta = PuntoCuenta::findOrFail($puntoCuentaId);

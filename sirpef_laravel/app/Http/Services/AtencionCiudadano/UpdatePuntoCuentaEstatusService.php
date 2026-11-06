@@ -30,6 +30,11 @@ class UpdatePuntoCuentaEstatusService
                     throw new \Exception('Acceso denegado. Solo los administradores pueden cambiar el estatus del punto de cuenta.', 403); // 403 Forbidden
                 }
 
+                if ($user->persona && (int) $user->persona->ministerio_id === 19) {
+                    Log::warning("Intento de cambiar estatus de PuntoCuenta por usuario de ministerio restringido (19). User ID: " . $user->id);
+                    throw new \Exception('Acceso denegado. Los usuarios de este ministerio no tienen autorización para modificar el estatus del punto de cuenta.', 403);
+                }
+
                 // 2. Encontrar el Punto de Cuenta
                 $puntoCuenta = PuntoCuenta::findOrFail($puntoCuentaId);
 
