@@ -523,15 +523,15 @@ const imprimirDocumento = () => {
         </div>
 
         <!-- Sección: Exposición de Motivos -->
-        <div class="section-container">
+        <div class="section-container section-container--grow">
           <div class="section-hdr">EXPOSICIÓN DE MOTIVO:</div>
-          <div class="section-body h-[250px] overflow-hidden text-justify" :style="{ fontSize: form.fontSizeExposicion }" v-html="exposicionHtml || '<p>&nbsp;</p>'"></div>
+          <div class="section-body section-body--exposicion text-justify" :style="{ fontSize: form.fontSizeExposicion }" v-html="exposicionHtml || '<p>&nbsp;</p>'"></div>
         </div>
 
         <!-- Sección: Propuesta -->
-        <div class="section-container">
+        <div class="section-container section-container--grow-sm">
           <div class="section-hdr">PROPUESTA:</div>
-          <div class="section-body h-[150px] overflow-hidden text-justify" :style="{ fontSize: form.fontSizePropuesta }" v-html="propuestaHtml || '<p>&nbsp;</p>'"></div>
+          <div class="section-body section-body--propuesta text-justify" :style="{ fontSize: form.fontSizePropuesta }" v-html="propuestaHtml || '<p>&nbsp;</p>'"></div>
         </div>
 
         <!-- Sección: Decisión -->
@@ -621,6 +621,7 @@ const imprimirDocumento = () => {
 .document-page {
   width: 215.9mm;
   min-height: 279.4mm;
+  height: 279.4mm;
   background: #ffffff;
   padding: 5mm 12mm 10mm 12mm;
   box-sizing: border-box;
@@ -629,6 +630,7 @@ const imprimirDocumento = () => {
   display: flex;
   flex-direction: column;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
 }
 
 /* Cintillo superior */
@@ -711,6 +713,12 @@ const imprimirDocumento = () => {
   display: flex;
   flex-direction: column;
 }
+.section-container--grow {
+  flex: 2;
+}
+.section-container--grow-sm {
+  flex: 1;
+}
 .section-hdr {
   background: #bd0000;
   color: #ffffff;
@@ -723,6 +731,14 @@ const imprimirDocumento = () => {
   padding: 4px 8px;
   font-size: 10pt;
   line-height: 1.35;
+}
+.section-body--exposicion {
+  flex: 2;
+  overflow: hidden;
+}
+.section-body--propuesta {
+  flex: 1;
+  overflow: hidden;
 }
 .section-body :deep(p) { margin: 0; }
 
@@ -737,18 +753,18 @@ const imprimirDocumento = () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 6px 0;
+  padding: 3px 0;
 }
-.opt-text { font-weight: bold; font-size: 10pt; margin-bottom: 5px; }
+.opt-text { font-weight: bold; font-size: 8pt; margin-bottom: 3px; }
 .check-box-square {
-  width: 4.8mm;
-  height: 4.8mm;
+  width: 4mm;
+  height: 4mm;
   border: 0.3mm solid #000000;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  font-size: 10.5pt;
+  font-size: 9pt;
 }
 
 /* Fila de Otras Instrucciones y Anexos */
@@ -759,35 +775,35 @@ const imprimirDocumento = () => {
   border-top: none;
 }
 .instrucciones-cell {
-  padding: 6px 8px 0px 8px;
-  font-size: 10pt;
+  padding: 3px 8px 2px 8px;
+  font-size: 9pt;
   vertical-align: top;
   text-align: left;
 }
-.instrucciones-text { margin-top: 3px; min-height: 5mm; white-space: pre-line; }
+.instrucciones-text { margin-top: 2px; min-height: 4mm; white-space: pre-line; font-size: 8.5pt; }
 .anexos-cell {
   width: 54mm;
   vertical-align: middle;
   text-align: center;
-  padding: 6px 0;
+  padding: 3px 0;
 }
 .anexo-item {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  margin-left: 10px;
-  font-size: 10pt;
+  gap: 4px;
+  margin-left: 8px;
+  font-size: 9pt;
   font-weight: bold;
 }
 .check-box-square-sm {
-  width: 4.2mm;
-  height: 4.2mm;
+  width: 3.5mm;
+  height: 3.5mm;
   border: 0.3mm solid #000000;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  font-size: 9.5pt;
+  font-size: 8pt;
 }
 
 /* Área de Firmantes Inferior */
