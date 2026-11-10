@@ -120,7 +120,7 @@ const verDetallesPago = (row: any) => {
         <p><strong>Proveedor:</strong> ${proveedorNombre} ${proveedorRif}</p>
         <p><strong>Beneficiario:</strong> ${row.beneficiario || 'Sin beneficiario'}</p>
         <p><strong>Teléfono:</strong> ${telefonoPersona}</p>
-        ${row.diagnostico ? `<p><strong>Diagnóstico:</strong> ${row.diagnostico}</p>` : ''}
+        ${row.diagnostico ? `<p class="break-words"><strong>Diagnóstico:</strong> ${row.diagnostico}</p>` : ''}
         <p class="border-t pt-2"><strong>Monto:</strong> <span class="text-green-700 font-bold">Bs. ${formatCurrency(row.monto)}</span></p>
         <p><strong>Factura:</strong> ${
           row.nro_factura && !row.factura_pendiente 
@@ -542,8 +542,8 @@ const exportToCSV = async () => {
             <tr class="">
               <th>ID / Orden</th>
               <th>Fecha Orden</th>
-              <th class="w-[15%] text-left">Proveedor</th>
-              <th class="w-[15%] text-left">Beneficiario</th>
+              <th class="w-[15%] max-w-[200px] text-center">Proveedor</th>
+              <th class="w-[15%] max-w-[200px] text-left">Beneficiario</th>
               <th>Monto</th>
               <th>Factura</th>
               <th>Saldo Deudor</th>
@@ -573,21 +573,38 @@ const exportToCSV = async () => {
                 {{ row.fecha_orden_pago || 'N/A' }}
               </td>
 
-              <td class="text-left capitalize">
+              <td class="text-center capitalize max-w-[200px]">
                 <div v-if="row.proveedores && row.proveedores.length > 0">
-                  <p class="font-semibold">{{ row.proveedores[0].nombre }}</p>
+                  <p class="font-semibold truncate max-w-[180px] sm:max-w-[200px] mx-auto" :title="row.proveedores[0].nombre">
+                    {{ row.proveedores[0].nombre }}
+                  </p>
                   <p class="text-xs text-gray-400">RIF: {{ row.proveedores[0].cedula_rif }}</p>
-                  <p v-if="row.proveedores[0].telefono" class="text-xs text-blue-600 flex items-center gap-1 font-medium">
+                  <p v-if="row.proveedores[0].telefono" class="text-xs text-blue-600 flex items-center justify-center gap-1 font-medium">
                     <font-awesome-icon icon="phone" class="text-[10px]" /> {{ row.proveedores[0].telefono }}
                   </p>
                 </div>
-                <span v-else>Sin proveedor</span>
+                <span v-else class="text-gray-400 text-xs">Sin proveedor</span>
               </td>
 
-              <td class="text-left capitalize">
-                <div v-if="row.beneficiario">
-                  <p class="font-semibold text-blue-600">{{ row.beneficiario }}</p>
-                  <p v-if="row.diagnostico" class="text-xs text-gray-500">Diag: {{ row.diagnostico }}</p>
+              <td class="text-left capitalize max-w-[200px]">
+                <div v-if="row.beneficiario || row.diagnostico" class="space-y-0.5">
+                  <p 
+                    v-if="row.beneficiario" 
+                    class="font-semibold text-blue-600 truncate max-w-[180px] sm:max-w-[200px]" 
+                    :title="row.beneficiario"
+                  >
+                    {{ row.beneficiario }}
+                  </p>
+                  <p v-else class="text-gray-400 text-xs italic">Sin beneficiario</p>
+
+                  <p 
+                    v-if="row.diagnostico" 
+                    class="text-xs text-gray-500 truncate max-w-[180px] sm:max-w-[200px] cursor-pointer hover:text-blue-600 transition-colors" 
+                    :title="`Diagnóstico completo: ${row.diagnostico} (Clic para ver detalles)`"
+                    @click="verDetallesPago(row)"
+                  >
+                    Diag: {{ row.diagnostico }}
+                  </p>
                 </div>
                 <span v-else class="text-gray-400 text-xs">Sin beneficiario</span>
               </td>
@@ -768,7 +785,7 @@ const exportToCSV = async () => {
 }
 
 .ubi_ads {
-  width: 900px !important;
+  max-width: 250px;
   white-space: wrap;
 }
 
