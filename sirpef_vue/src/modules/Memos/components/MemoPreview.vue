@@ -1,9 +1,9 @@
 <template>
   <div
     class="memo-paper bg-white print:shadow-none mx-auto p-[1.5cm] pt-[1cm] text-black text-[12pt] font-arial leading-snug w-[21.59cm] min-h-[27.94cm] relative flex flex-col">
-    <!-- Header Image -->
-    <div v-if="data.header_img || data.headerImg" class="mb-4">
-      <img :src="data.header_img || data.headerImg" class="w-full h-auto" />
+    <!-- Header / Cintillo (por defecto el del Punto de Cuenta) -->
+    <div class="mb-4">
+      <img :src="data.header_img || data.headerImg || '/cintillo.png'" alt="Cintillo institucional" class="w-full h-auto" />
     </div>
 
     <!-- Metadata -->
