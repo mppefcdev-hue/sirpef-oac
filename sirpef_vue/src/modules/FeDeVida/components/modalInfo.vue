@@ -4,7 +4,7 @@ import { onMounted, onUnmounted } from 'vue';
 import useModalInfo from '../composables/useModalInfo';
 import CardHistory from './cardHistory.vue';
 import { useRoute, useRouter } from 'vue-router';
-import { nextTick, ref } from 'vue';
+import { computed, nextTick, ref } from 'vue';
 import MemoPreview from '../../Memos/components/MemoPreview.vue';
 import PuntoPreview from './PuntoPreview.vue';
 import { generateMemoPdf } from '../../Memos/services/PdfService';
@@ -36,6 +36,8 @@ const route = useRoute()
 const router = useRouter()
 const memoToPrint = ref(null);
 const puntoToPrint = ref(null);
+
+const tienePuntoCuenta = computed(() => !!caseData.value?.punto_cuenta);
 
 const hidden = (e?: PointerEvent) => {
     if(route.name == 'case-fedevida') router.back()
@@ -97,6 +99,8 @@ const formatCurrency = (value: any) => {
 };
 
 const createMemoFromPDC = async () => {
+    if (!tienePuntoCuenta.value) return;
+
     const memo = caseData.value?.punto_cuenta?.memorandum;
     if (memo?.id) {
         const providers = memo.proveedores || [];
@@ -542,22 +546,33 @@ const handleEdit = () => {
 
 
 
-                    <div v-if="caseData?.punto_cuenta" @click="createMemoFromPDC"
-                        class="border cursor-pointer w-[200px] h-[300px] border-gray-200 rounded-lg overflow-hidden flex flex-col justify-between shadow-md hover:shadow-2xl transition-shadow duration-300 bg-white">
+                    <div
+                        :class="['border w-[200px] h-[300px] rounded-lg overflow-hidden flex flex-col justify-between shadow-md transition-all duration-300 bg-white',
+                            tienePuntoCuenta ? 'border-gray-200 cursor-pointer hover:shadow-2xl' : 'border-gray-200 opacity-60 cursor-not-allowed bg-gray-50']"
+                        :title="tienePuntoCuenta ? 'Crear o ver memorándum' : 'Debe crear primero el punto de cuenta'"
+                        @click="tienePuntoCuenta && createMemoFromPDC()">
                         <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
                             <h3 class="font-medium text-gray-700 capitalize truncate">Memorándum</h3>
                         </div>
 
-                        <div class="flex justify-center items-center p-4 overflow-hidden min-h-[150px]">
-                            <img class="max-w-full max-h-[180px] object-contain rounded"
+                        <div class="flex flex-col justify-center items-center gap-2 p-4 overflow-hidden min-h-[150px]">
+                            <img class="max-w-full max-h-[120px] object-contain rounded"
+                                :class="{ 'grayscale': !tienePuntoCuenta }"
                                 :src="`/memo.png`"
                                 alt="" />
+                            <p v-if="!tienePuntoCuenta" class="text-center text-[11px] font-medium leading-snug text-amber-600">
+                                Debe crear primero el punto de cuenta para generar el memorándum.
+                            </p>
                         </div>
                         <div class="px-4 py-3 border-t border-gray-200 text-center">
                             <button
-                                class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition-colors duration-200">
-                                <font-awesome-icon :icon="caseData?.punto_cuenta?.memorandum?.id ? 'eye' : 'plus'" />
-                                {{ caseData?.punto_cuenta?.memorandum?.id ? 'Ver Memorándum' : 'Crear Memorándum' }}
+                                type="button"
+                                :disabled="!tienePuntoCuenta"
+                                :class="['inline-flex items-center gap-2 px-4 py-2 rounded transition-colors duration-200',
+                                    tienePuntoCuenta ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed']">
+                                <font-awesome-icon v-if="tienePuntoCuenta" :icon="caseData?.punto_cuenta?.memorandum?.id ? 'eye' : 'plus'" />
+                                <font-awesome-icon v-else icon="lock" />
+                                {{ !tienePuntoCuenta ? 'Requiere punto de cuenta' : (caseData?.punto_cuenta?.memorandum?.id ? 'Ver Memorándum' : 'Crear Memorándum') }}
                             </button>
                         </div>
                     </div>
