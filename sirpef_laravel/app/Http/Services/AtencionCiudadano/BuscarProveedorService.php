@@ -12,14 +12,17 @@ class BuscarProveedorService
      */
     static public function buscarPorDocumento(string $documento): JsonResponse
     {
-        // Limpiamos el string por si viene con espacios
-        $documento = trim($documento);
+        // Normalizamos el documento (sin espacios y en mayúsculas)
+        $documento = strtoupper(preg_replace('/\s+/', '', trim($documento)) ?? '');
+        $documentoSinSeparadores = preg_replace('/[^A-Z0-9]/', '', $documento) ?? '';
 
-        // Buscamos en la tabla tbl_proveedor
-        // Asumiendo que tu tabla tiene una columna 'cedula_rif' o similar.
-        // Si el campo se llama distinto, ajústalo aquí.
+        // Buscamos en la tabla tbl_proveedor por su RIF.
+        // Se comparan ambos formatos: exacto y sin guiones/espacios/puntos.
         $proveedor = Proveedor::where('cedula_rif', $documento)
-            ->orWhere('rif', $documento) // Por si tienes campos separados
+            ->orWhereRaw(
+                "UPPER(REPLACE(REPLACE(REPLACE(cedula_rif, '-', ''), ' ', ''), '.', '')) = ?",
+                [$documentoSinSeparadores]
+            )
             ->first();
 
         if (!$proveedor) {
@@ -36,7 +39,7 @@ class BuscarProveedorService
             'data'    => [
                 'id'         => $proveedor->id,
                 'nombre'     => $proveedor->nombre,
-                'cedula_rif' => $proveedor->cedula_rif ?? $proveedor->rif,
+                'cedula_rif' => $proveedor->cedula_rif,
                 // Agrega aquí otros campos que necesites autorrellenar
             ]
         ], 200);

@@ -85,13 +85,48 @@
             <button @click="addProveedor" type="button" class="text-[10px] bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700">+ Agregar</button>
           </div>
           <div v-for="(item, index) in props.form.tabla.proveedores" :key="index" class="flex gap-2 items-end">
-            <div class="flex-1">
+            <div class="flex-1 relative">
               <label class="text-[9px] font-bold text-gray-400 uppercase"> RIF Proveedor</label>
-              <input v-model="props.form.tabla.proveedores[index].cedula_rif" placeholder="Rif del proveedor" class="w-full border p-2 rounded text-xs focus:ring-1 focus:ring-blue-400 outline-none" />
+              <input
+                v-model="props.form.tabla.proveedores[index].cedula_rif"
+                @input="onRifInput(index)"
+                @focus="onRifFocus(index)"
+                @blur="closeProveedorSugerencias(index)"
+                placeholder="Rif del proveedor"
+                class="w-full border p-2 rounded text-xs focus:ring-1 focus:ring-blue-400 outline-none"
+              />
+              <div
+                v-if="dropdownAbierto[index]"
+                class="absolute z-20 left-0 right-0 mt-1 bg-white border border-gray-200 rounded shadow-lg max-h-48 overflow-y-auto"
+              >
+                <div v-if="buscandoProveedor[index]" class="p-2 text-[10px] text-gray-500">
+                  Buscando proveedores...
+                </div>
+                <template v-else>
+                  <button
+                    v-for="prov in (sugerenciasProveedores[index] || [])"
+                    :key="prov.id"
+                    type="button"
+                    @mousedown.prevent="seleccionarProveedor(index, prov)"
+                    class="block w-full text-left px-2 py-1.5 hover:bg-blue-50 border-b border-gray-100 last:border-b-0"
+                  >
+                    <span class="block text-[10px] font-bold text-gray-700">{{ prov.cedula_rif }}</span>
+                    <span class="block text-[10px] text-gray-500 truncate">{{ prov.nombre }}</span>
+                  </button>
+                  <p v-if="sinResultadosProveedor[index]" class="p-2 text-[10px] text-amber-600">
+                    Proveedor no registrado. Escriba el nombre y se guardará con el memorándum.
+                  </p>
+                </template>
+              </div>
             </div>
             <div class="flex-1">
               <label class="text-[9px] font-bold text-gray-400 uppercase">Proveedor</label>
-              <input v-model="props.form.tabla.proveedores[index].nombre" placeholder="Nombre del proveedor" class="w-full border p-2 rounded text-xs focus:ring-1 focus:ring-blue-400 outline-none" />
+              <input
+                v-model="props.form.tabla.proveedores[index].nombre"
+                :disabled="!nombreHabilitado[index]"
+                :placeholder="nombreHabilitado[index] ? 'Nombre del proveedor' : 'Escriba un RIF nuevo para habilitar'"
+                class="w-full border p-2 rounded text-xs focus:ring-1 focus:ring-blue-400 outline-none disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
+              />
             </div>
             <div class="w-32">
               <label class="text-[9px] font-bold text-gray-400 uppercase">Monto (Bs.)</label>
@@ -168,6 +203,90 @@ const route = useRoute();
 const http = new Http(init);
 const loadingSearch = ref(false);
 
+// Búsqueda de proveedores existentes por RIF
+const sugerenciasProveedores = ref<Record<number, any[]>>({});
+const buscandoProveedor = ref<Record<number, boolean>>({});
+const sinResultadosProveedor = ref<Record<number, boolean>>({});
+const dropdownAbierto = ref<Record<number, boolean>>({});
+const nombreHabilitado = ref<Record<number, boolean>>({});
+const proveedorSeleccionado = ref<Record<number, number | null>>({});
+const rifTimers: Record<number, any> = {};
+
+const onRifFocus = (index: number) => {
+  const rif = String(props.form?.tabla?.proveedores?.[index]?.cedula_rif || '').trim();
+  if (rif.length >= 2 && (sugerenciasProveedores.value[index]?.length || sinResultadosProveedor.value[index])) {
+    dropdownAbierto.value[index] = true;
+  }
+};
+
+const onRifInput = (index: number) => {
+  const rif = String(props.form?.tabla?.proveedores?.[index]?.cedula_rif || '').trim();
+
+  if (rifTimers[index]) {
+    clearTimeout(rifTimers[index]);
+  }
+
+  // Si se cambia el RIF después de elegir un proveedor, se limpia el nombre anterior
+  if (proveedorSeleccionado.value[index]) {
+    proveedorSeleccionado.value[index] = null;
+    if (props.form?.tabla?.proveedores?.[index]) {
+      props.form.tabla.proveedores[index].nombre = '';
+    }
+  }
+
+  sinResultadosProveedor.value[index] = false;
+  nombreHabilitado.value[index] = false;
+
+  if (rif.length < 2) {
+    sugerenciasProveedores.value[index] = [];
+    dropdownAbierto.value[index] = false;
+    return;
+  }
+
+  rifTimers[index] = setTimeout(() => buscarProveedoresPorRif(index, rif), 350);
+};
+
+const buscarProveedoresPorRif = async (index: number, rif: string) => {
+  dropdownAbierto.value[index] = true;
+  buscandoProveedor.value[index] = true;
+
+  try {
+    const response = await http.get(`api/oac/memorandum/proveedores/buscar?q=${encodeURIComponent(rif)}`);
+    const data = response?.data?.data || [];
+
+    // Ignoramos respuestas obsoletas si el RIF cambió mientras se consultaba
+    const rifActual = String(props.form?.tabla?.proveedores?.[index]?.cedula_rif || '').trim();
+    if (rifActual !== rif) return;
+
+    sugerenciasProveedores.value[index] = data;
+    sinResultadosProveedor.value[index] = data.length === 0;
+    // El nombre solo se habilita si el RIF no existe (se va a crear un proveedor nuevo)
+    nombreHabilitado.value[index] = data.length === 0;
+  } catch (error) {
+    sugerenciasProveedores.value[index] = [];
+    sinResultadosProveedor.value[index] = true;
+    nombreHabilitado.value[index] = true;
+  } finally {
+    buscandoProveedor.value[index] = false;
+  }
+};
+
+const seleccionarProveedor = (index: number, prov: any) => {
+  if (!props.form?.tabla?.proveedores?.[index]) return;
+
+  props.form.tabla.proveedores[index].cedula_rif = prov.cedula_rif;
+  props.form.tabla.proveedores[index].nombre = prov.nombre;
+  proveedorSeleccionado.value[index] = prov.id;
+  nombreHabilitado.value[index] = false;
+  dropdownAbierto.value[index] = false;
+};
+
+const closeProveedorSugerencias = (index: number) => {
+  setTimeout(() => {
+    dropdownAbierto.value[index] = false;
+  }, 150);
+};
+
 const addProveedor = () => {
   if (!props.form.tabla.proveedores) {
     props.form.tabla.proveedores = [];
@@ -211,11 +330,11 @@ const buscarPuntoCuenta = async (numero) => {
       props.form.tabla.monto = pc.monto;
       
       if (pc.proveedores && pc.proveedores.length > 0) {
-        props.form.tabla.proveedores = pc.proveedores.map(p => ({ nombre: p.nombre, monto: parseFloat(p.monto) || 0 }));
+        props.form.tabla.proveedores = pc.proveedores.map(p => ({ nombre: p.nombre, monto: parseFloat(p.monto) || 0, cedula_rif: p.cedula_rif || '' }));
       } else if (pc.monto || pc.proveedor) {
-        props.form.tabla.proveedores = [{ nombre: pc.proveedor || '', monto: parseFloat(pc.monto) || 0 }];
+        props.form.tabla.proveedores = [{ nombre: pc.proveedor || '', monto: parseFloat(pc.monto) || 0, cedula_rif: '' }];
       } else {
-        props.form.tabla.proveedores = [{ nombre: '', monto: 0 }];
+        props.form.tabla.proveedores = [{ nombre: '', monto: 0, cedula_rif: '' }];
       }
       
       if (pc.asunto) {

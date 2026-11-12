@@ -83,6 +83,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Memorandum
     Route::get('/memorandum', [MemorandumController::class, 'index']);
     Route::get('/memorandum/buscar-punto-cuenta/{numero}', [MemorandumController::class, 'buscarPuntoCuenta'])->where('numero', '.*');
+    Route::get('/memorandum/proveedores/buscar', [MemorandumController::class, 'buscarProveedores']);
     Route::post('/memorandum', [MemorandumController::class, 'store']);
     Route::put('/memorandum/{id}', [MemorandumController::class, 'update']);
     Route::delete('/memorandum/{id}', [MemorandumController::class, 'destroy']);

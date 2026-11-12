@@ -1,5 +1,11 @@
 .aider*
+# Variables de entorno: ignorar cualquier .env en cualquier carpeta (excepto plantillas)
 .env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
 # Dependencias de PHP (Composer)
 sirpef_laravel/vendor/
 sirpef_laravel/.env

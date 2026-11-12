@@ -104,7 +104,7 @@ const memoData = ref({
     solicitante: '',
     ci: '',
     monto: '',
-    proveedores: [{ nombre: '', monto: 0 }],
+    proveedores: [{ nombre: '', monto: 0, cedula_rif: '' }],
     total: ''
   },
   cuerpo_final: 'Agradeciendo la receptividad que tenga a bien dispensar a la presente, en girar la instrucción correspondiente a fin de realizar el trámite de orden de pago, quedo de usted.',

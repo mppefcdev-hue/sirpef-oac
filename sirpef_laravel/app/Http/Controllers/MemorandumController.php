@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Services\Memos\CreateMemoService;
+use App\Http\Services\Memos\BuscarProveedoresService;
 use Illuminate\Http\Request;
 
 class MemorandumController extends Controller
@@ -10,6 +11,11 @@ class MemorandumController extends Controller
     public function buscarPuntoCuenta(string $numero)
     {
         return CreateMemoService::buscarPuntoCuenta($numero);
+    }
+
+    public function buscarProveedores(Request $request)
+    {
+        return BuscarProveedoresService::buscar((string) $request->query('q', ''));
     }
 
     public function store(Request $request)

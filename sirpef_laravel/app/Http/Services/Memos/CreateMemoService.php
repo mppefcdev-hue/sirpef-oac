@@ -4,6 +4,7 @@ namespace App\Http\Services\Memos;
 
 use App\Models\Memorandum;
 use App\Models\PuntoCuenta;
+use App\Models\Proveedor;
 use App\Models\Auditoria;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -101,6 +102,46 @@ class CreateMemoService
     }
 
     /**
+     * Resuelve el proveedor de un memorándum:
+     * - Si el RIF ya existe, reutiliza el registro (sin cambiar su nombre).
+     * - Si el RIF no existe, lo crea con el nombre indicado.
+     * - Si no hay RIF, mantiene el comportamiento anterior (crear por nombre).
+     */
+    private static function resolveProveedor(array $prov): ?Proveedor
+    {
+        $nombre = trim((string) ($prov['nombre'] ?? ''));
+        $rif = strtoupper(preg_replace('/\s+/', '', trim((string) ($prov['cedula_rif'] ?? ''))) ?? '');
+
+        if ($nombre === '' && $rif === '') {
+            return null;
+        }
+
+        if ($rif !== '') {
+            $rifSinSeparadores = preg_replace('/[^A-Z0-9]/', '', $rif) ?? '';
+
+            $existente = Proveedor::where('cedula_rif', $rif)
+                ->orWhereRaw(
+                    "UPPER(REPLACE(REPLACE(REPLACE(cedula_rif, '-', ''), ' ', ''), '.', '')) = ?",
+                    [$rifSinSeparadores]
+                )
+                ->first();
+
+            if ($existente) {
+                return $existente;
+            }
+
+            return Proveedor::create([
+                'nombre' => $nombre !== '' ? $nombre : $rif,
+                'cedula_rif' => $rif,
+            ]);
+        }
+
+        return Proveedor::create([
+            'nombre' => $nombre,
+        ]);
+    }
+
+    /**
      * Store a new memorandum record.
      *
      * @param Request $request
@@ -156,13 +197,9 @@ class CreateMemoService
 
                 if ($request->has('proveedores') && is_array($request->input('proveedores'))) {
                     foreach ($request->input('proveedores') as $prov) {
-                        $nombreProv = $prov['nombre'] ?? null;
-                        if (!empty($nombreProv)) {
-                            $proveedor = \App\Models\Proveedor::create([
-                                'nombre' => $nombreProv,
-                                'cedula_rif' => $prov['cedula_rif'] ?? null,
-                            ]);
+                        $proveedor = self::resolveProveedor($prov);
 
+                        if ($proveedor) {
                             // Vincular en la tabla pivote con el monto
                             $memorandum->proveedores()->attach($proveedor->id, [
                                 'monto_relacionado' => (float) ($prov['monto'] ?? 0)
@@ -287,13 +324,9 @@ class CreateMemoService
                     $memorandum->proveedores()->detach();
                     
                     foreach ($request->input('proveedores') as $prov) {
-                        $nombreProv = $prov['nombre'] ?? null;
-                        if (!empty($nombreProv)) {
-                            $proveedor = \App\Models\Proveedor::create([
-                                'nombre' => $nombreProv,
-                                'cedula_rif' => $prov['cedula_rif'] ?? null,
-                            ]);
+                        $proveedor = self::resolveProveedor($prov);
 
+                        if ($proveedor) {
                             $memorandum->proveedores()->attach($proveedor->id, [
                                 'monto_relacionado' => (float) ($prov['monto'] ?? 0)
                             ]);
